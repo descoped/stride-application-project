@@ -4,8 +4,8 @@
     <servers>
         <server>
             <id>ossrh</id>
-            <username>${env.AUTH_USER}</username>
-            <password>${env.AUTH_TOKEN}</password>
+            <username>${env.OSSRH_USER}</username>
+            <password>${env.OSSRH_TOKEN}</password>
         </server>
     </servers>
 
