@@ -1,4 +1,4 @@
-package io.descoped.application.test;
+package io.descoped.stride.application.test;
 
 public interface TestUriResolver {
 

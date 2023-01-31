@@ -1,4 +1,4 @@
-package io.descoped.application;
+package io.descoped.stride.application;
 
 import no.cantara.config.ApplicationProperties;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package io.descoped.application;
+package io.descoped.stride.application;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
@@ -9,10 +9,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.descoped.application.cors.ApplicationCORSServletFilter;
-import io.descoped.application.factory.InstanceFactory;
-import io.descoped.application.openapi.ApplicationOpenApiResource;
-import io.descoped.application.openapi.ApplicationOpenApiSpecFilter;
+import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
+import io.descoped.stride.application.factory.InstanceFactory;
+import io.descoped.stride.application.openapi.ApplicationOpenApiResource;
+import io.descoped.stride.application.openapi.ApplicationOpenApiSpecFilter;
 import io.dropwizard.metrics.jetty11.InstrumentedConnectionFactory;
 import io.dropwizard.metrics.jetty11.InstrumentedHttpChannelListener;
 import io.dropwizard.metrics.jetty11.InstrumentedQueuedThreadPool;
@@ -196,13 +196,17 @@ public class Application {
         return instance;
     }
 
-    public <T extends Filter> T initAndAddServletFilter(Class<T> clazz, Supplier<T> filterSupplier,
-                                                        String pathSpec, EnumSet<DispatcherType> dispatches) {
+    public <T extends Filter> T initAndAddServletFilter(Class<T> clazz,
+                                                        Supplier<T> filterSupplier,
+                                                        String pathSpec,
+                                                        EnumSet<DispatcherType> dispatches) {
         return initAndAddServletFilter(clazz.getName(), filterSupplier, pathSpec, dispatches);
     }
 
-    public <T extends Filter> T initAndAddServletFilter(String key, Supplier<T> filterSupplier,
-                                                        String pathSpec, EnumSet<DispatcherType> dispatches) {
+    public <T extends Filter> T initAndAddServletFilter(String key,
+                                                        Supplier<T> filterSupplier,
+                                                        String pathSpec,
+                                                        EnumSet<DispatcherType> dispatches) {
         T instance = init(key, filterSupplier);
         filterSpecs.add(new FilterSpec(key, instance, pathSpec, dispatches));
         return instance;
@@ -224,10 +228,19 @@ public class Application {
         initAndAddServletFilter(DefaultExceptionServletFilter.class, DefaultExceptionServletFilter::new,
                 "/*", EnumSet.allOf(DispatcherType.class));
 
-        initAndAddServletFilter(ApplicationCORSServletFilter.class,
-                ApplicationCORSServletFilter.builder()::build, "/*", EnumSet.allOf(DispatcherType.class));
+        final ApplicationCORSServletFilter applicationCORSServletFilter = initAndAddServletFilter(
+                ApplicationCORSServletFilter.class,
+                this::configureCORSFilter,
+                "/*",
+                EnumSet.allOf(DispatcherType.class));
 
         initAndRegisterJaxRsWsComponent(ApplicationOpenApiResource.class, this::createOpenApiResource);
+    }
+
+    private ApplicationCORSServletFilter configureCORSFilter() {
+        final ApplicationCORSServletFilter.Builder builder = ApplicationCORSServletFilter.builder();
+        builder.headers(configuration.corsHeaders());
+        return builder.build();
     }
 
     public void start() {

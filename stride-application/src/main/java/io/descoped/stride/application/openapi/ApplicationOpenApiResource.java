@@ -1,4 +1,4 @@
-package io.descoped.application.openapi;
+package io.descoped.stride.application.openapi;
 
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;

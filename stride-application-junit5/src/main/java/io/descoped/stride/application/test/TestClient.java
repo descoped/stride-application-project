@@ -1,4 +1,4 @@
-package io.descoped.application.test;
+package io.descoped.stride.application.test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

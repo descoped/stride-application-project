@@ -1,4 +1,4 @@
-package io.descoped.application.test;
+package io.descoped.stride.application.test;
 
 import java.net.HttpURLConnection;
 import java.net.http.HttpResponse;

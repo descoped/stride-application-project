@@ -1,10 +1,10 @@
-package io.descoped.application;
+package io.descoped.stride.application;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.descoped.application.factory.InstanceFactory;
+import io.descoped.stride.application.factory.InstanceFactory;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;

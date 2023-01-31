@@ -1,4 +1,4 @@
-package io.descoped.application.cors;
+package io.descoped.stride.application.cors;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

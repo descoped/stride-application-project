@@ -1,9 +1,9 @@
-package io.descoped.application.test;
+package io.descoped.stride.application.test;
 
-import io.descoped.application.Application;
-import io.descoped.application.Configuration;
-import io.descoped.application.Logging;
-import io.descoped.application.factory.InstanceFactory;
+import io.descoped.stride.application.Application;
+import io.descoped.stride.application.Configuration;
+import io.descoped.stride.application.Logging;
+import io.descoped.stride.application.factory.InstanceFactory;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServlet;

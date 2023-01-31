@@ -1,4 +1,4 @@
-package io.descoped.application;
+package io.descoped.stride.application;
 
 import no.cantara.config.ApplicationProperties;
 
@@ -10,6 +10,18 @@ public interface Configuration {
 
     default Map<String, String> asMap() {
         return properties().map();
+    }
+
+    default String host() {
+        return properties().get("server.host", "0.0.0.0");
+    }
+
+    default int port() {
+        return properties().asInt("server.port", 9090);
+    }
+
+    default String contextPath() {
+        return properties().get("server.context-path", "/");
     }
 
     default String alias() {
@@ -25,16 +37,8 @@ public interface Configuration {
                 host(), port(), contextPath()));
     }
 
-    default String contextPath() {
-        return properties().get("server.context-path", "/");
-    }
-
-    default String host() {
-        return properties().get("server.host", "0.0.0.0");
-    }
-
-    default int port() {
-        return properties().asInt("server.port", 9090);
+    default String corsHeaders() {
+        return properties().get("application.cors.headers", "origin, content-type, accept, authorization");
     }
 
     static Configuration create(ApplicationProperties applicationProperties) {

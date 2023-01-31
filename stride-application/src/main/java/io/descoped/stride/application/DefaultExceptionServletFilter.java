@@ -1,4 +1,4 @@
-package io.descoped.application;
+package io.descoped.stride.application;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpFilter;

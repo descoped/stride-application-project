@@ -1,4 +1,4 @@
-package io.descoped.application.openapi;
+package io.descoped.stride.application.openapi;
 
 import io.swagger.v3.core.filter.AbstractSpecFilter;
 import io.swagger.v3.core.model.ApiDescription;

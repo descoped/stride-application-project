@@ -1,4 +1,4 @@
-package io.descoped.application.factory;
+package io.descoped.stride.application.factory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
