@@ -220,6 +220,11 @@
     <profiles>
         <profile>
             <id>release</id>
+            <properties>
+                <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+                <gpg.executable>gpg</gpg.executable>
+                <gpg.passphrase>${env.GPG_PASSPHRASE}}</gpg.passphrase>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -287,12 +292,16 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <!-- This is necessary for gpg to not try to use the pinentry programs -->
                         <configuration>
-                            <!-- This is necessary for gpg to not try to use the pinentry programs -->
+                            <!--
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
+                            -->
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
                         </configuration>
                     </plugin>
                 </plugins>
