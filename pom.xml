@@ -222,7 +222,7 @@
             <properties>
                 <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
                 <gpg.executable>gpg</gpg.executable>
-                <gpg.passphrase>${env.GPG_PASSPHRASE}}</gpg.passphrase>
+                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
             </properties>
             <build>
                 <plugins>
