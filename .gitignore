@@ -1,0 +1,49 @@
+.idea/*
+*lib/*
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+logs/
+logs.txt
+
+### VS Code ###
+.vscode/
+
+# Markdown preview
+/readme.md.temp
+**/.DS_Store
+
+### Terraform ###
+**/.terraform
+**/*.tfstate*
+crash.log
+
+**/secret-jwk.properties
+
+.task/
