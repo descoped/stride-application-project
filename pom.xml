@@ -84,9 +84,9 @@
     </repositories>
 
     <scm>
-        <connection>scm:git:git://github.com/descoped/descoped-application-project.git</connection>
-        <developerConnection>scm:git:https://github.com/descoped/descoped-application-project.git</developerConnection>
-        <url>https://github.com/descoped/descoped-application-project</url>
+        <connection>scm:git:git://github.com/descoped/stride-application-project.git</connection>
+        <developerConnection>scm:git:https://github.com/descoped/stride-application-project.git</developerConnection>
+        <url>https://github.com/descoped/stride-application-project</url>
     </scm>
 
     <dependencyManagement>
