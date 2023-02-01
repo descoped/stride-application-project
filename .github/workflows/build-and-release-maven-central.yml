@@ -36,8 +36,9 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USER }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          GPG_KEYNAME: ${{ secrets.OSSRH_GPG_SECRET_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
           mvn --no-transfer-progress --batch-mode clean deploy \
-            -Darguments="-Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests" \
-            -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests \
+            -Dgpg.keyname=${{ env.GPG_KEYNAME }} -Dgpg.passphrase=${{ env.GPG_PASSPHRASE }} -DskipTests \
             -P oss-maven-central
