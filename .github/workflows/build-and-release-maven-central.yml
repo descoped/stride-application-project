@@ -19,26 +19,19 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-
       - name: Copy maven settings.xml
         run: |
           cat "${{ github.workspace }}/.github/settings.xml" > ~/.m2/settings.xml
-
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-
       - name: Install gpg secret key
         run: |
           cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
-          gpg --list-secret-keys --keyid-format LONG        
-
-#      - name: Publish to Central Repository
-#        env:
-#          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-#          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-#        run: |
-#          mvn \
-#            --no-transfer-progress \
-#            --batch-mode \
-#            -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} \
-#            clean deploy -P oss-maven-central
+      - name: Publish to Central Repository
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+        run: |
+          mvn -B release:clean release:prepare release:perform \
+            -Darguments="-Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -DskipTests" \
+            -DskipTests -P oss-maven-central
