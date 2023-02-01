@@ -233,7 +233,7 @@
             </build>
         </profile>
         <profile>
-            <id>release</id>
+            <id>oss-maven-central</id>
             <distributionManagement>
                 <snapshotRepository>
                     <id>ossrh</id>
