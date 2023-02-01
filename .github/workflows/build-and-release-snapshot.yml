@@ -29,7 +29,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+      #          server-id: ossrh
+      #          server-username: MAVEN_USERNAME
+      #          server-password: MAVEN_PASSWORD
+      - name: Print path
+        run: |
+          echo "GITHUB_PATH: ${{ github.workspace }}"
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-
-
+#      - name: Publish Snapshot to OSS SonaType
+#        run: mvn -B deploy -DskipTests --file pom.xml
+#        env:
+#          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
