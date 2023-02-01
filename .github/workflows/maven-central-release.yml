@@ -1,9 +1,7 @@
 name: My Manual Workflow
 
 on:
-  manual:
-    triggers:
-      - name: Trigger me manually
+  workflow_dispatch:
 
 jobs:
   build:
