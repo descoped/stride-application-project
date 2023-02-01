@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.descoped.stride.application</groupId>
         <artifactId>stride-application-project</artifactId>
-        <version>0.0.13</version>
+        <version>0.0.14-SNAPSHOT</version>
     </parent>
 
     <artifactId>stride-application</artifactId>
