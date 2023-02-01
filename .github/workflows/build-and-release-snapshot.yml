@@ -31,18 +31,5 @@ jobs:
           cache: maven
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-      - name: Get Maven Project Version
-        run: |
-          echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
-      - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.8.0
-        timeout-minutes: 1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: oranheim
-          issue-title: "Approve ${{ env.RELEASE_VERSION }}"
-
-      - name: Approved step
-        run: echo "Hello world"
 
 
