@@ -32,7 +32,7 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
       - name: Publish Snapshot to OSS SonaType
-        run: mvn -B deploy -DskipTests --file pom.xml
+        run: mvn -B deploy -DskipTests -P oss-sonatype
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USER }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
