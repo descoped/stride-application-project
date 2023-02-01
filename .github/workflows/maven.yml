@@ -35,6 +35,7 @@ jobs:
       - name: Manual Workflow Approval
         uses: trstringer/manual-approval@v1.8.0
         with:
+          secret: ${{ github.TOKEN }}
           approvers: oranheim
 
       - name: Approved step
