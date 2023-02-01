@@ -40,7 +40,7 @@ jobs:
         with:
           secret: ${{ github.TOKEN }}
           approvers: oranheim
-          issue-title: "Approve $env.RELEASE_VERSION"
+          issue-title: "Approve ${{ env.RELEASE_VERSION }}"
 
       - name: Approved step
         run: echo "Hello world"
