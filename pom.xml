@@ -365,6 +365,8 @@
                 <version>3.0.0-M7</version>
                 <configuration>
                     <tagNameFormat>@{project.version}</tagNameFormat>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <goals>install</goals>
                 </configuration>
             </plugin>
         </plugins>
