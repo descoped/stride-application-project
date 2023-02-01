@@ -32,9 +32,10 @@ jobs:
       #          server-id: ossrh
       #          server-username: MAVEN_USERNAME
       #          server-password: MAVEN_PASSWORD
-      - name: Print path
+      - name: Copy maven settings.xml
         run: |
-          echo "GITHUB_PATH: ${{ github.workspace }}"
+          cat "${{ github.workspace }}/.github/settings.xml" > ~/.m2/settings.xml
+          cat ~/.m2/settings.xml
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 #      - name: Publish Snapshot to OSS SonaType
