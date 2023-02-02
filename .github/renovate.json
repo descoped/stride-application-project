@@ -1,0 +1,69 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "prHourlyLimit": 0,
+  "packageRules": [
+    {
+      "matchManagers": [
+        "npm",
+        "maven"
+      ],
+      "updateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "updateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "depTypeList": [
+        "devDependencies"
+      ],
+      "automerge": true
+    },
+    {
+      "packagePatterns": [
+        "eslint"
+      ],
+      "groupName": "eslint"
+    },
+    {
+      "matchSourceUrlPrefixes": [
+        "https://github.com/nuxt/nuxt.js"
+      ],
+      "groupName": "nuxtjs monorepo",
+      "automerge": true
+    },
+    {
+      "matchSourceUrlPrefixes": [
+        "https://github.com/vuejs/vue"
+      ],
+      "groupName": "vue monorepo",
+      "automerge": true
+    },
+    {
+      "matchSourceUrlPrefixes": [
+        "https://github.com/junit-team/junit5"
+      ],
+      "groupName": "junit5 monorepo",
+      "automerge": true
+    }
+  ],
+  "separateMajorMinor": true,
+  "separateMinorPatch": true
+}
