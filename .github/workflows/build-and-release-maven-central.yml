@@ -41,3 +41,32 @@ jobs:
           mvn --batch-mode --no-transfer-progress deploy \
             -Dgpg.passphrase=${{ env.GPG_PASSPHRASE }} -DskipTests \
             -P oss-maven-central
+
+      - name: Get latest tag
+        id: latest_tag
+        run: |
+          echo "::set-output name=tag_name::$(git describe --tags --abbrev=0)"
+
+      - name: Update badge
+        uses: actions/github-script@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const ref = process.env.GITHUB_REF;
+            const { tag_name } = steps.latest_tag.outputs;
+            const badge = `![Latest Tag](https://img.shields.io/github/v/${ref}/${tag_name}.svg)`;
+            const readme = await context.github.repos.getReadme({ref});
+            const content = readme.data.content;
+            const encodedContent = Buffer.from(content, 'base64').toString();
+            const newContent = encodedContent.replace(/!\[Latest Tag\].*\n/, badge + '\n');
+            const newEncodedContent = Buffer.from(newContent).toString('base64');
+            await context.github.repos.updateFile({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'README.md',
+              message: `Update Latest Tag Badge to v${tag_name}`,
+              content: newEncodedContent,
+              sha: readme.data.sha,
+              branch: ref,
+            });
