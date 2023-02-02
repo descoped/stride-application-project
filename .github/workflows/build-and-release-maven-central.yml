@@ -46,8 +46,7 @@ jobs:
         id: latest_tag
         run: |
           echo "{tag_name}=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-          #echo "{name}=tag_name::$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-          #echo "::set-output name=tag_name::$(git describe --tags --abbrev=0)"
+          echo "tag_name: $GITHUB_OUTPUT"
 
       - name: Update badge
         uses: actions/github-script@v3
@@ -56,7 +55,7 @@ jobs:
         with:
           script: |
             const ref = process.env.GITHUB_REF;
-            const { tag_name } = steps.latest_tag.outputs;
+            const { tag_name } = ${{ steps.latest_tag.outputs }};
             const badge = `![Latest Tag](https://img.shields.io/github/v/${ref}/${tag_name}.svg)`;
             const readme = await context.github.repos.getReadme({ref});
             const content = readme.data.content;
@@ -67,7 +66,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               path: 'README.md',
-              message: `Update Latest Tag Badge to v${tag_name}`,
+              message: `Update Latest Tag Badge to ${tag_name}`,
               content: newEncodedContent,
               sha: readme.data.sha,
               branch: ref,
