@@ -5,7 +5,7 @@
 
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-project</artifactId>
-    <version>0.0.22-SNAPSHOT</version>
+    <version>0.0.22</version>
     <packaging>pom</packaging>
 
     <name>Stride Application Project</name>
@@ -86,7 +86,7 @@
         <connection>scm:git:git://github.com/descoped/stride-application-project.git</connection>
         <developerConnection>scm:git:https://github.com/descoped/stride-application-project.git</developerConnection>
         <url>https://github.com/descoped/stride-application-project</url>
-        <tag>HEAD</tag>
+        <tag>0.0.22</tag>
     </scm>
 
     <dependencyManagement>
