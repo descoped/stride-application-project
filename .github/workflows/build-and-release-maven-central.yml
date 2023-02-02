@@ -45,7 +45,9 @@ jobs:
       - name: Get latest tag
         id: latest_tag
         run: |
-          echo "::set-output name=tag_name::$(git describe --tags --abbrev=0)"
+          echo "{tag_name}=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+          #echo "{name}=tag_name::$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+          #echo "::set-output name=tag_name::$(git describe --tags --abbrev=0)"
 
       - name: Update badge
         uses: actions/github-script@v3
