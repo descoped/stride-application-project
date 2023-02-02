@@ -38,6 +38,6 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
           GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
         run: |
-          mvn --no-transfer-progress --batch-mode clean deploy \
+          mvn --batch-mode --no-transfer-progress deploy \
             -Dgpg.passphrase=${{ env.GPG_PASSPHRASE }} -DskipTests \
             -P oss-maven-central
