@@ -19,7 +19,7 @@
     <properties>
         <jetty.version>11.0.13</jetty.version>
         <jakarta.version>3.1.0</jakarta.version>
-        <jersey.version>3.0.8</jersey.version>
+        <jersey.version>3.1.1</jersey.version>
         <swagger.version>2.2.8</swagger.version>
         <metrics.version>4.2.15</metrics.version>
         <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
