@@ -360,7 +360,6 @@
                 <sonar.organization>descoped</sonar.organization>
                 <sonar.projectKey>descoped_stride-application-project</sonar.projectKey>
                 <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
-                <sonar.modules>stride-application,stride-application-junit5</sonar.modules>
                 <sonar.exclusions>${code.coverage.exclusions}</sonar.exclusions>
                 <sonar.report>${aggregate.report.dir}</sonar.report>
             </properties>
