@@ -16,6 +16,14 @@
     <description>Stride Application JUnit5 Extension</description>
     <inceptionYear>2023</inceptionYear>
 
+    <properties>
+        <!-- Sonar -->
+        <code.coverage.exclusions>
+        </code.coverage.exclusions>
+        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}
+        </sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
+
     <licenses>
         <license>
             <name>The Apache License, Version 2.0</name>

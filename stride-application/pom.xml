@@ -17,15 +17,11 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <jetty.version>11.0.13</jetty.version>
-        <jakarta.version>3.1.0</jakarta.version>
-        <jersey.version>3.1.1</jersey.version>
-        <swagger.version>2.2.8</swagger.version>
-        <metrics.version>4.2.15</metrics.version>
-        <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
-        <hibernate.validator.version>8.0.0.Final</hibernate.validator.version>
-        <jaxb-api.version>2.3.1</jaxb-api.version>
-        <jetty.jakarta.servlet-api.version>5.0.2</jetty.jakarta.servlet-api.version>
+        <!-- Sonar -->
+        <code.coverage.exclusions>
+        </code.coverage.exclusions>
+        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}
+        </sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <licenses>
