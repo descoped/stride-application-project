@@ -67,7 +67,7 @@ public class EmbeddedApplicationTest {
         {
             HttpResponse<String> response = client.send(
                     HttpRequest.newBuilder()
-                            .uri(URI.create(String.format("http://localhost:%s/greet/arunkumar?greeting=hello",
+                            .uri(URI.create(String.format("http://localhost:%s/greet/world?greeting=hello",
                                     application.getPort())))
                             .build(),
                     BodyHandlers.ofString());
