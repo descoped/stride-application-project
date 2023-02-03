@@ -57,7 +57,7 @@
         <jacoco.version>0.8.8</jacoco.version>
         <code.coverage.exclusions>
         </code.coverage.exclusions>
-        <aggregate.report.dir>target/site/jacoco-aggregate/jacoco.xml</aggregate.report.dir>
+        <aggregate.report.dir>stride-application-junit5/target/site/jacoco-aggregate/jacoco.xml</aggregate.report.dir>
     </properties>
 
     <modules>
@@ -360,6 +360,7 @@
                 <sonar.organization>descoped</sonar.organization>
                 <sonar.projectKey>descoped_stride-application-project</sonar.projectKey>
                 <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
+                <sonar.modules>stride-application,stride-application-junit5</sonar.modules>
                 <sonar.exclusions>${code.coverage.exclusions}</sonar.exclusions>
                 <sonar.report>${aggregate.report.dir}</sonar.report>
             </properties>
