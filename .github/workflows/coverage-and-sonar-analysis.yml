@@ -1,4 +1,4 @@
-name: Build and Publish Snapshot
+name: Coverage and Sonar Analysis
 
 on:
   push:
