@@ -18,6 +18,7 @@
 
     <properties>
         <!-- Sonar -->
+        <sonar.projectKey>descoped_${project.artifactId}</sonar.projectKey>
         <code.coverage.exclusions>
         </code.coverage.exclusions>
         <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}
