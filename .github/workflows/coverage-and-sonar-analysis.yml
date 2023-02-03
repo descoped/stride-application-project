@@ -27,7 +27,7 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn --batch-mode help:evaluate -Dexpression=project.properties
+          mvn --batch-mode --no-transfer-progress help:evaluate -Dexpression=project.properties
           mvn --batch-mode --no-transfer-progress help:evaluate -Daggregate.report.dir=target/site/jacoco-aggregate/jacoco.xml -Dexpression=project.properties -file stride-application/pom.xml
           mvn --batch-mode --no-transfer-progress help:evaluate -Daggregate.report.dir=target/site/jacoco-aggregate/jacoco.xml -Dexpression=project.properties -file stride-application-junit5/pom.xml
           mvn --batch-mode --no-transfer-progress --update-snapshots install
