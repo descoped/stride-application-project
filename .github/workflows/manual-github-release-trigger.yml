@@ -15,6 +15,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+          server-id: github
 
       - name: Get Maven Project Version
         run: |
@@ -28,7 +29,14 @@ jobs:
           approvers: oranheim
           issue-title: "Approve release of ${{ env.RELEASE_VERSION }}"
 
+      - name: Configure Git User
+        run: |
+          git config user.email "oranheim@gmail.com"
+          git config user.name "GitHub Actions"
+
       - name: Release with Maven
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mvn --batch-mode release:clean release:prepare release:perform \
             -Darguments="-DskipTests" \
