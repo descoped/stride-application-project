@@ -9,4 +9,23 @@
         </server>
     </servers>
 
+    <profiles>
+        <profile>
+            <id>cantara-releases</id>
+            <repositories>
+                <repository>
+                    <id>cantara-releases</id>
+                    <name>Cantara Releases</name>
+                    <url>https://mvnrepo.cantara.no/content/repositories/</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
 </settings>
