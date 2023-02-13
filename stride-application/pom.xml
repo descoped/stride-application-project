@@ -162,7 +162,9 @@
             <version>${swagger.version}</version>
         </dependency>
 
-        <!-- replace jakarta.xml.bind:jakarta.xml.bind-api:2.x (which uses javax namespace) with this allows javax and jakarta to coexist -->
+        <!-- replace jakarta.xml.bind:jakarta.xml.bind-api:2.x (which uses javax namespace) with this allows javax and jakarta to coexist
+             pls refer to the profile javax-jaxb and jakarta-jaxb for correct dependency graph
+        -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
@@ -225,6 +227,39 @@
     </dependencies>
 
     <profiles>
+        <profile>
+            <id>javax-jaxb</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-core</artifactId>
+                    <version>2.3.0.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
+                    <version>${jaxb-api.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>jakarta-jaxb</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-core</artifactId>
+                    <version>3.0.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
+                    <version>3.0.0</version>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>coverage</id>
             <build>
