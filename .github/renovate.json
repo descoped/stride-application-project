@@ -8,20 +8,7 @@
   "packageRules": [
     {
       "matchManagers": [
-        "npm",
         "maven"
-      ],
-      "updateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest"
-      ],
-      "automerge": true
-    },
-    {
-      "matchManagers": [
-        "npm"
       ],
       "updateTypes": [
         "minor",
@@ -38,24 +25,21 @@
       "automerge": true
     },
     {
-      "packagePatterns": [
-        "eslint"
-      ],
-      "groupName": "eslint"
-    },
-    {
-      "matchSourceUrlPrefixes": [
-        "https://github.com/nuxt/nuxt.js"
-      ],
-      "groupName": "nuxtjs monorepo",
-      "automerge": true
-    },
-    {
-      "matchSourceUrlPrefixes": [
-        "https://github.com/vuejs/vue"
-      ],
-      "groupName": "vue monorepo",
-      "automerge": true
+      "dependencyRules": [
+        {
+          "packageNames": [
+            "javax.xml.bind:jaxb-api"
+          ],
+          "exclude": true
+        },
+        {
+          "packageNames": [
+            "com.sun.xml.bind:jaxb-core",
+            "com.sun.xml.bind:jaxb-impl"
+          ],
+          "exclude": true
+        }
+      ]
     },
     {
       "matchSourceUrlPrefixes": [
