@@ -25,21 +25,17 @@
       "automerge": true
     },
     {
-      "dependencyRules": [
-        {
-          "packageNames": [
-            "javax.xml.bind:jaxb-api"
-          ],
-          "exclude": true
-        },
-        {
-          "packageNames": [
-            "com.sun.xml.bind:jaxb-core",
-            "com.sun.xml.bind:jaxb-impl"
-          ],
-          "exclude": true
-        }
-      ]
+      "excludePackageNames": [
+        "javax.xml.bind:jaxb-api"
+      ],
+      "exclude": true
+    },
+    {
+      "excludePackageNames": [
+        "com.sun.xml.bind:jaxb-core",
+        "com.sun.xml.bind:jaxb-impl"
+      ],
+      "exclude": true
     },
     {
       "matchSourceUrlPrefixes": [
