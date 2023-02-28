@@ -43,7 +43,7 @@
         <logstash-encoder.version>7.3</logstash-encoder.version>
 
         <!-- Other libs -->
-        <property-config.version>0.8.15</property-config.version>
+        <property-config.version>0.8.16</property-config.version>
 
         <!-- Test libs -->
         <junit-jupiter-engine.version>5.9.2</junit-jupiter-engine.version>
