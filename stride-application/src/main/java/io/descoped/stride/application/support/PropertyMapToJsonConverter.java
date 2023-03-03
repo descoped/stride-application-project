@@ -22,8 +22,10 @@ public record PropertyMapToJsonConverter(Map<String, String> properties, ObjectN
     public PropertyMapToJsonConverter(Map<String, String> propertyMap) {
         this(propertyMap, JsonNodeFactory.instance.objectNode());
 
-        List<Property> propertyList = new ArrayList<>(propertyMap.size());
-        propertyMap.forEach((key, value) -> propertyList.add(new PropertyTokenizer(key, value).property));
+        List<Property> propertyList = propertyMap.entrySet().stream()
+                .map(e -> new PropertyTokenizer(e.getKey(), e.getValue()))
+                .map(t -> t.property)
+                .toList();
 
         Map<String, JsonNode> parentPathMap = new LinkedHashMap<>();
         parentPathMap.put("ROOT", json);
@@ -69,13 +71,13 @@ public record PropertyMapToJsonConverter(Map<String, String> properties, ObjectN
         }
     }
 
-    private String getPathElementsByProperty(Property property, int limit) {
+    private static String getPathElementsByProperty(Property property, int limit) {
         List<String> parentPathElementList = property.elements.stream().limit(limit).map(PropertyElement::key).toList();
-        return "ROOT" + (parentPathElementList.size() == 0 ? "" : "." + String.join(".", parentPathElementList));
+        return "ROOT" + (parentPathElementList.isEmpty() ? "" : "." + String.join(".", parentPathElementList));
     }
 
     record PropertyTokenizer(String key, String value, Property property) {
-        private final static Pattern INTEGER_PATTERN = Pattern.compile("^\\d+$");
+        private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d+$");
 
         PropertyTokenizer(String property, String value) {
             this(property, value, tokenize(property, value));
@@ -87,10 +89,8 @@ public record PropertyMapToJsonConverter(Map<String, String> properties, ObjectN
             List<String> list = List.of(property.split("\\."));
             String previous = null;
             for (int i = 0; i < list.size(); i++) {
-                //String prev = (i - 1 >= 0) ? list.get(i - 1) : null;
                 String current = list.get(i);
                 String next = (i + 1 < list.size()) ? list.get(i + 1) : null;
-                //String nextNext = (i + 2 < list.size()) ? list.get(i + 2) : null;
 
                 if (isLeafNode(current, next)) {
                     elementList.add(PropertyElement.of(current, ElementType.LEAF_NODE));
@@ -106,6 +106,7 @@ public record PropertyMapToJsonConverter(Map<String, String> properties, ObjectN
 
                 } else if (isObject(current)) {
                     elementList.add(PropertyElement.of(current, ElementType.OBJECT));
+
                 } else {
                     throw new IllegalStateException(String.format("Unknown type: [elementIndex: %s] %s <- %s", i, current, i > 0 ? list.get(i - 1) : "(null)"));
                 }
@@ -169,26 +170,6 @@ public record PropertyMapToJsonConverter(Map<String, String> properties, ObjectN
         String key();
 
         ElementType type();
-
-        default boolean isLeafNode() {
-            return ElementType.LEAF_NODE.equals(type());
-        }
-
-        default boolean isObject() {
-            return ElementType.OBJECT.equals(type());
-        }
-
-        default boolean isArrayNode() {
-            return ElementType.ARRAY_NODE.equals(type());
-        }
-
-        default boolean isArrayElement() {
-            return ElementType.ARRAY_ELEMENT.equals(type());
-        }
-
-        default boolean isArrayObject() {
-            return ElementType.ARRAY_OBJECT.equals(type());
-        }
 
         record PropertyElementImpl(String key, ElementType type) implements PropertyElement {
             @Override

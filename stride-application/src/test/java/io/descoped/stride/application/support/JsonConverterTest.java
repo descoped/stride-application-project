@@ -98,7 +98,7 @@ class JsonConverterTest {
             assertEquals("a", propertyElement.map(PropertyElement::key).orElse(null));
             assertEquals(ElementType.OBJECT, propertyElement.map(PropertyElement::type).orElse(null));
 
-            propertyElement = propertyElement = ofNullable(elementIterator.next());
+            propertyElement = ofNullable(elementIterator.next());
             assertEquals("b", propertyElement.map(PropertyElement::key).orElse(null));
             assertEquals(ElementType.LEAF_NODE, propertyElement.map(PropertyElement::type).orElse(null));
 
