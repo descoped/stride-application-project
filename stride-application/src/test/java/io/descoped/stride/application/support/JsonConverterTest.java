@@ -33,8 +33,10 @@ class JsonConverterTest {
 
         Map<String, String> metadata = properties.subMap("metadata");
 
+        long past = System.currentTimeMillis();
         JavaPropsMapper mapper = new JavaPropsMapper();
         JsonNode root = mapper.readMapAs(metadata, JsonNode.class);
+        log.trace("Jackson conversion time: {}ms", System.currentTimeMillis() - past);
         log.info("{}", root.toPrettyString());
 
         ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
@@ -47,8 +49,10 @@ class JsonConverterTest {
                 .classpathPropertiesFile("application-test.properties")
                 .build();
 
+        long past = System.currentTimeMillis();
         PropertyMapToJsonConverter converter = new PropertyMapToJsonConverter(config.subMap("metadata"));
         ObjectNode json = converter.json();
+        log.trace("Conversion time: {}ms", System.currentTimeMillis() - past);
         //log.info("\n{}", json.toPrettyString());
         assertEquals("v1", json.get("a").asText());
         assertEquals("v1", json.get("b").asText());
