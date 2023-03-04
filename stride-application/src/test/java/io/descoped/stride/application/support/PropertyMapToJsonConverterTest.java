@@ -12,17 +12,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import static io.descoped.stride.application.support.PropertyMapToJsonConverter.*;
 import static java.util.Optional.ofNullable;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class JsonConverterTest {
+class PropertyMapToJsonConverterTest {
 
-    private static final Logger log = LoggerFactory.getLogger(JsonConverterTest.class);
+    private static final Logger log = LoggerFactory.getLogger(PropertyMapToJsonConverterTest.class);
 
     @Test
     void testJacksonDataformatProperties() throws IOException {
@@ -50,26 +56,115 @@ class JsonConverterTest {
                 .build();
 
         long past = System.currentTimeMillis();
-        PropertyMapToJsonConverter converter = new PropertyMapToJsonConverter(config.subMap("metadata"));
+        Map<String, String> metadata = config.subMap("metadata");
+        PropertyMapToJsonConverter converter = new PropertyMapToJsonConverter(metadata);
         ObjectNode json = converter.json();
         log.trace("Conversion time: {}ms", System.currentTimeMillis() - past);
         //log.info("\n{}", json.toPrettyString());
-        assertEquals("v1", json.get("a").asText());
-        assertEquals("v1", json.get("b").asText());
-        ArrayNode cArrayNode = (ArrayNode) json.get("c");
-        assertEquals("v1", cArrayNode.get(0).asText());
-        assertEquals("v2", cArrayNode.get(1).asText());
-        assertEquals("v1", cArrayNode.get(2).get("prop1").asText());
-        assertEquals("v1", cArrayNode.get(2).get("prop2").asText());
-        JsonNode prop3ArrayNodeNodeWithArrayElements = cArrayNode.get(3).get("prop3");
-        assertEquals("v1", prop3ArrayNodeNodeWithArrayElements.get(0).asText());
-        assertEquals("v2", prop3ArrayNodeNodeWithArrayElements.get(1).asText());
-        ArrayNode dArrayNode = (ArrayNode) json.get("d");
-        ArrayNode prop1ArrayNodeNodeWithArrayObjects = (ArrayNode) dArrayNode.get(0).get("prop1");
-        assertEquals("v1", prop1ArrayNodeNodeWithArrayObjects.get(0).get("foo").asText());
-        assertEquals("v2", prop1ArrayNodeNodeWithArrayObjects.get(0).get("bar").asText());
-        ArrayNode dArrayNodeWithArrayObjectProp2 = (ArrayNode) dArrayNode.get(0).get("prop2");
-        assertEquals("v1", dArrayNodeWithArrayObjectProp2.get(0).get("bar").asText());
+
+        AtomicInteger assertionCount = new AtomicInteger();
+        Consumer<JsonAssert> incAssertionCounter = jsonAssert -> assertionCount.incrementAndGet();
+
+        Json.of(json).with("a").assertion().equals("v1").call(incAssertionCounter);
+
+        Json.of(json).with("b").assertion().equals("v1").call(incAssertionCounter);
+
+        Json.of(json).with("c").assertion().arrayCount(4);
+
+        Json.of(json).with("c").at(0).assertion().equals("v1").call(incAssertionCounter);
+
+        Json.of(json).with("c").at(1).assertion().equals("v2").call(incAssertionCounter);
+
+        Json.of(json).with("c").at(2).with("prop1").assertion().equals("v1").call(incAssertionCounter);
+        Json.of(json).with("c").at(2).with("prop2").assertion().equals("v1").call(incAssertionCounter);
+
+        Json.of(json).with("c").at(3).with("prop3").assertion().arrayEquals("v1", "v2").call(incAssertionCounter, 2);
+
+        Json.of(json).with("d").at(0).with("prop1").at(0).with("foo").assertion().equals("v1").call(incAssertionCounter);
+        Json.of(json).with("d").at(0).with("prop1").at(0).with("bar").assertion().equals("v2").call(incAssertionCounter);
+
+        Json.of(json).with("d").at(0).with("prop2").at(0).with("bar").assertion().equals("v1").call(incAssertionCounter);
+
+        Json.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("bar").assertion().equals("foo").call(incAssertionCounter);
+        Json.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("foo").assertion().equals("bar").call(incAssertionCounter);
+        Json.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("foobar").assertion().equals("foobar").call(incAssertionCounter);
+
+        Json.of(json).with("e").with("foo").assertion().equals("bar").call(incAssertionCounter);
+        Json.of(json).with("e").with("bar").assertion().equals("foo").call(incAssertionCounter);
+        Json.of(json).with("e").with("foobar").assertion().equals("foobaz").call(incAssertionCounter);
+
+        assertEquals(metadata.size(), assertionCount.get());
+    }
+
+    interface JsonAssert {
+        JsonNode json();
+
+        default JsonAssert call(Consumer<JsonAssert> callback) {
+            call(callback, 1);
+            return this;
+        }
+
+        default JsonAssert call(Consumer<JsonAssert> callback, int repetitions) {
+            IntStream.range(0, repetitions).boxed().forEach(ignore -> callback.accept(this));
+            return this;
+        }
+
+        default JsonAssert arrayCount(int exceptedSize) {
+            assertEquals(exceptedSize, json().size());
+            return this;
+        }
+
+        default JsonAssert arrayEquals(Object... excepted) {
+            if (!(json() instanceof ArrayNode arrayNode)) {
+                throw new IllegalArgumentException("Not an array-node!");
+            }
+            List<Object> elements = new ArrayList<>();
+            for (int i = 0; i < arrayNode.size(); i++) {
+                elements.add(arrayNode.get(i).textValue());
+            }
+            assertArrayEquals(excepted, elements.toArray(new Object[0]));
+            return this;
+        }
+
+        default JsonAssert equals(String expected) {
+            assertEquals(expected, json().asText());
+            return this;
+        }
+    }
+
+    interface Json {
+        JsonNode json();
+
+        default Json with(String name) {
+            return Json.of(ofNullable(json()).map(node -> node.get(name)).orElseThrow(() -> new IllegalArgumentException("Node for " + name + " NOT found!")));
+        }
+
+        default Json at(int index) {
+            return Json.of(ofNullable(json()).map(node -> node.get(index)).orElseThrow(() -> new IllegalArgumentException("Node at index " + index + " NOT found!")));
+        }
+
+        default ObjectNode toObject() {
+            return to(ObjectNode.class);
+        }
+
+        default <R extends JsonNode> R to(Class<R> clazz) {
+            return clazz.cast(json());
+        }
+
+        default JsonAssert assertion() {
+            return new FluentJsonAssert(json());
+        }
+
+        static Json of(JsonNode json) {
+            return new FluentJson(json);
+        }
+    }
+
+
+    record FluentJson(JsonNode json) implements Json {
+    }
+
+    record FluentJsonAssert(JsonNode json) implements JsonAssert {
     }
 
 
