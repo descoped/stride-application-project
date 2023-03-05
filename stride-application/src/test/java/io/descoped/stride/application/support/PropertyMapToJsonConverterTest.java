@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -63,58 +64,65 @@ class PropertyMapToJsonConverterTest {
         //log.info("\n{}", json.toPrettyString());
 
         AtomicInteger assertionCount = new AtomicInteger();
-        Consumer<JsonAssert> incAssertionCounter = jsonAssert -> assertionCount.incrementAndGet();
+        Consumer<JacksonAssert> incAssertionCounter = jsonAssert -> assertionCount.incrementAndGet();
 
-        Json.of(json).with("a").assertion().equals("v1").call(incAssertionCounter);
+        Jackson.of(json).with("a").assertion().arrayCount(0);
+        Jackson.of(json).with("a").assertion().equalTo("v1").call(incAssertionCounter);
 
-        Json.of(json).with("b").assertion().equals("v1").call(incAssertionCounter);
+        Jackson.of(json).with("b").assertion().arrayCount(0);
+        Jackson.of(json).with("b").assertion().equalTo("v1").call(incAssertionCounter);
 
-        Json.of(json).with("c").assertion().arrayCount(4);
+        Jackson.of(json).with("c").assertion().arrayCount(4);
 
-        Json.of(json).with("c").at(0).assertion().equals("v1").call(incAssertionCounter);
+        Jackson.of(json).with("c").at(0).assertion().equalTo("v1").call(incAssertionCounter);
 
-        Json.of(json).with("c").at(1).assertion().equals("v2").call(incAssertionCounter);
+        Jackson.of(json).with("c").at(1).assertion().equalTo("v2").call(incAssertionCounter);
 
-        Json.of(json).with("c").at(2).with("prop1").assertion().equals("v1").call(incAssertionCounter);
-        Json.of(json).with("c").at(2).with("prop2").assertion().equals("v1").call(incAssertionCounter);
+        Jackson.of(json).with("c").at(2).with("prop1").assertion().equalTo("v1").call(incAssertionCounter);
+        Jackson.of(json).with("c").at(2).with("prop2").assertion().equalTo("v1").call(incAssertionCounter);
 
-        Json.of(json).with("c").at(3).with("prop3").assertion().arrayEquals("v1", "v2").call(incAssertionCounter, 2);
+        Jackson.of(json).with("c").at(3).with("prop3").assertion().arrayCount(2);
+        Jackson.of(json).with("c").at(3).with("prop3").assertion().arrayEquals("v1", "v2").call(incAssertionCounter, 2);
 
-        Json.of(json).with("d").at(0).with("prop1").at(0).with("foo").assertion().equals("v1").call(incAssertionCounter);
-        Json.of(json).with("d").at(0).with("prop1").at(0).with("bar").assertion().equals("v2").call(incAssertionCounter);
+        Jackson.of(json).with("d").assertion().arrayCount(2);
 
-        Json.of(json).with("d").at(0).with("prop2").at(0).with("bar").assertion().equals("v1").call(incAssertionCounter);
+        Jackson.of(json).with("d").at(0).with("prop1").at(0).with("foo").assertion().equalTo("v1").call(incAssertionCounter);
+        Jackson.of(json).with("d").at(0).with("prop1").at(0).with("bar").assertion().equalTo("v2").call(incAssertionCounter);
 
-        Json.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("bar").assertion().equals("foo").call(incAssertionCounter);
-        Json.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("foo").assertion().equals("bar").call(incAssertionCounter);
-        Json.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("foobar").assertion().equals("foobar").call(incAssertionCounter);
+        Jackson.of(json).with("d").at(0).with("prop2").at(0).with("bar").assertion().equalTo("v1").call(incAssertionCounter);
 
-        Json.of(json).with("e").with("foo").assertion().equals("bar").call(incAssertionCounter);
-        Json.of(json).with("e").with("bar").assertion().equals("foo").call(incAssertionCounter);
-        Json.of(json).with("e").with("foobar").assertion().equals("foobaz").call(incAssertionCounter);
+        Jackson.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("bar").assertion().equalTo("foo").call(incAssertionCounter);
+        Jackson.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("foo").assertion().equalTo("bar").call(incAssertionCounter);
+        Jackson.of(json).with("d").at(1).with("prop3").at(0).with("obj").with("foobar").assertion().equalTo("foobar").call(incAssertionCounter);
+
+        Jackson.of(json).with("e").assertion().arrayCount(0);
+
+        Jackson.of(json).with("e").with("foo").assertion().equalTo("bar").call(incAssertionCounter);
+        Jackson.of(json).with("e").with("bar").assertion().equalTo("foo").call(incAssertionCounter);
+        Jackson.of(json).with("e").with("foobar").assertion().equalTo("foobaz").call(incAssertionCounter);
 
         assertEquals(metadata.size(), assertionCount.get());
     }
 
-    interface JsonAssert {
+    interface JacksonAssert {
         JsonNode json();
 
-        default JsonAssert call(Consumer<JsonAssert> callback) {
+        default JacksonAssert call(Consumer<JacksonAssert> callback) {
             call(callback, 1);
             return this;
         }
 
-        default JsonAssert call(Consumer<JsonAssert> callback, int repetitions) {
+        default JacksonAssert call(Consumer<JacksonAssert> callback, int repetitions) {
             IntStream.range(0, repetitions).boxed().forEach(ignore -> callback.accept(this));
             return this;
         }
 
-        default JsonAssert arrayCount(int exceptedSize) {
-            assertEquals(exceptedSize, json().size());
+        default JacksonAssert arrayCount(int exceptedSize) {
+            assertEquals(exceptedSize, json() instanceof ArrayNode ? ofNullable(json()).map(JsonNode::size).orElse(0) : 0);
             return this;
         }
 
-        default JsonAssert arrayEquals(Object... excepted) {
+        default JacksonAssert arrayEquals(Object... excepted) {
             if (!(json() instanceof ArrayNode arrayNode)) {
                 throw new IllegalArgumentException("Not an array-node!");
             }
@@ -126,45 +134,53 @@ class PropertyMapToJsonConverterTest {
             return this;
         }
 
-        default JsonAssert equals(String expected) {
+        default JacksonAssert equalTo(String expected) {
             assertEquals(expected, json().asText());
             return this;
         }
     }
 
-    interface Json {
+    interface Jackson {
         JsonNode json();
 
-        default Json with(String name) {
-            return Json.of(ofNullable(json()).map(node -> node.get(name)).orElseThrow(() -> new IllegalArgumentException("Node for " + name + " NOT found!")));
+        default Jackson with(String name) {
+            return Jackson.of(ofNullable(json()).map(node -> node.get(name)).orElseThrow(() -> new IllegalArgumentException("Node for " + name + " NOT found!")));
         }
 
-        default Json at(int index) {
-            return Json.of(ofNullable(json()).map(node -> node.get(index)).orElseThrow(() -> new IllegalArgumentException("Node at index " + index + " NOT found!")));
+        default Jackson at(int index) {
+            return Jackson.of(ofNullable(json()).map(node -> node.get(index)).orElseThrow(() -> new IllegalArgumentException("Node at index " + index + " NOT found!")));
         }
 
-        default ObjectNode toObject() {
+        default Optional<ObjectNode> toObject() {
             return to(ObjectNode.class);
         }
 
-        default <R extends JsonNode> R to(Class<R> clazz) {
-            return clazz.cast(json());
+        default Optional<ArrayNode> toArray() {
+            return to(ArrayNode.class);
         }
 
-        default JsonAssert assertion() {
-            return new FluentJsonAssert(json());
+        default <R extends JsonNode> Optional<R> to(Class<R> clazz) {
+            Objects.requireNonNull(json());
+            if (json().getClass().isAssignableFrom(clazz)) {
+                return ofNullable(clazz.cast(json()));
+            }
+            throw new ClassCastException("Excepted type is " + clazz + ", but was " + json().getClass().getName());
         }
 
-        static Json of(JsonNode json) {
-            return new FluentJson(json);
+        default JacksonAssert assertion() {
+            return new FluentJacksonAssert(json());
+        }
+
+        static Jackson of(JsonNode json) {
+            return new FluentJackson(json);
         }
     }
 
 
-    record FluentJson(JsonNode json) implements Json {
+    record FluentJackson(JsonNode json) implements Jackson {
     }
 
-    record FluentJsonAssert(JsonNode json) implements JsonAssert {
+    record FluentJacksonAssert(JsonNode json) implements JacksonAssert {
     }
 
 
