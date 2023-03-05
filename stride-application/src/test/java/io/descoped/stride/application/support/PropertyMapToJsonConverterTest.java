@@ -44,10 +44,10 @@ class PropertyMapToJsonConverterTest {
         JavaPropsMapper mapper = new JavaPropsMapper();
         JsonNode root = mapper.readMapAs(metadata, JsonNode.class);
         log.trace("Jackson conversion time: {}ms", System.currentTimeMillis() - past);
-        log.info("{}", root.toPrettyString());
+        //log.info("{}", root.toPrettyString());
 
         ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-        log.info("{}", yamlMapper.writeValueAsString(root));
+        //log.info("{}", yamlMapper.writeValueAsString(root));
     }
 
     @Test
