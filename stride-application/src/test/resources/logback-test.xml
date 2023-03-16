@@ -17,6 +17,7 @@
   </appender>
 
   <logger name="org.eclipse.jetty" level="INFO"/>
+  <logger name="io.descoped.stride" level="TRACE"/>
 
   <root level="INFO">
     <appender-ref ref="STDOUT"/>
