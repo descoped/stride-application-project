@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.factory.InstanceFactory;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -22,8 +23,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -44,15 +43,12 @@ public class EmbeddedApplicationTest {
 
     @Test
     void testBoostrapApp() throws InterruptedException, IOException {
-        Map<String, String> config = new LinkedHashMap<>();
-        config.put("server.port", Integer.toString(10990));
-        config.put("server.context-path", "/");
-        config.put("application.url", "https://notarealcompany.bad/app");
-
         ApplicationProperties applicationProperties = ApplicationProperties.builder()
                 .testDefaults()
+                .property("server.port", Integer.toString(10990))
+                .property("server.context-path", "/")
                 .build();
-        Configuration configuration = Configuration.create(applicationProperties);
+        ApplicationConfiguration configuration = new ApplicationConfiguration(applicationProperties);
 
         Application application = new Application(configuration, new InstanceFactory());
         application.initBuiltinDefaults();
