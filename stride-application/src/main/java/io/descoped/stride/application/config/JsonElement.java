@@ -73,7 +73,7 @@ public interface JsonElement {
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(childNodeName));
 
         if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
-            JsonElement jsonElement = JsonElement.ofOrEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
+            JsonElement jsonElement = JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
             // recurse for nested child nodes
             if (hasNestedElements) {
                 return jsonElement.with(String.join(".", elements));
@@ -100,7 +100,7 @@ public interface JsonElement {
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(index));
 
         if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
-            return JsonElement.ofOrEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
+            return JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
         }
 
         return JsonElement.of(childNode
@@ -232,7 +232,7 @@ public interface JsonElement {
         return new JsonElementImpl(json);
     }
 
-    static JsonElement ofOrEphemeral(JsonNode json) {
+    static JsonElement ofEphemeral(JsonNode json) {
         return new JsonElementImpl(json, JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
     }
 }

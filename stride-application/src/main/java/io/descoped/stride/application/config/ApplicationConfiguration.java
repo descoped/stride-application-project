@@ -48,7 +48,7 @@ public final class ApplicationConfiguration implements JsonElement {
 
     // Using JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST strategy during element navigation
     JsonElement element() {
-        return JsonElement.ofOrEphemeral(nonNullNode());
+        return JsonElement.ofEphemeral(nonNullNode());
     }
 
     public String toString() {
