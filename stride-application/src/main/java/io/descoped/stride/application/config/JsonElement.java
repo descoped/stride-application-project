@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -231,6 +232,16 @@ public interface JsonElement {
 
     default <T> Optional<T> getObjectAs(Function<ObjectNode, T> mapper) {
         return optionalNode().map(ObjectNode.class::cast).map(mapper);
+    }
+
+    static Map<String, JsonNode> asMap(ObjectNode objectNode) {
+        Map<String, JsonNode> map = new HashMap<>(objectNode.size());
+        Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
     }
 
     static <T> void toFlattenedMap(Map<String, T> result, String prefix, ObjectNode object, Function<JsonNode, T> mapper) {
