@@ -119,6 +119,10 @@ public interface JsonElement {
         return asString().orElse(defaultValue);
     }
 
+    default String asString(String with, String defaultValue) {
+        return with(with).asString(defaultValue);
+    }
+
     default Optional<Integer> asInt() {
         return optionalNode().flatMap(value -> {
             if (value instanceof NumericNode number) {
@@ -134,6 +138,10 @@ public interface JsonElement {
 
     default Integer asInt(Integer defaultValue) {
         return asInt().orElse(defaultValue);
+    }
+
+    default Integer asInt(String with, Integer defaultValue) {
+        return with(with).asInt(defaultValue);
     }
 
     default Optional<Long> asLong() {
@@ -153,6 +161,10 @@ public interface JsonElement {
         return asLong().orElse(defaultValue);
     }
 
+    default Long asLong(String with, Long defaultValue) {
+        return with(with).asLong(defaultValue);
+    }
+
     default Optional<Float> asFloat() {
         return optionalNode().flatMap(value -> {
             if (value instanceof NumericNode number) {
@@ -168,6 +180,10 @@ public interface JsonElement {
 
     default Float asFloat(Float defaultValue) {
         return asFloat().orElse(defaultValue);
+    }
+
+    default Float asFloat(String with, Float defaultValue) {
+        return with(with).asFloat(defaultValue);
     }
 
     default Optional<Double> asDouble() {
@@ -187,6 +203,10 @@ public interface JsonElement {
         return asDouble().orElse(defaultValue);
     }
 
+    default Double asDouble(String with, Double defaultValue) {
+        return with(with).asDouble(defaultValue);
+    }
+
     default Optional<Boolean> asBoolean() {
         return optionalNode().flatMap(value -> {
             if (value instanceof BooleanNode number) {
@@ -203,6 +223,11 @@ public interface JsonElement {
     default Boolean asBoolean(Boolean defaultValue) {
         return asBoolean().orElse(defaultValue);
     }
+
+    default Boolean asBoolean(String with, Boolean defaultValue) {
+        return with(with).asBoolean(defaultValue);
+    }
+
 
     @SuppressWarnings("unchecked")
     default <R, U extends JsonNode> List<R> toList(Function<U, R> mapFunction) {
