@@ -74,7 +74,7 @@ public interface JsonElement {
 
         if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
             JsonElement jsonElement = JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
-            // recurse for nested child nodes
+            // recurse nested child nodes
             if (hasNestedElements) {
                 return jsonElement.with(String.join(".", elements));
             }
@@ -88,7 +88,7 @@ public interface JsonElement {
                                 .orElse(null)))
         );
 
-        // recurse for nested child nodes
+        // recurse nested child nodes
         if (hasNestedElements) {
             return jsonElement.with(String.join(".", elements));
         }
