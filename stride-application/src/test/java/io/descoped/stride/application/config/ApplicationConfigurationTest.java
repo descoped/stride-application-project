@@ -19,11 +19,16 @@ class ApplicationConfigurationTest {
         ApplicationConfiguration configuration = new ApplicationConfiguration(jsonConfiguration.json());
         log.trace("{}", configuration.toPrettyString());
 
+        assertEquals("localhost", configuration.element().with("server.host").asString("example.com"));
+        assertEquals(0, configuration.element().with("server.port").asInt(9090));
+        assertEquals("default", configuration.element().with("application.alias").asString("default"));
+
+        assertEquals(configuration.with("application.alias").asString("default"), configuration.application().alias());
+
         assertEquals("default", configuration.application().alias());
         assertEquals("unknown", configuration.application().version());
         assertEquals("localhost", configuration.server().host());
-        assertEquals(9090, configuration.server().port());
-
+        assertEquals(0, configuration.server().port());
 
         log.trace("server.host: {}", configuration.server().host());
         log.trace("server.port: {}", configuration.server().port());

@@ -2,7 +2,9 @@ package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
@@ -10,11 +12,18 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
 import static java.util.Optional.ofNullable;
 
+/**
+ * The JsonElement is a convenient helper for Jackson ObjectNode, ArrayNode and ValueNode. The strategy declares
+ * whether hierarchy is strictly respected or by using a more relaxed way of navigating null nodes. If using
+ * the ephemeral node creation strategy, the with/at methods will create empty nodes in order to omit NPE during
+ * traversal.
+ */
 public interface JsonElement {
 
     JsonNode json();
@@ -54,25 +63,44 @@ public interface JsonElement {
     }
 
     default JsonElement with(String name) {
-        Optional<JsonNode> childNode = optionalNode().map(node -> node.get(name));
+        Objects.requireNonNull(name);
+        boolean hasNestedElements = name.contains(".");
+        List<String> elements = new ArrayList<>();
+        if (hasNestedElements) {
+            elements.addAll(List.of(name.split("\\.")));
+        }
+        String childNodeName = hasNestedElements ? elements.remove(0) : name;
+        Optional<JsonNode> childNode = optionalNode().map(node -> node.get(childNodeName));
 
         if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
-            return JsonElement.ofOrCreate(childNode.orElse(JsonNodeFactory.instance.objectNode()));
+            JsonElement jsonElement = JsonElement.ofOrEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
+            // recurse for nested child nodes
+            if (hasNestedElements) {
+                return jsonElement.with(String.join(".", elements));
+            }
+            return jsonElement;
         }
 
-        return JsonElement.of(childNode
+        JsonElement jsonElement = JsonElement.of(childNode
                 .orElseThrow(() -> new IllegalArgumentException("Node for '" + name + "' NOT found!\n" +
                         optionalNode()
                                 .map(JsonNode::toString)
                                 .orElse(null)))
         );
+
+        // recurse for nested child nodes
+        if (hasNestedElements) {
+            return jsonElement.with(String.join(".", elements));
+        }
+
+        return jsonElement;
     }
 
     default JsonElement at(int index) {
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(index));
 
         if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
-            return JsonElement.ofOrCreate(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
+            return JsonElement.ofOrEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
         }
 
         return JsonElement.of(childNode
@@ -92,7 +120,16 @@ public interface JsonElement {
     }
 
     default Optional<Integer> asInt() {
-        return optionalNode().filter(JsonNode::isInt).map(JsonNode::intValue);
+        return optionalNode().flatMap(value -> {
+            if (value instanceof NumericNode number) {
+                return Optional.of(number.intValue());
+            }
+            try {
+                return Optional.of(Integer.parseInt(value.asText()));
+            } catch (NumberFormatException e) {
+                return Optional.empty();
+            }
+        });
     }
 
     default Integer asInt(Integer defaultValue) {
@@ -100,7 +137,16 @@ public interface JsonElement {
     }
 
     default Optional<Long> asLong() {
-        return optionalNode().map(JsonNode::longValue);
+        return optionalNode().flatMap(value -> {
+            if (value instanceof NumericNode number) {
+                return Optional.of(number.longValue());
+            }
+            try {
+                return Optional.of(Long.parseLong(value.asText()));
+            } catch (NumberFormatException e) {
+                return Optional.empty();
+            }
+        });
     }
 
     default Long asLong(Long defaultValue) {
@@ -108,11 +154,33 @@ public interface JsonElement {
     }
 
     default Optional<Float> asFloat() {
-        return optionalNode().map(JsonNode::floatValue);
+        return optionalNode().flatMap(value -> {
+            if (value instanceof NumericNode number) {
+                return Optional.of(number.floatValue());
+            }
+            try {
+                return Optional.of(Float.parseFloat(value.asText()));
+            } catch (NumberFormatException e) {
+                return Optional.empty();
+            }
+        });
+    }
+
+    default Float asFloat(Float defaultValue) {
+        return asFloat().orElse(defaultValue);
     }
 
     default Optional<Double> asDouble() {
-        return optionalNode().map(JsonNode::doubleValue);
+        return optionalNode().flatMap(value -> {
+            if (value instanceof NumericNode number) {
+                return Optional.of(number.doubleValue());
+            }
+            try {
+                return Optional.of(Double.parseDouble(value.asText()));
+            } catch (NumberFormatException e) {
+                return Optional.empty();
+            }
+        });
     }
 
     default Double asDouble(Double defaultValue) {
@@ -120,7 +188,16 @@ public interface JsonElement {
     }
 
     default Optional<Boolean> asBoolean() {
-        return optionalNode().map(JsonNode::booleanValue);
+        return optionalNode().flatMap(value -> {
+            if (value instanceof BooleanNode number) {
+                return Optional.of(number.booleanValue());
+            }
+            try {
+                return Optional.of(Boolean.parseBoolean(value.asText()));
+            } catch (NumberFormatException e) {
+                return Optional.empty();
+            }
+        });
     }
 
     default Boolean asBoolean(Boolean defaultValue) {
@@ -155,7 +232,7 @@ public interface JsonElement {
         return new JsonElementImpl(json);
     }
 
-    static JsonElement ofOrCreate(JsonNode json) {
+    static JsonElement ofOrEphemeral(JsonNode json) {
         return new JsonElementImpl(json, JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
     }
 }

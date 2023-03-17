@@ -1,7 +1,5 @@
 package io.descoped.stride.application.config;
 
-// TODO Refactor with/at in JsonElement to its own type.
-
 /**
  * Creational behaviour during node navigation.
  */
