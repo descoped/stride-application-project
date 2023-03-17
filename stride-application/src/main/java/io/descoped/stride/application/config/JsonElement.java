@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -220,14 +221,31 @@ public interface JsonElement {
         });
     }
 
-    default Boolean asBoolean(Boolean defaultValue) {
-        return asBoolean().orElse(defaultValue);
+    default boolean asBoolean(Boolean defaultValue) {
+        return Boolean.TRUE.equals(asBoolean().orElse(defaultValue));
     }
 
-    default Boolean asBoolean(String with, Boolean defaultValue) {
-        return with(with).asBoolean(defaultValue);
+    default boolean asBoolean(String with, Boolean defaultValue) {
+        return Boolean.TRUE.equals(with(with).asBoolean(defaultValue));
     }
 
+    default <T> Optional<T> getObjectAs(Function<ObjectNode, T> mapper) {
+        return optionalNode().map(ObjectNode.class::cast).map(mapper);
+    }
+
+    static <T> void toFlattenedMap(Map<String, T> result, String prefix, ObjectNode object, Function<JsonNode, T> mapper) {
+        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            if (next.getValue().getNodeType().equals(JsonNodeType.OBJECT)) {
+                toFlattenedMap(result, prefix + next.getKey() + ".", (ObjectNode) next.getValue(), mapper);
+            } else {
+                JsonNode value = next.getValue();
+                T mappedValue = mapper.apply(value);
+                result.put(prefix + next.getKey(), mappedValue);
+            }
+        }
+    }
 
     @SuppressWarnings("unchecked")
     default <R, U extends JsonNode> List<R> toList(Function<U, R> mapFunction) {
