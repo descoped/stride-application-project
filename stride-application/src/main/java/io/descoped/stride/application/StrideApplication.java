@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.JsonElement;
 import no.cantara.config.ApplicationProperties;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.Filter;
@@ -50,15 +53,46 @@ public class StrideApplication implements AutoCloseable {
     public StrideApplication(ApplicationProperties configuration) {
         this.configuration = new ApplicationConfiguration(configuration);
         this.serviceLocator = ServiceLocatorFactory.getInstance().create(null);
-        log.debug("Config:\n{}", this.configuration.toPrettyString());
+        //log.debug("Config:\n{}", this.configuration.toPrettyString());
     }
 
     public ServiceLocator getServiceLocator() {
         return serviceLocator;
     }
 
+    public int geHost() {
+        int port = -1;
+        Server server = serviceLocator.getService(Server.class);
+        for (Connector connector : server.getConnectors()) {
+            // the first connector should be the http connector
+            ServerConnector serverConnector = (ServerConnector) connector;
+            List<String> protocols = serverConnector.getProtocols();
+            if (!protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2c"))) {
+                port = serverConnector.getLocalPort();
+                break;
+            }
+        }
+        return port;
+    }
+
+    public int gePort() {
+        int port = -1;
+        Server server = serviceLocator.getService(Server.class);
+        for (Connector connector : server.getConnectors()) {
+            // the first connector should be the http connector
+            ServerConnector serverConnector = (ServerConnector) connector;
+            List<String> protocols = serverConnector.getProtocols();
+            if (!protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2c"))) {
+                port = serverConnector.getLocalPort();
+                break;
+            }
+        }
+        return port;
+    }
+
     /*
     public String getHost() {
+        serviceLocator.getService()
         String host = ((ServerConnector) jettyServerRef.get().getConnectors()[0]).getHost();
         return host == null ? "localhost" : host;
     }

@@ -1,21 +1,22 @@
 package io.descoped.stride.application;
 
 import no.cantara.config.ApplicationProperties;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 class StrideApplicationTest {
 
     private static final Logger log = LoggerFactory.getLogger(StrideApplicationTest.class);
 
     @Test
-    void testBootstrap() {
+    void testBootstrap() throws IOException, InterruptedException {
         ApplicationProperties properties = ApplicationProperties.builder()
                 .classpathPropertiesFile("application-defaults.properties")
                 .testDefaults()
@@ -23,36 +24,12 @@ class StrideApplicationTest {
 
         try (StrideApplication application = new StrideApplication(properties)) {
             application.start();
-//            int httpPort = getHttpPort(application.getServiceLocator().getService(Server.class));
-        }
-    }
+            log.trace("port: {}", application.gePort());
 
-    public int getHttpPort(Server server) {
-        int port = -3;
-        for (Connector connector : server.getConnectors()) {
-            // the first connector should be the http connector
-            ServerConnector serverConnector = (ServerConnector) connector;
-            List<String> protocols = serverConnector.getProtocols();
-            if (!protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2c"))) {
-                port = serverConnector.getLocalPort();
-                break;
-            }
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + application.gePort() + "/ping")).GET().build(), HttpResponse.BodyHandlers.ofString());
+            log.trace("resp: {}", response.statusCode());
         }
-        return port;
-    }
-
-    public int getHttpsPort(Server server) {
-        int port = -3;
-        for (Connector connector : server.getConnectors()) {
-            // the first connector should be the http connector
-            ServerConnector serverConnector = (ServerConnector) connector;
-            List<String> protocols = serverConnector.getProtocols();
-            if (protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2"))) {
-                port = serverConnector.getLocalPort();
-                break;
-            }
-        }
-        return port;
     }
 
 }
