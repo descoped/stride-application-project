@@ -19,7 +19,6 @@ import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DescriptorImpl;
-import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -50,6 +50,11 @@ public class StrideApplication implements AutoCloseable {
     public StrideApplication(ApplicationProperties configuration) {
         this.configuration = new ApplicationConfiguration(configuration);
         this.serviceLocator = ServiceLocatorFactory.getInstance().create(null);
+        log.debug("Config:\n{}", this.configuration.toPrettyString());
+    }
+
+    public ServiceLocator getServiceLocator() {
+        return serviceLocator;
     }
 
     /*
@@ -89,12 +94,13 @@ public class StrideApplication implements AutoCloseable {
     private void doStart() {
         populateServiceLocator(serviceLocator);
 
+        Filter configurationFilter = getEnabledServicesFilter();
+
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
         runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.asString("hk2.threadpolicy", "FULLY_THREADED")));
         runLevelController.setMaximumUseableThreads(configuration.asInt("hk2.threadcount", 5));
         runLevelController.proceedTo(configuration.asInt("hk2.runlevel", 20));
 
-        Filter configurationFilter = getEnabledServicesFilter();
         List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
         if (log.isDebugEnabled()) {
             StringBuilder msg = new StringBuilder();
@@ -132,7 +138,7 @@ public class StrideApplication implements AutoCloseable {
         try {
             populator.populate(
                     new ClasspathDescriptorFileFinder()
-                    , new DuplicatePostProcessor()
+//                    , new DuplicatePostProcessor()
                     , new ConfigurationPostPopulatorProcessor(configuration)
             );
         } catch (IOException e) {
@@ -141,10 +147,18 @@ public class StrideApplication implements AutoCloseable {
     }
 
     Filter getEnabledServicesFilter() {
-        return descriptor -> ofNullable(descriptor.getName()).map(name ->
-                configuration.with("hk2").with(name).with("enabled").asBoolean(
-                        configuration.asBoolean("hk2.defaults.enabled", false)
-                )).orElse(false);
+        return descriptor -> {
+            boolean defaultValue = configuration.asBoolean("hk2.defaults.enabled", false);
+            boolean enabled = ofNullable(descriptor.getName())
+                    .map(configuration::find)
+                    .map(e -> e.with("enabled"))
+                    .map(e -> e.asBoolean(defaultValue))
+                    .orElse(false);
+            if (descriptor.getName() != null) {
+                log.debug("Service: {}.enabled={}", descriptor.getName(), enabled);
+            }
+            return enabled;
+        };
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -159,9 +173,16 @@ public class StrideApplication implements AutoCloseable {
                 return descriptorImpl;
             }
 
-            boolean defaultEnabled = configuration.asBoolean("hk2.defaults.enabled", false);
-            JsonElement serviceConfiguration = configuration.with("hk2").with(name);
-            if (serviceConfiguration.asBoolean("enabled", defaultEnabled)) {
+            boolean defaultValue = configuration.asBoolean("hk2.defaults.enabled", false);
+
+            JsonElement serviceConfiguration = configuration.find(name);
+            boolean enabled = Optional.of(serviceConfiguration)
+                    .map(e -> e.with("enabled"))
+                    .map(e -> e.asBoolean(defaultValue))
+                    .orElse(false);
+
+
+            if (enabled) {
                 serviceConfiguration.with("metadata").getObjectAs(object -> {
                     Map<String, List<String>> metadatas = new HashMap<>();
                     Function<JsonNode, List<String>> mapper = new Function<>() {
@@ -179,8 +200,10 @@ public class StrideApplication implements AutoCloseable {
                     JsonElement.toFlattenedMap(metadatas, "", object, mapper);
                     return metadatas;
                 }).ifPresent(descriptorImpl::addMetadata);
+                log.debug("Enabled {}", descriptorImpl.getImplementation() + "(" + name + ".enabled=true)");
                 return descriptorImpl;
             } else {
+                log.debug("Disabled {}", descriptorImpl.getImplementation() + "(" + name + ".enabled=false)");
                 return null;
             }
         }

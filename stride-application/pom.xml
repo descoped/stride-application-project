@@ -91,21 +91,33 @@
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
-            <artifactId>hk2-runlevel</artifactId>
-            <version>3.0.3</version>
+            <artifactId>hk2-api</artifactId>
+            <version>${hk2.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>hk2-locator</artifactId>
+            <version>${hk2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-extras</artifactId>
-            <version>3.0.3</version>
+            <version>${hk2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
-            <artifactId>hk2-metadata-generator</artifactId>
-            <version>3.0.3</version>
+            <artifactId>hk2-runlevel</artifactId>
+            <version>${hk2.version}</version>
         </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.glassfish.hk2</groupId>-->
+        <!--            <artifactId>hk2-metadata-generator</artifactId>-->
+        <!--            <version>${hk2.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
@@ -327,6 +339,13 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <meminitial>64m</meminitial>
                     <maxmem>512m</maxmem>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.glassfish.hk2</groupId>
+                            <artifactId>hk2-metadata-generator</artifactId>
+                            <version>${hk2.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
