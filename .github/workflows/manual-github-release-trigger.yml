@@ -22,7 +22,7 @@ jobs:
           echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: Manual Release Approval
-        uses: trstringer/manual-approval@v1.8.0
+        uses: trstringer/manual-approval@v1.9.0
         timeout-minutes: 1
         with:
           secret: ${{ github.TOKEN }}
