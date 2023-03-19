@@ -24,12 +24,11 @@ class StrideApplicationTest {
 
         try (StrideApplication application = new StrideApplication(properties)) {
             application.start();
-            log.trace("port: {}", application.gePort());
+            log.trace("port: {}", application.getLocalPort());
 
             HttpClient client = HttpClient.newHttpClient();
-            HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + application.gePort() + "/ping")).GET().build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + application.getLocalPort() + "/ping")).GET().build(), HttpResponse.BodyHandlers.ofString());
             log.trace("resp: {}", response.statusCode());
         }
     }
-
 }

@@ -75,38 +75,33 @@ public class StrideApplication implements AutoCloseable {
         return port;
     }
 
-    public int gePort() {
-        int port = -1;
+    private Optional<ServerConnector> getConnector() {
         Server server = serviceLocator.getService(Server.class);
         for (Connector connector : server.getConnectors()) {
             // the first connector should be the http connector
             ServerConnector serverConnector = (ServerConnector) connector;
             List<String> protocols = serverConnector.getProtocols();
             if (!protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2c"))) {
-                port = serverConnector.getLocalPort();
-                break;
+                return Optional.of(serverConnector);
             }
         }
-        return port;
+        return Optional.empty();
     }
 
-    /*
     public String getHost() {
-        serviceLocator.getService()
-        String host = ((ServerConnector) jettyServerRef.get().getConnectors()[0]).getHost();
-        return host == null ? "localhost" : host;
+        Optional<ServerConnector> connector = getConnector();
+        return connector.map(ServerConnector::getHost).orElse("localhost");
+    }
+
+    public int getLocalPort() {
+        Optional<ServerConnector> connector = getConnector();
+        return connector.map(ServerConnector::getLocalPort).orElse(-1);
     }
 
     public int getPort() {
-        int port = ((ServerConnector) jettyServerRef.get().getConnectors()[0]).getPort();
-        return port;
+        Optional<ServerConnector> connector = getConnector();
+        return connector.map(ServerConnector::getPort).orElse(-1);
     }
-
-    public int getBoundPort() {
-        int port = ((ServerConnector) jettyServerRef.get().getConnectors()[0]).getLocalPort();
-        return port;
-    }
-    */
 
     public void start() {
         if (closed.compareAndSet(false, true)) {
