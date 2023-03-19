@@ -36,6 +36,14 @@ public interface JsonElement {
         return ofNullable(json());
     }
 
+    default boolean isEmpty() {
+        return optionalNode().isEmpty();
+    }
+
+    private boolean isStrategyCreateEphemeralNodeIfNotExist() {
+        return strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
+    }
+
     default <R extends JsonNode> Optional<R> to(Class<R> clazz) {
         return optionalNode().filter(node -> node.getClass().isAssignableFrom(clazz)).map(clazz::cast);
     }
@@ -61,7 +69,26 @@ public interface JsonElement {
     }
 
     default Optional<JsonElement> get(String name) {
-        return optionalNode().filter(node -> node.has(name)).map(node -> node.get(name)).map(child -> of(json()));
+        return optionalNode().filter(node -> node.has(name)).map(node -> node.get(name)).map(JsonElement::of);
+    }
+
+    default JsonElement find(String name) {
+        Objects.requireNonNull(name);
+        List<String> elements = new ArrayList<>(List.of(name.split("\\.")));
+
+        if (elements.isEmpty()) {
+            return JsonElement.of(null);
+        }
+
+        JsonNode node = optionalNode().map(e -> e.findValue(elements.remove(0))).orElse(null);
+        for (String element : elements) {
+            if (node == null || !node.has(element)) {
+                break;
+            }
+            node = node.get(element);
+        }
+
+        return isStrategyCreateEphemeralNodeIfNotExist() ? JsonElement.ofEphemeral(node) : JsonElement.of(node);
     }
 
     default JsonElement with(String name) {
@@ -74,7 +101,7 @@ public interface JsonElement {
         String childNodeName = hasNestedElements ? elements.remove(0) : name;
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(childNodeName));
 
-        if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
+        if (isStrategyCreateEphemeralNodeIfNotExist()) {
             JsonElement jsonElement = JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
             // recurse nested child nodes
             if (hasNestedElements) {
@@ -101,7 +128,7 @@ public interface JsonElement {
     default JsonElement at(int index) {
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(index));
 
-        if (strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST)) {
+        if (isStrategyCreateEphemeralNodeIfNotExist()) {
             return JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
         }
 
