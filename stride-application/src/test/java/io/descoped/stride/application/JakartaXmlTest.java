@@ -10,7 +10,7 @@ import jakarta.xml.bind.annotation.XmlType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class JakartaXmlTest {
+class JakartaXmlTest {
 
     @Disabled
     @Test
