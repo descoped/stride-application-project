@@ -6,8 +6,9 @@
 
     <parent>
         <groupId>io.descoped.stride.application</groupId>
-        <artifactId>stride-application-project</artifactId>
+        <artifactId>stride-application-parent</artifactId>
         <version>0.0.24-SNAPSHOT</version>
+        <relativePath>../stride-application-parent</relativePath>
     </parent>
 
     <artifactId>stride-application-junit5</artifactId>

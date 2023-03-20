@@ -8,7 +8,7 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jersey.server")
-@RunLevel(5)
+@RunLevel(4)
 public class JerseyServerService implements PreDestroy {
 
 //    private final JerseyServletContainer servletContainer;
