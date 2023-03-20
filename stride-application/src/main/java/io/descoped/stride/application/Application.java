@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import io.descoped.stride.application.factory.InstanceFactory;
 import io.descoped.stride.application.openapi.ApplicationOpenApiResource;
@@ -37,9 +38,15 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.EnumSet;
 import java.util.EventListener;
 import java.util.LinkedHashMap;
@@ -53,17 +60,22 @@ import java.util.function.Supplier;
 
 public class Application {
 
-    private final Configuration configuration;
+    private static final Logger log = LoggerFactory.getLogger(Application.class);
+
+    private final ApplicationConfiguration configuration;
     private final InstanceFactory instanceFactory;
     private final AtomicReference<Server> jettyServerRef = new AtomicReference<>();
     private final List<FilterSpec> filterSpecs = new CopyOnWriteArrayList<>();
     private final ResourceConfig resourceConfig; // jakarta.ws.rs.core.Application
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final ServiceLocator serviceLocator;
 
-    public Application(Configuration configuration, InstanceFactory instanceFactory) {
+    public Application(ApplicationConfiguration configuration, InstanceFactory instanceFactory) {
         this.configuration = configuration;
         this.instanceFactory = instanceFactory;
+        serviceLocator = ServiceLocatorFactory.getInstance().create(null);
         resourceConfig = new ResourceConfig();
+        resourceConfig.property("jersey.config.server.wadl.disableWadl", "true");
         instanceFactory.put(jakarta.ws.rs.core.Application.class, resourceConfig);
         instanceFactory.put(ResourceConfig.class, resourceConfig);
     }
@@ -84,8 +96,8 @@ public class Application {
     }
 
 
+    // The ServerConnector is closed during Application.stop()
     @SuppressWarnings("resource")
-        // ServerConnector is closed during stop()
     void doStart() {
         try {
             QueuedThreadPool threadPool;
@@ -110,8 +122,8 @@ public class Application {
                 connectionFactory = new HttpConnectionFactory();
             }
 
-            String host = configuration.host();
-            int port = configuration.port();
+            String host = configuration.server().host();
+            int port = configuration.server().port();
             if (port == 0) {
                 port = 9090;
             }
@@ -143,7 +155,7 @@ public class Application {
         Objects.requireNonNull(resourceConfig);
         ServletContextHandler servletContextHandler = new ServletContextHandler(
                 ServletContextHandler.SESSIONS);
-        String contextPath = normalizeContextPath(configuration.contextPath());
+        String contextPath = normalizeContextPath(configuration.server().contextPath());
         for (FilterSpec filterSpec : filterSpecs) {
             FilterHolder filterHolder = new FilterHolder(filterSpec.filter);
             servletContextHandler.addFilter(filterHolder, filterSpec.pathSpec, filterSpec.dispatches);
@@ -222,6 +234,21 @@ public class Application {
         return instance;
     }
 
+    public static void printStackTrace() {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        StackTraceElement[] st = Thread.currentThread().getStackTrace();
+        int skip = 2;
+        for (StackTraceElement ste : st) {
+            if (skip > 0) {
+                skip--;
+                continue;
+            }
+            pw.println("    " + ste.toString());
+        }
+        System.out.printf("StackTrace:%n%s%n", sw.toString());
+    }
+
     public void initBuiltinDefaults() {
         initAndRegisterJaxRsWsComponent("jackson", this::createJacksonMapperProvider);
 
@@ -239,7 +266,7 @@ public class Application {
 
     private ApplicationCORSServletFilter configureCORSFilter() {
         final ApplicationCORSServletFilter.Builder builder = ApplicationCORSServletFilter.builder();
-        builder.headers(configuration.corsHeaders());
+        builder.headers(configuration.application().cors().headers());
         return builder.build();
     }
 
@@ -325,12 +352,12 @@ public class Application {
 
     private ApplicationOpenApiResource createOpenApiResource() {
         Info info = new Info()
-                .title(configuration.alias() + " API")
-                .version(configuration.version());
-        String contextPath = normalizeContextPath(configuration.contextPath());
+                .title(configuration.application().alias() + " API")
+                .version(configuration.application().version());
+        String contextPath = normalizeContextPath(configuration.server().contextPath());
         OpenAPI openAPI = new OpenAPI()
                 .info(info);
-        String applicationUrl = configuration.applicationUrl();
+        String applicationUrl = configuration.application().url();
         if (applicationUrl != null) {
             openAPI.addServersItem(new io.swagger.v3.oas.models.servers.Server().url(applicationUrl));
         }
