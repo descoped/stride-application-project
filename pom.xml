@@ -161,7 +161,28 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- cantara -->
+
+            <dependency>
+                <groupId>no.cantara.config</groupId>
+                <artifactId>property-config</artifactId>
+                <version>${property-config.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>no.cantara.config</groupId>
+                <artifactId>property-config-json</artifactId>
+                <version>${property-config-json.version}</version>
+            </dependency>
+
             <!-- override/patch lib-common -->
+
+            <dependency>
+                <groupId>org.eclipse.jetty.toolchain</groupId>
+                <artifactId>jetty-jakarta-servlet-api</artifactId>
+                <version>${jetty.jakarta.servlet-api.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>jakarta.inject</groupId>
                 <artifactId>jakarta.inject-api</artifactId>
@@ -187,7 +208,54 @@
                 <version>2.0</version>
             </dependency>
 
+            <!-- swagger -->
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-core-jakarta</artifactId>
+                <version>${swagger.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- replaced by javax.xml.bind:jaxb-api -->
+                        <groupId>jakarta.xml.bind</groupId>
+                        <artifactId>jakarta.xml.bind-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-jaxrs2-jakarta</artifactId>
+                <version>${swagger.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- replaced by javax.xml.bind:jaxb-api -->
+                        <groupId>jakarta.xml.bind</groupId>
+                        <artifactId>jakarta.xml.bind-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-integration-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-models-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
             <!-- logging -->
+
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -226,14 +294,6 @@
             </dependency>
 
             <!-- test libs -->
-            <!--
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            -->
 
             <dependency>
                 <groupId>org.mockito</groupId>
@@ -354,6 +414,7 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>coverage</id>
             <build>
@@ -374,6 +435,7 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>sonar</id>
             <properties>

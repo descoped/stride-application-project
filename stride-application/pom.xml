@@ -37,186 +37,133 @@
         <dependency>
             <groupId>no.cantara.config</groupId>
             <artifactId>property-config</artifactId>
-            <version>${property-config.version}</version>
         </dependency>
 
         <dependency>
             <groupId>no.cantara.config</groupId>
             <artifactId>property-config-json</artifactId>
-            <version>${property-config-json.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-properties</artifactId>
-            <version>${jackson.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
             <artifactId>http2-server</artifactId>
-            <version>${jetty.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-jetty-server</artifactId>
-            <version>${jetty.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>${jakarta.validation-api.version}</version>
+            <groupId>org.eclipse.jetty.toolchain</groupId>
+            <artifactId>jetty-jakarta-servlet-api</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
-            <version>${jersey.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
-            <version>${jersey.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-api</artifactId>
-            <version>${hk2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-locator</artifactId>
-            <version>${hk2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-extras</artifactId>
-            <version>${hk2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-runlevel</artifactId>
-            <version>${hk2.version}</version>
         </dependency>
-
-        <!--        <dependency>-->
-        <!--            <groupId>org.glassfish.hk2</groupId>-->
-        <!--            <artifactId>hk2-metadata-generator</artifactId>-->
-        <!--            <version>${hk2.version}</version>-->
-        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
-            <version>${jersey.version}</version>
             <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jetty11</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jakarta-servlets</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jvm</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jersey3</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
-
-        <!--
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>${hibernate.validator.version}</version>
-        </dependency>
-        -->
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-healthchecks</artifactId>
-            <version>${metrics.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.toolchain</groupId>
-            <artifactId>jetty-jakarta-servlet-api</artifactId>
-            <version>${jetty.jakarta.servlet-api.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-core-jakarta</artifactId>
-            <version>${swagger.version}</version>
-            <exclusions>
-                <exclusion>
-                    <!-- replaced by javax.xml.bind:jaxb-api -->
-                    <groupId>jakarta.xml.bind</groupId>
-                    <artifactId>jakarta.xml.bind-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-jaxrs2-jakarta</artifactId>
-            <version>${swagger.version}</version>
-            <exclusions>
-                <exclusion>
-                    <!-- replaced by javax.xml.bind:jaxb-api -->
-                    <groupId>jakarta.xml.bind</groupId>
-                    <artifactId>jakarta.xml.bind-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
+
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-integration-jakarta</artifactId>
-            <version>${swagger.version}</version>
+        </dependency>
+
+        <!-- Transitive dependencies without explicit version -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-models-jakarta</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>
 
         <!-- replace jakarta.xml.bind:jakarta.xml.bind-api:2.x (which uses javax namespace) with this allows javax and jakarta to coexist
@@ -226,18 +173,6 @@
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>${jaxb-api.version}</version>
-        </dependency>
-
-        <!-- Transitive dependencies without explicit version -->
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-models-jakarta</artifactId>
-            <version>${swagger.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations-jakarta</artifactId>
-            <version>${swagger.version}</version>
         </dependency>
 
         <dependency>
@@ -302,6 +237,7 @@
                 </dependency>
             </dependencies>
         </profile>
+
         <profile>
             <id>jakarta-jaxb</id>
             <dependencies>
@@ -317,6 +253,7 @@
                 </dependency>
             </dependencies>
         </profile>
+
         <profile>
             <id>coverage</id>
             <build>
