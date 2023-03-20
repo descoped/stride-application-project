@@ -168,11 +168,13 @@
             <version>${metrics.version}</version>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>${hibernate.validator.version}</version>
         </dependency>
+        -->
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
@@ -337,5 +339,25 @@
             </build>
         </profile>
     </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.glassfish.hk2</groupId>
+                            <artifactId>hk2-metadata-generator</artifactId>
+                            <version>${hk2.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
