@@ -166,13 +166,19 @@
             <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>
 
-        <!-- replace jakarta.xml.bind:jakarta.xml.bind-api:2.x (which uses javax namespace) with this allows javax and jakarta to coexist
-             pls refer to the profile javax-jaxb and jakarta-jaxb for correct dependency graph
-        -->
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>${jaxb-api.version}</version>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>txw2</artifactId>
         </dependency>
 
         <dependency>
@@ -221,10 +227,15 @@
     <profiles>
         <profile>
             <id>javax-jaxb</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencies>
+                <!-- replace jakarta.xml.bind:jakarta.xml.bind-api:2.x (which uses javax namespace) with this allows javax and jakarta to coexist
+                     pls refer to the profile javax-jaxb and jakarta-jaxb for correct dependency graph
+                -->
+                <dependency>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                    <version>2.3.1</version>
+                </dependency>
                 <dependency>
                     <groupId>com.sun.xml.bind</groupId>
                     <artifactId>jaxb-core</artifactId>
@@ -233,7 +244,7 @@
                 <dependency>
                     <groupId>com.sun.xml.bind</groupId>
                     <artifactId>jaxb-impl</artifactId>
-                    <version>${jaxb-api.version}</version>
+                    <version>2.3.1</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -241,6 +252,11 @@
         <profile>
             <id>jakarta-jaxb</id>
             <dependencies>
+                <dependency>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                    <version>2.3.1</version>
+                </dependency>
                 <dependency>
                     <groupId>com.sun.xml.bind</groupId>
                     <artifactId>jaxb-core</artifactId>
