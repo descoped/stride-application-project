@@ -22,6 +22,7 @@ import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DescriptorImpl;
+import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,7 +168,7 @@ public class StrideApplication implements AutoCloseable {
         try {
             populator.populate(
                     new ClasspathDescriptorFileFinder()
-//                    , new DuplicatePostProcessor()
+                    , new DuplicatePostProcessor()
                     , new ConfigurationPostPopulatorProcessor(configuration)
             );
         } catch (IOException e) {
