@@ -17,6 +17,7 @@ import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
+import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,7 +123,7 @@ public class StrideApplication implements AutoCloseable {
         runLevelController.proceedTo(configuration.asInt("hk2.runlevel", 20));
 
         List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() && configuration.isVerboseLogging()) {
             StringBuilder msg = new StringBuilder();
             msg.append("Configured services:");
             for (ServiceHandle<?> service : services) {
@@ -158,7 +159,7 @@ public class StrideApplication implements AutoCloseable {
         try {
             populator.populate(
                     new ClasspathDescriptorFileFinder()
-//                    , new DuplicatePostProcessor()
+                    , new DuplicatePostProcessor()
                     , new DefaultConfigurationPostPopulatorProcessor(configuration)
             );
         } catch (IOException e) {
@@ -169,13 +170,14 @@ public class StrideApplication implements AutoCloseable {
     Filter getEnabledServicesFilter() {
         return descriptor -> {
             boolean defaultValue = configuration.asBoolean("hk2.defaults.enabled", false);
-            boolean enabled = ofNullable(descriptor.getName())
+            String name = descriptor.getName();
+            boolean enabled = ofNullable(name)
                     .map(configuration::find)
                     .map(e -> e.with("enabled"))
                     .map(e -> e.asBoolean(defaultValue))
                     .orElse(true);
-            if (descriptor.getName() != null) {
-                log.debug("Service: {}.enabled={}", descriptor.getName(), enabled);
+            if (name != null && log.isDebugEnabled() && configuration.isVerboseLogging()) {
+                log.debug("Service: {}.enabled={}", name, enabled);
             }
             return enabled;
         };

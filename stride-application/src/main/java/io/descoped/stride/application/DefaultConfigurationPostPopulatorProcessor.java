@@ -65,9 +65,11 @@ public record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguratio
     }
 
     private void logServiceStatus(String implementation, String name, boolean enabled) {
-        log.debug("{} {}[{}]",
-                enabled ? "Enabled" : "Disabled",
-                implementation,
-                name == null ? "" : "\"" + name + "\"");
+        if (log.isDebugEnabled() && configuration.isVerboseLogging()) {
+            log.debug("{} {}[{}]",
+                    enabled ? "Enabled" : "Disabled",
+                    implementation,
+                    name == null ? "" : "\"" + name + "\"");
+        }
     }
 }

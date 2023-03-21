@@ -59,6 +59,10 @@ public final class ApplicationConfiguration implements JsonElement {
         return nonNullNode().toPrettyString();
     }
 
+    public boolean isVerboseLogging() {
+        return element().with("verbose.logging").asBoolean(false);
+    }
+
     public Server server() {
         return new Server(element().with("server"));
     }
