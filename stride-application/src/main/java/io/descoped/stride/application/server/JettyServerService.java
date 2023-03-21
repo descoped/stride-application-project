@@ -113,6 +113,8 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         server.setHandler(handler);
         server.start();
 
+        log.info("Jetty server started");
+
         ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
     }
 
