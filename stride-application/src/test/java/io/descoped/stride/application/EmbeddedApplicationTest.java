@@ -97,7 +97,7 @@ public class EmbeddedApplicationTest {
         }
     }
 
-    static class Greeting {
+    public static class Greeting {
 
         final String name;
         final String greeting;

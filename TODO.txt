@@ -1,0 +1,5 @@
+TODO
+
+* Make builder configuration for servlet, filter and resources
+* Investigate route fluent api
+* Make a proper config system for the fluent api
