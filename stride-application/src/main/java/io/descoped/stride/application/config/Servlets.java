@@ -1,5 +1,7 @@
 package io.descoped.stride.application.config;
 
+import static java.util.Optional.ofNullable;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -8,9 +10,7 @@ import jakarta.servlet.Servlet;
 
 import java.util.Objects;
 
-import static java.util.Optional.ofNullable;
-
-public record Servlets(ArrayNode json) implements JsonElement {
+public record Servlets(ArrayNode json) {
 
     /**
      * Lookup array element by servlet-name
@@ -38,11 +38,6 @@ public record Servlets(ArrayNode json) implements JsonElement {
             }
         }
         return JsonElement.ofEphemeral(null);
-    }
-
-    @Override
-    public JsonElementStrategy strategy() {
-        return JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST;
     }
 
     public record Builder(ArrayNode builder) {
