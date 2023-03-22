@@ -28,6 +28,7 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.glassfish.jersey.servlet.ServletProperties;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         server.setRequestLog(new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
 
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
+        servletContextHandler.setAttribute(ServletProperties.SERVICE_LOCATOR, serviceLocator);
         servletContextHandler.setContextPath("/");
 
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
