@@ -6,19 +6,13 @@ import io.descoped.stride.application.server.JettyServerService;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.MetricsServlet;
 import jakarta.servlet.DispatcherType;
-import no.cantara.config.ApplicationProperties;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -165,21 +159,10 @@ class DeploymentTest {
                 servlets.1.pathSpec=/metrics
                 """;
 
-        Properties properties = new Properties();
-        properties.load(new StringReader(props));
-
-        Map<String, String> map = properties.entrySet().stream().collect(
-                Collectors.toMap(
-                        e -> String.valueOf(e.getKey()),
-                        e -> String.valueOf(e.getValue()),
-                        (prev, next) -> next, LinkedHashMap::new
-                ));
-
-        ApplicationJson applicationJson = new ApplicationJson(ApplicationProperties.builder()
-                .map(map)
-                .build());
+        ApplicationJson applicationJson = new ApplicationJson(props);
 
         Deployment deployment = new Deployment((ObjectNode) applicationJson.json());
+
         log.debug("\n{}", deployment.json().toPrettyString());
     }
 }
