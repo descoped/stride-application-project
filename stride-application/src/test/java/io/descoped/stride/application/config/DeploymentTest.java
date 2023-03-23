@@ -4,10 +4,13 @@ import io.descoped.stride.application.server.JerseyServerService;
 import io.descoped.stride.application.server.JettyServerService;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.MetricsServlet;
+import jakarta.servlet.DispatcherType;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -51,7 +54,27 @@ class DeploymentTest {
 
     @Test
     void testFiltersBuilder() {
+        Filters filters = Filters.builder()
+                .filter(Filters.filterBuilder()
+                        .name("dummy")
+                        .clazz(jakarta.servlet.Filter.class)
+                        .pathSpec("/dummy")
+                        .dispatches(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST)))
+                .build();
 
+        //log.debug("filter: {}", filters.json().toPrettyString());
+        assertEquals("dummy", filters.filterName("dummy")
+                .map(Filters.Filter::name)
+                .orElse(null));
+        assertEquals("jakarta.servlet.Filter", filters.filterClass("jakarta.servlet.Filter")
+                .map(Filters.Filter::className)
+                .orElse(null));
+        assertEquals("/dummy", filters.filterName("dummy")
+                .map(Filters.Filter::pathSpec)
+                .orElse(null));
+        assertEquals(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST), filters.filterName("dummy")
+                .map(Filters.Filter::dispatches)
+                .orElse(null));
     }
 
     @Test
@@ -79,10 +102,5 @@ class DeploymentTest {
         assertEquals("io.dropwizard.metrics.servlets.MetricsServlet", servlets.servletName("metrics")
                 .map(Servlets.Servlet::className)
                 .orElse(null));
-    }
-
-    @Test
-    void testServletsMappingBuilder() {
-
     }
 }
