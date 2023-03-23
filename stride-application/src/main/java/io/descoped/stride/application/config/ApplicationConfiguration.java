@@ -1,6 +1,8 @@
 package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.descoped.stride.application.jackson.JsonElement;
+import io.descoped.stride.application.jackson.JsonElementStrategy;
 import no.cantara.config.ApplicationProperties;
 
 import java.util.Objects;

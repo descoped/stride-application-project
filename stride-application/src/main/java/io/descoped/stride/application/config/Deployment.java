@@ -2,6 +2,7 @@ package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.jackson.JsonElement;
 
 public record Deployment(ObjectNode json) {
 

@@ -3,7 +3,7 @@ package io.descoped.stride.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.JsonElement;
+import io.descoped.stride.application.jackson.JsonElement;
 import org.glassfish.hk2.api.PopulatorPostProcessor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.DescriptorImpl;
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration configuration)
+record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration configuration)
         implements PopulatorPostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultConfigurationPostPopulatorProcessor.class);

@@ -1,7 +1,7 @@
 package io.descoped.stride.application.server;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.JsonElement;
+import io.descoped.stride.application.jackson.JsonElement;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;

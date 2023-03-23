@@ -2,7 +2,7 @@ package io.descoped.stride.application.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.JsonElement;
+import io.descoped.stride.application.jackson.JsonElement;
 import jakarta.inject.Inject;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
