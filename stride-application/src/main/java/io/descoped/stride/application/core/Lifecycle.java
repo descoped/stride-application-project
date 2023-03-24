@@ -1,4 +1,4 @@
-package io.descoped.stride.application;
+package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;

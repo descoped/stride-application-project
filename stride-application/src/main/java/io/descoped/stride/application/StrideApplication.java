@@ -1,5 +1,6 @@
 package io.descoped.stride.application;
 
+import io.descoped.stride.application.core.StrideApplicationImpl;
 import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -17,20 +18,18 @@ public interface StrideApplication extends AutoCloseable {
 
     ServiceLocator getServiceLocator();
 
-    Optional<ServerConnector> getConnector();
-
     default String getHost() {
-        Optional<ServerConnector> connector = getConnector();
+        Optional<ServerConnector> connector = ((StrideApplicationImpl) this).getConnector();
         return connector.map(ServerConnector::getHost).orElse("localhost");
     }
 
     default int getLocalPort() {
-        Optional<ServerConnector> connector = getConnector();
+        Optional<ServerConnector> connector = ((StrideApplicationImpl) this).getConnector();
         return connector.map(ServerConnector::getLocalPort).orElse(-1);
     }
 
     default int getPort() {
-        Optional<ServerConnector> connector = getConnector();
+        Optional<ServerConnector> connector = ((StrideApplicationImpl) this).getConnector();
         return connector.map(ServerConnector::getPort).orElse(-1);
     }
 

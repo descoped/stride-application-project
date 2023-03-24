@@ -1,5 +1,6 @@
-package io.descoped.stride.application;
+package io.descoped.stride.application.core;
 
+import io.descoped.stride.application.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.Connector;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
-class StrideApplicationImpl implements StrideApplication {
+public class StrideApplicationImpl implements StrideApplication {
 
     static {
         Logging.init();
@@ -30,13 +31,20 @@ class StrideApplicationImpl implements StrideApplication {
     private static final Logger log = LoggerFactory.getLogger(StrideApplication.class);
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ApplicationConfiguration configuration;
-    private final ServiceLocator serviceLocator;
+    private final InstanceFactory instanceFactory; // static instance configuration
+    private final ServiceLocator serviceLocator; // dynamic instance configuration
     private final Lifecycle lifecycle;
 
-    StrideApplicationImpl(ApplicationProperties configuration) {
+    public StrideApplicationImpl(ApplicationProperties configuration) {
         this.configuration = new ApplicationConfiguration(configuration);
+        this.instanceFactory = new InstanceFactory();
         this.serviceLocator = ServiceLocatorFactory.getInstance().create(null);
-        BeanDiscovery beanDiscovery = new BeanDiscovery(this.configuration, serviceLocator, this);
+
+        instanceFactory.put(StrideApplication.class, this);
+        instanceFactory.put(ApplicationConfiguration.class, this.configuration);
+
+        BeanDiscovery beanDiscovery = new BeanDiscovery(instanceFactory, serviceLocator);
+
         this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
         //log.debug("Config:\n{}", this.configuration.toPrettyString());
     }
@@ -80,7 +88,6 @@ class StrideApplicationImpl implements StrideApplication {
         return serviceLocator;
     }
 
-    @Override
     public Optional<ServerConnector> getConnector() {
         Server server = serviceLocator.getService(Server.class);
         if (server == null) {

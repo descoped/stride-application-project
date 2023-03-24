@@ -1,4 +1,4 @@
-package io.descoped.stride.application;
+package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -13,35 +13,36 @@ import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.IOException;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 class BeanDiscovery {
-    private final ApplicationConfiguration configuration;
+    private final InstanceFactory instanceFactory;
     private final ServiceLocator serviceLocator;
-    private final StrideApplication application;
 
-    BeanDiscovery(ApplicationConfiguration configuration, ServiceLocator serviceLocator, StrideApplication application) {
-        this.configuration = configuration;
+    BeanDiscovery(InstanceFactory instanceFactory, ServiceLocator serviceLocator) {
+        this.instanceFactory = instanceFactory;
         this.serviceLocator = serviceLocator;
-        this.application = application;
-        populateServiceLocator();
     }
 
     void populateServiceLocator() throws MultiException {
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
-
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
-        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
-        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(application));
+        for (Object instance : instanceFactory.instances()) {
+            dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(instance));
+        }
         dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
         dynamicConfiguration.commit();
 
         Populator populator = dcs.getPopulator();
 
         try {
+            Optional<ApplicationConfiguration> configuration = ofNullable(instanceFactory.getOrNull(ApplicationConfiguration.class));
             populator.populate(
                     new ClasspathDescriptorFileFinder()
                     , new DuplicatePostProcessor()
-                    , new DefaultConfigurationPostPopulatorProcessor(configuration)
+                    , new DefaultConfigurationPostPopulatorProcessor(configuration.orElseThrow(() -> new IllegalStateException("Missing configuration!")))
             );
         } catch (IOException e) {
             throw new MultiException(e);

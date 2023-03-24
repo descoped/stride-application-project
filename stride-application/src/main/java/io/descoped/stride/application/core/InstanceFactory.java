@@ -1,5 +1,7 @@
-package io.descoped.stride.application.factory;
+package io.descoped.stride.application.core;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,5 +23,9 @@ public class InstanceFactory {
 
     public <R> R getOrNull(Class<R> clazz) {
         return (R) singletonByType.get(clazz.getName());
+    }
+
+    public Collection<Object> instances() {
+        return Collections.unmodifiableCollection(singletonByType.values());
     }
 }

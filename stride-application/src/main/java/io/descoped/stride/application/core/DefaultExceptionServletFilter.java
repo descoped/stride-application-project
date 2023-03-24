@@ -1,4 +1,4 @@
-package io.descoped.stride.application;
+package io.descoped.stride.application.core;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpFilter;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-class DefaultExceptionServletFilter extends HttpFilter {
+public class DefaultExceptionServletFilter extends HttpFilter {
 
     static final Logger log = LoggerFactory.getLogger(DefaultExceptionServletFilter.class);
 
