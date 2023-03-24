@@ -31,7 +31,7 @@ public class StrideApplicationImpl implements StrideApplication {
     private static final Logger log = LoggerFactory.getLogger(StrideApplication.class);
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ApplicationConfiguration configuration;
-    private final InstanceFactory instanceFactory; // static instance configuration
+    private final InstanceFactory instanceFactory; // static instance configuration (yield pre-start)
     private final ServiceLocator serviceLocator; // dynamic instance configuration
     private final Lifecycle lifecycle;
 

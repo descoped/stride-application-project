@@ -11,6 +11,8 @@ import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -18,6 +20,9 @@ import java.util.Optional;
 import static java.util.Optional.ofNullable;
 
 class BeanDiscovery {
+
+    private static final Logger log = LoggerFactory.getLogger(BeanDiscovery.class);
+
     private final InstanceFactory instanceFactory;
     private final ServiceLocator serviceLocator;
 
@@ -27,6 +32,7 @@ class BeanDiscovery {
     }
 
     void populateServiceLocator() throws MultiException {
+        long past = System.currentTimeMillis();
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
         for (Object instance : instanceFactory.instances()) {
@@ -47,5 +53,6 @@ class BeanDiscovery {
         } catch (IOException e) {
             throw new MultiException(e);
         }
+        log.trace("Discovery completed in {}ms", System.currentTimeMillis() - past);
     }
 }

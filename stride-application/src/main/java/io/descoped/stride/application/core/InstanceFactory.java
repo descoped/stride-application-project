@@ -3,6 +3,7 @@ package io.descoped.stride.application.core;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InstanceFactory {
@@ -17,12 +18,18 @@ public class InstanceFactory {
         singletonByType.put(clazz.getName(), instance);
     }
 
+    @SuppressWarnings("unchecked")
     public <R> R getOrNull(String name) {
         return (R) singletonByType.get(name);
     }
 
+    @SuppressWarnings("unchecked")
     public <R> R getOrNull(Class<R> clazz) {
         return (R) singletonByType.get(clazz.getName());
+    }
+
+    public Set<String> names() {
+        return Collections.unmodifiableSet(singletonByType.keySet());
     }
 
     public Collection<Object> instances() {

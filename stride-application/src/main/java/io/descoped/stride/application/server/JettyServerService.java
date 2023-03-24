@@ -39,7 +39,7 @@ import java.io.StringWriter;
 import java.time.Duration;
 
 @Service(name = "jetty.server")
-@RunLevel(4)
+@RunLevel(Constants.WEB_SERVER_RUN_LEVEL)
 public class JettyServerService implements Factory<ServletContextHandler>, PreDestroy {
 
     private static final Logger log = LoggerFactory.getLogger(JettyServerService.class);
