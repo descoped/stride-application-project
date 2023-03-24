@@ -46,7 +46,8 @@ class StrideApplicationImpl implements StrideApplication {
     StrideApplicationImpl(ApplicationProperties configuration) {
         this.configuration = new ApplicationConfiguration(configuration);
         this.serviceLocator = ServiceLocatorFactory.getInstance().create(null);
-        this.lifecycle = new Lifecycle(this.configuration, serviceLocator);
+        BeanDiscovery beanDiscovery = new BeanDiscovery(this.configuration, serviceLocator);
+        this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
         //log.debug("Config:\n{}", this.configuration.toPrettyString());
     }
 
@@ -108,15 +109,48 @@ class StrideApplicationImpl implements StrideApplication {
         stop();
     }
 
+    static class BeanDiscovery {
+        private final ApplicationConfiguration configuration;
+        private final ServiceLocator serviceLocator;
+
+        BeanDiscovery(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
+            this.configuration = configuration;
+            this.serviceLocator = serviceLocator;
+            populateServiceLocator();
+        }
+
+        void populateServiceLocator() throws MultiException {
+            DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
+
+            DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
+            dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
+            dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
+            dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
+            dynamicConfiguration.commit();
+
+            Populator populator = dcs.getPopulator();
+
+            try {
+                populator.populate(
+                        new ClasspathDescriptorFileFinder()
+                        , new DuplicatePostProcessor()
+                        , new DefaultConfigurationPostPopulatorProcessor(configuration)
+                );
+            } catch (IOException e) {
+                throw new MultiException(e);
+            }
+        }
+    }
+
     static class Lifecycle {
         private final ApplicationConfiguration configuration;
         private final ServiceLocator serviceLocator;
         private final BeanDiscovery beanDiscovery;
 
-        Lifecycle(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
+        Lifecycle(ApplicationConfiguration configuration, ServiceLocator serviceLocator, BeanDiscovery beanDiscovery) {
             this.configuration = configuration;
             this.serviceLocator = serviceLocator;
-            beanDiscovery = new BeanDiscovery(configuration, serviceLocator);
+            this.beanDiscovery = beanDiscovery;
         }
 
         void configure() {
@@ -151,38 +185,7 @@ class StrideApplicationImpl implements StrideApplication {
         }
     }
 
-    static class BeanDiscovery {
-        private final ApplicationConfiguration configuration;
-        private final ServiceLocator serviceLocator;
-
-        BeanDiscovery(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
-            this.configuration = configuration;
-            this.serviceLocator = serviceLocator;
-            populateServiceLocator();
-        }
-
-        void populateServiceLocator() throws MultiException {
-            DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
-
-            DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
-            dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
-            dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
-            dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
-            dynamicConfiguration.commit();
-
-            Populator populator = dcs.getPopulator();
-
-            try {
-                populator.populate(
-                        new ClasspathDescriptorFileFinder()
-                        , new DuplicatePostProcessor()
-                        , new DefaultConfigurationPostPopulatorProcessor(configuration)
-                );
-            } catch (IOException e) {
-                throw new MultiException(e);
-            }
-        }
-    }
+    // ---------------------------------------------------------------------------------------------------------------
 
     Filter getEnabledServicesFilter() {
         return descriptor -> {
