@@ -22,7 +22,7 @@ class StrideApplicationTest {
                 .testDefaults()
                 .build();
 
-        try (StrideApplication application = new StrideApplication(properties)) {
+        try (StrideApplication application = StrideApplication.create(properties)) {
             application.start();
             log.trace("port: {}", application.getLocalPort());
 
