@@ -36,7 +36,7 @@ class StrideApplicationImpl implements StrideApplication {
     StrideApplicationImpl(ApplicationProperties configuration) {
         this.configuration = new ApplicationConfiguration(configuration);
         this.serviceLocator = ServiceLocatorFactory.getInstance().create(null);
-        BeanDiscovery beanDiscovery = new BeanDiscovery(this.configuration, serviceLocator);
+        BeanDiscovery beanDiscovery = new BeanDiscovery(this.configuration, serviceLocator, this);
         this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
         //log.debug("Config:\n{}", this.configuration.toPrettyString());
     }

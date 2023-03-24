@@ -17,10 +17,12 @@ import java.io.IOException;
 class BeanDiscovery {
     private final ApplicationConfiguration configuration;
     private final ServiceLocator serviceLocator;
+    private final StrideApplication application;
 
-    BeanDiscovery(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
+    BeanDiscovery(ApplicationConfiguration configuration, ServiceLocator serviceLocator, StrideApplication application) {
         this.configuration = configuration;
         this.serviceLocator = serviceLocator;
+        this.application = application;
         populateServiceLocator();
     }
 
@@ -29,7 +31,7 @@ class BeanDiscovery {
 
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
         dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
-        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
+        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(application));
         dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
         dynamicConfiguration.commit();
 
