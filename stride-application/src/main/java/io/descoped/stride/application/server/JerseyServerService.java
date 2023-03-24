@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service(name = "jersey.server")
-@RunLevel(Constants.WEB_SERVER_RUN_LEVEL)
+@RunLevel(RunLevelConstants.WEB_SERVER_RUN_LEVEL)
 public class JerseyServerService implements PreDestroy {
 
     private static final Logger log = LoggerFactory.getLogger(JerseyServerService.class);
