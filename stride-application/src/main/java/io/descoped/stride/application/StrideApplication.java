@@ -9,8 +9,24 @@ import java.util.Optional;
 
 public interface StrideApplication extends AutoCloseable {
 
+    /**
+     * Proceed to service run-level (before web server)
+     */
+    void proceedToServiceRunLevel();
+
+    /**
+     * Proceed to given run-level
+     */
+    void proceedToRunLevel(int runLevel);
+
+    /**
+     * Start application by enabling run-level max
+     */
     void start();
 
+    /**
+     * Stop application by enabling run-level 0
+     */
     void stop();
 
     @Override

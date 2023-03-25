@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Optional.ofNullable;
 
@@ -25,13 +26,20 @@ class BeanDiscovery {
 
     private final InstanceFactory instanceFactory;
     private final ServiceLocator serviceLocator;
+    private final AtomicBoolean completed = new AtomicBoolean();
 
     BeanDiscovery(InstanceFactory instanceFactory, ServiceLocator serviceLocator) {
         this.instanceFactory = instanceFactory;
         this.serviceLocator = serviceLocator;
     }
 
-    void populateServiceLocator() throws MultiException {
+    void discover() throws MultiException {
+        if (completed.compareAndSet(false, true)) {
+            populateServiceLocator();
+        }
+    }
+
+    private void populateServiceLocator() throws MultiException {
         long past = System.currentTimeMillis();
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
@@ -54,5 +62,6 @@ class BeanDiscovery {
             throw new MultiException(e);
         }
         log.trace("Discovery completed in {}ms", System.currentTimeMillis() - past);
+
     }
 }

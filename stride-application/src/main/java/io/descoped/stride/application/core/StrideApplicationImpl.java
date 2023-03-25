@@ -9,7 +9,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.runlevel.RunLevelController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -29,7 +27,6 @@ public class StrideApplicationImpl implements StrideApplication {
     }
 
     private static final Logger log = LoggerFactory.getLogger(StrideApplication.class);
-    private final AtomicBoolean closed = new AtomicBoolean();
     private final ApplicationConfiguration configuration;
     private final InstanceFactory instanceFactory; // static instance configuration (yield pre-start)
     private final ServiceLocator serviceLocator; // dynamic instance configuration
@@ -38,7 +35,7 @@ public class StrideApplicationImpl implements StrideApplication {
     public StrideApplicationImpl(ApplicationProperties configuration) {
         this.configuration = new ApplicationConfiguration(configuration);
         this.instanceFactory = new InstanceFactory();
-        this.serviceLocator = ServiceLocatorFactory.getInstance().create(null);
+        this.serviceLocator = ServiceLocatorUtils.instance();
 
         instanceFactory.put(StrideApplication.class, this);
         instanceFactory.put(ApplicationConfiguration.class, this.configuration);
@@ -50,21 +47,34 @@ public class StrideApplicationImpl implements StrideApplication {
     }
 
     @Override
-    public void start() {
-        if (closed.compareAndSet(false, true)) {
-            doStart();
+    public void proceedToServiceRunLevel() {
+        proceedToRunLevel(lifecycle.getServiceRunLevel());
+    }
+
+    @Override
+    public synchronized void proceedToRunLevel(int runLevel) {
+        if (runLevel <= 0 && lifecycle.getCurrentRunLevel() > 0) {
+            stop();
+
+        } else if (runLevel == lifecycle.getMaxRunLevel()) {
+            start();
+
+        } else {
+            lifecycle.proceedTo(runLevel);
         }
     }
 
     @Override
+    public void start() {
+        doStart();
+    }
+
+    @Override
     public void stop() {
-        if (closed.compareAndSet(true, false)) {
-            doStop();
-        }
+        doStop();
     }
 
     private void doStart() {
-        lifecycle.preStart();
         lifecycle.start();
 
         Filter configurationFilter = getEnabledServicesFilter();
@@ -72,7 +82,6 @@ public class StrideApplicationImpl implements StrideApplication {
     }
 
     private void doStop() {
-        lifecycle.preStop();
         lifecycle.stop();
     }
 

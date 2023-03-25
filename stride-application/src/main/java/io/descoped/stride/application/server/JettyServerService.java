@@ -56,7 +56,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         int httpPort = configuration.server().port();
 
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
-        jettyConnectorThreadPool.setName("jetty-http-server-");
+        jettyConnectorThreadPool.setName("jetty-http-server");
         jettyConnectorThreadPool.setMinThreads(jettyServerConfig.with("minThreads").asInt(10));
         jettyConnectorThreadPool.setMaxThreads(jettyServerConfig.with("maxThreads").asInt(150));
 
@@ -114,7 +114,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         server.setHandler(handler);
         server.start();
 
-        log.info("Jetty server started");
+        log.info("Jetty Server started");
 
         ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
     }

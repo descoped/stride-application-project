@@ -1,7 +1,7 @@
 package io.descoped.stride.application.server;
 
-class RunLevelConstants {
+public class RunLevelConstants {
 
-    static final int WEB_SERVER_RUN_LEVEL = 10;
+    public static final int WEB_SERVER_RUN_LEVEL = 10;
 
 }
