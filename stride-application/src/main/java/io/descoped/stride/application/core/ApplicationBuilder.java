@@ -6,7 +6,6 @@ import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Services;
 import io.descoped.stride.application.config.Servlets;
 import no.cantara.config.ApplicationProperties;
-import org.glassfish.hk2.api.AnnotationLiteral;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.BuilderHelper;
@@ -14,8 +13,6 @@ import org.glassfish.hk2.utilities.DescriptorImpl;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.annotation.Annotation;
 
 public class ApplicationBuilder implements StrideApplication.Builder {
 
@@ -69,6 +66,7 @@ public class ApplicationBuilder implements StrideApplication.Builder {
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
         Services services = servicesBuilder.build();
 
+        // register services
         for (Services.Service service : services.list()) {
             DescriptorImpl descriptorImpl = BuilderHelper.link(service.clazz(), true)
                     .to(Service.class)
@@ -77,28 +75,9 @@ public class ApplicationBuilder implements StrideApplication.Builder {
             descriptorImpl.addMetadata(RunLevel.RUNLEVEL_MODE_META_TAG, String.valueOf(RunLevel.RUNLEVEL_MODE_VALIDATING));
             descriptorImpl.addMetadata(RunLevel.RUNLEVEL_VAL_META_TAG, String.valueOf(service.runLevel()));
             //log.trace("--> {}", descriptorImpl);
-            dc.bind(descriptorImpl, true);
+            dc.bind(descriptorImpl, false);
         }
 
         return new StrideApplicationImpl(configuration, beanDiscovery);
-    }
-
-
-    static class RunLevelLiteral extends AnnotationLiteral<RunLevel> implements RunLevel {
-
-        @Override
-        public Class<? extends Annotation> annotationType() {
-            return RunLevel.class;
-        }
-
-        @Override
-        public int value() {
-            return 7;
-        }
-
-        @Override
-        public int mode() {
-            return RunLevel.RUNLEVEL_MODE_VALIDATING;
-        }
     }
 }
