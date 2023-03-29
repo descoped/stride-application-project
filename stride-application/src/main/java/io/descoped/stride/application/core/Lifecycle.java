@@ -25,7 +25,8 @@ class Lifecycle {
     void configure() {
         if (configured.compareAndSet(false, true)) {
             RunLevelController runLevelController = ofNullable(serviceLocator.getService(RunLevelController.class)).orElseThrow(() -> new IllegalStateException("RunLevelController is yet not available!"));
-            runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.asString("hk2.threadpolicy", "FULLY_THREADED")));
+
+            runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.asString("hk2.threadpolicy", RunLevelController.ThreadingPolicy.FULLY_THREADED.name())));
             runLevelController.setMaximumUseableThreads(configuration.asInt("hk2.threadcount", 20));
         }
     }

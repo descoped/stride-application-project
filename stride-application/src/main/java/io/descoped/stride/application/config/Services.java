@@ -6,12 +6,18 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.exception.ExceptionFunction;
 import io.descoped.stride.application.jackson.JsonElement;
+import org.glassfish.hk2.runlevel.RunLevel;
 
+import java.util.List;
 import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
 public record Services(ArrayNode json) {
+
+    public List<Service> list() {
+        return JsonElement.of(json).toList(node -> new Service((ObjectNode) node));
+    }
 
     public static Builder builder() {
         return new Builder();
@@ -67,6 +73,16 @@ public record Services(ArrayNode json) {
     // ----------------------------------------------------------------------------------------------------------------
 
     public record Service(ObjectNode json) {
+
+        public boolean isEnabled() {
+            return ofNullable(json)
+                    .map(node -> node.get("enabled"))
+                    .map(JsonNode::asText)
+                    .map(Boolean::parseBoolean)
+                    .map(Boolean.TRUE::equals)
+                    .orElse(false);
+        }
+
         public String name() {
             return ofNullable(json)
                     .map(node -> node.get("serviceName"))
@@ -88,6 +104,14 @@ public record Services(ArrayNode json) {
                     .orElse(null);
         }
 
+        public int runLevel() {
+            return ofNullable(json)
+                    .map(node -> node.get("runLevel"))
+                    .map(JsonNode::asText)
+                    .map(Integer::valueOf)
+                    .orElse(RunLevel.RUNLEVEL_VAL_INITIAL);
+        }
+
         public Metadata metadata() {
             return ofNullable(json)
                     .map(node -> node.get("metadata"))
@@ -103,6 +127,11 @@ public record Services(ArrayNode json) {
                 this(JsonNodeFactory.instance.objectNode());
             }
 
+            public Builder enabled(boolean enabled) {
+                builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
+                return this;
+            }
+
             public Builder name(String serviceName) {
                 ofNullable(serviceName).map(builder::textNode).map(node -> builder.set("serviceName", node));
                 return this;
@@ -115,6 +144,11 @@ public record Services(ArrayNode json) {
 
             public Builder clazz(Class<?> serviceClass) {
                 return className(serviceClass.getName());
+            }
+
+            public Builder runLevel(int runlevel) {
+                builder.set("runLevel", builder.textNode(String.valueOf(runlevel)));
+                return this;
             }
 
             public Builder metadata(Metadata.Builder metadataBuilder) {

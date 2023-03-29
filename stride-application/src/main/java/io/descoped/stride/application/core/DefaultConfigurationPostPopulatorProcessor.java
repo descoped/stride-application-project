@@ -24,6 +24,7 @@ record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration confi
 
     @Override
     public DescriptorImpl process(ServiceLocator serviceLocator, DescriptorImpl descriptorImpl) {
+        //log.trace("--> {}", descriptorImpl);
         String name = descriptorImpl.getName();
         if (name == null) {
             logServiceStatus(descriptorImpl.getImplementation(), null, true);

@@ -6,10 +6,12 @@ import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevelController;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,16 @@ public class StrideApplicationImpl implements StrideApplication {
 
         this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
         //log.debug("Config:\n{}", this.configuration.toPrettyString());
+    }
+
+    public StrideApplicationImpl(ApplicationConfiguration configuration, BeanDiscovery beanDiscovery) {
+        this.configuration = configuration;
+        this.instanceFactory = new InstanceFactory();
+        this.serviceLocator = ServiceLocatorUtils.instance();
+        DynamicConfiguration dynamicConfiguration = beanDiscovery.getDynamicConfiguration();
+        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
+        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
+        this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
     }
 
     @Override

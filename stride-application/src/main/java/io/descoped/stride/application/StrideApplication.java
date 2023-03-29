@@ -1,5 +1,9 @@
 package io.descoped.stride.application;
 
+import io.descoped.stride.application.config.Filters;
+import io.descoped.stride.application.config.Services;
+import io.descoped.stride.application.config.Servlets;
+import io.descoped.stride.application.core.ApplicationBuilder;
 import io.descoped.stride.application.core.StrideApplicationImpl;
 import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.ServerConnector;
@@ -51,5 +55,21 @@ public interface StrideApplication extends AutoCloseable {
 
     static StrideApplication create(ApplicationProperties configuration) {
         return new StrideApplicationImpl(configuration);
+    }
+
+    static StrideApplication.Builder builder() {
+        return new ApplicationBuilder();
+    }
+
+    interface Builder {
+        Builder configuration(ApplicationProperties applicationProperties);
+
+        Builder services(Services.Builder servicesBuilder);
+
+        Builder filters(Filters.Builder filtersBuilder);
+
+        Builder servlets(Servlets.Builder servletsBuilder);
+
+        StrideApplication build();
     }
 }

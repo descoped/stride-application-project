@@ -15,53 +15,69 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static java.util.Optional.ofNullable;
 
 class BeanDiscovery {
 
     private static final Logger log = LoggerFactory.getLogger(BeanDiscovery.class);
 
+    private final ApplicationConfiguration configuration;
     private final InstanceFactory instanceFactory;
     private final ServiceLocator serviceLocator;
+    private final AtomicBoolean committed = new AtomicBoolean();
     private final AtomicBoolean completed = new AtomicBoolean();
+    private final DynamicConfiguration dynamicConfiguration;
+
+    BeanDiscovery(ApplicationConfiguration configuration) {
+        this.configuration = configuration;
+        this.instanceFactory = new InstanceFactory();
+        this.serviceLocator = ServiceLocatorUtils.instance();
+        dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
+    }
 
     BeanDiscovery(InstanceFactory instanceFactory, ServiceLocator serviceLocator) {
         this.instanceFactory = instanceFactory;
+        this.configuration = instanceFactory.getOrNull(ApplicationConfiguration.class);
         this.serviceLocator = serviceLocator;
+        dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
     }
 
     void discover() throws MultiException {
         if (completed.compareAndSet(false, true)) {
-            populateServiceLocator();
+            propagate();
+            if (committed.compareAndSet(false, true)) {
+                dynamicConfiguration.commit();
+                populate();
+            }
         }
     }
 
-    private void populateServiceLocator() throws MultiException {
-        long past = System.currentTimeMillis();
-        DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
-        DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
+    DynamicConfiguration getDynamicConfiguration() {
+        if (committed.get()) {
+            throw new IllegalStateException("The DynamicConfiguration is committed!");
+        }
+        return dynamicConfiguration;
+    }
+
+    private void propagate() throws MultiException {
         for (Object instance : instanceFactory.instances()) {
             dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(instance));
         }
         dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
-        dynamicConfiguration.commit();
+    }
 
+    private void populate() {
+        DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
         Populator populator = dcs.getPopulator();
 
         try {
-            Optional<ApplicationConfiguration> configuration = ofNullable(instanceFactory.getOrNull(ApplicationConfiguration.class));
             populator.populate(
                     new ClasspathDescriptorFileFinder()
                     , new DuplicatePostProcessor()
-                    , new DefaultConfigurationPostPopulatorProcessor(configuration.orElseThrow(() -> new IllegalStateException("Missing configuration!")))
+                    , new DefaultConfigurationPostPopulatorProcessor(configuration)
             );
         } catch (IOException e) {
             throw new MultiException(e);
         }
-        log.trace("Discovery completed in {}ms", System.currentTimeMillis() - past);
-
     }
 }
