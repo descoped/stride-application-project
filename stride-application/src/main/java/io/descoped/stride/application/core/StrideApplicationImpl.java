@@ -59,12 +59,12 @@ public class StrideApplicationImpl implements StrideApplication {
     }
 
     @Override
-    public void proceedToServiceRunLevel() {
-        proceedToRunLevel(lifecycle.getServiceRunLevel());
+    public void activate() {
+        proceedTo(lifecycle.getServiceRunLevel());
     }
 
     @Override
-    public synchronized void proceedToRunLevel(int runLevel) {
+    public synchronized void proceedTo(int runLevel) {
         if (runLevel <= 0 && lifecycle.getCurrentRunLevel() > 0) {
             stop();
 

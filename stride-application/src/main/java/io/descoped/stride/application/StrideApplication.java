@@ -16,12 +16,12 @@ public interface StrideApplication extends AutoCloseable {
     /**
      * Proceed to service run-level (before web server)
      */
-    void proceedToServiceRunLevel();
+    void activate();
 
     /**
      * Proceed to given run-level
      */
-    void proceedToRunLevel(int runLevel);
+    void proceedTo(int runLevel);
 
     /**
      * Start application by enabling run-level max

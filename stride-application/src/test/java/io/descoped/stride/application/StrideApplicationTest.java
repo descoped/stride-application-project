@@ -35,7 +35,7 @@ class StrideApplicationTest {
 
         try (StrideApplication application = builder.build()) {
             log.trace("proceedTo");
-            application.proceedToServiceRunLevel();
+            application.activate();
 
             boolean isAct = application.getServiceLocator().getServiceHandle(TestRepository.class).isActive();
             assertFalse(isAct, "TestRepository found, should be null");
