@@ -48,6 +48,14 @@ public final class Deployment {
                 .orElse(new Servlets(JsonNodeFactory.instance.arrayNode()));
     }
 
+    public Resources resources() {
+        return ofNullable(json)
+                .map(node -> node.get("resources"))
+                .map(ArrayNode.class::cast)
+                .map(Resources::new)
+                .orElse(new Resources(JsonNodeFactory.instance.arrayNode()));
+    }
+
     public ObjectNode json() {
         return json;
     }
@@ -75,13 +83,18 @@ public final class Deployment {
             return this;
         }
 
+        public Builder filters(Filters.Builder filtersBuilder) {
+            builder.set("filters", filtersBuilder.build().json());
+            return this;
+        }
+
         public Builder servlets(Servlets.Builder servletsBuilder) {
             builder.set("servlets", servletsBuilder.build().json());
             return this;
         }
 
-        public Builder filters(Filters.Builder filtersBuilder) {
-            builder.set("filters", filtersBuilder.build().json());
+        public Builder resources(Resources.Builder resourcesBuilder) {
+            builder.set("resources", resourcesBuilder.build().json());
             return this;
         }
 

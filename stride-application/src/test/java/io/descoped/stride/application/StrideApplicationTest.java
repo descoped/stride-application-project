@@ -44,7 +44,8 @@ class StrideApplicationTest {
                                 .clazz(ApplicationCORSServletFilter.class)
                                 .pathSpec("/*")
                                 .dispatches(EnumSet.allOf(DispatcherType.class)))
-                ).build();
+                )
+                .build();
 
         try (StrideApplication application = StrideApplication.create(deployment)) {
             log.trace("proceedTo");

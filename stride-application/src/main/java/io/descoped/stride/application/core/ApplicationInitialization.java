@@ -53,6 +53,9 @@ public class ApplicationInitialization {
         // register servlets config
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(deployment.servlets()));
 
+        // register resources config
+        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(deployment.resources()));
+
         // create application
         StrideApplication strideApplication = new StrideApplicationImpl(configuration, beanDiscovery);
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(strideApplication));

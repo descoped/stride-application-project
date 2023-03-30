@@ -1,6 +1,7 @@
 package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.EmbeddedApplicationTest;
 import io.descoped.stride.application.server.JerseyServerService;
 import io.descoped.stride.application.server.JettyServerService;
 import io.dropwizard.metrics.servlets.AdminServlet;
@@ -27,12 +28,18 @@ class DeploymentTest {
     void emptyFilters() {
         Deployment deployment = Deployment.builder()
                 .build();
+
         Services services = deployment.services();
         assertNotNull(services);
+
         Filters filters = deployment.filters();
         assertNotNull(filters);
+
         Servlets servlets = deployment.servlets();
         assertNotNull(servlets);
+
+        Resources resources = deployment.resources();
+        assertNotNull(resources);
     }
 
     @Test
@@ -121,6 +128,20 @@ class DeploymentTest {
     }
 
     @Test
+    void testResourcesBuilder() {
+        Resources resources = Resources.builder()
+                .resource(Resources.resourceBuilder()
+                        .clazz(EmbeddedApplicationTest.GreetingResource.class))
+                .build();
+
+        //log.debug("{}", servlets.json().toPrettyString());
+        assertEquals(EmbeddedApplicationTest.GreetingResource.class.getName(), resources.clazz(EmbeddedApplicationTest.GreetingResource.class.getName())
+                .map(Resources.Resource::clazz)
+                .map(Class::getName)
+                .orElse(null));
+    }
+
+    @Test
     void deploymentBuilder() {
         Deployment deployment = Deployment.builder()
                 .services(Services.builder()
@@ -148,6 +169,9 @@ class DeploymentTest {
                                 .name("metrics")
                                 .clazz(MetricsServlet.class)
                                 .pathSpec("/metrics")))
+                .resources(Resources.builder()
+                        .resource(Resources.resourceBuilder()
+                                .clazz(EmbeddedApplicationTest.GreetingResource.class)))
                 .build();
         log.debug("\n{}", deployment.json().toPrettyString());
     }
