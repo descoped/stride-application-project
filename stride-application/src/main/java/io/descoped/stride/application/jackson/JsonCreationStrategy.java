@@ -3,7 +3,7 @@ package io.descoped.stride.application.jackson;
 /**
  * Creational behaviour during node navigation.
  */
-public enum JsonElementStrategy {
+public enum JsonCreationStrategy {
     /**
      * Default behaviour
      */

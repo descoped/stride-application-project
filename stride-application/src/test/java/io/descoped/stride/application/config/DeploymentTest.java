@@ -16,11 +16,24 @@ import java.io.IOException;
 import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class DeploymentTest {
 
     private static final Logger log = LoggerFactory.getLogger(DeploymentTest.class);
+
+    @Test
+    void emptyFilters() {
+        Deployment deployment = Deployment.builder()
+                .build();
+        Services services = deployment.services();
+        assertNotNull(services);
+        Filters filters = deployment.filters();
+        assertNotNull(filters);
+        Servlets servlets = deployment.servlets();
+        assertNotNull(servlets);
+    }
 
     @Test
     void testServicesBuilder() {
@@ -141,6 +154,7 @@ class DeploymentTest {
 
     @Test
     void propertiesToDeployment() throws IOException {
+        // TODO use a service namespace instead of
         final String props = """
                 services.0.serviceName=jetty.server
                 services.0.serviceClass=io.descoped.stride.application.server.JettyServerService

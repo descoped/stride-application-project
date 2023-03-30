@@ -22,6 +22,7 @@ public class ApplicationInitialization {
     public StrideApplication initialize() {
         ApplicationProperties applicationProperties = deployment.properties();
         if (deployment.properties() == null) {
+            // TODO do not read test config. Test config used be passed form Test Extension. Otherwise use default prod config
             applicationProperties = ApplicationProperties.builder()
                     .classpathPropertiesFile("application-defaults.properties")
                     .testDefaults()
@@ -46,7 +47,15 @@ public class ApplicationInitialization {
             dc.bind(descriptorImpl, false);
         }
 
+        // register filters config
+        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(deployment.filters()));
+
+        // register servlets config
+        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(deployment.servlets()));
+
         // create application
-        return new StrideApplicationImpl(configuration, beanDiscovery);
+        StrideApplication strideApplication = new StrideApplicationImpl(configuration, beanDiscovery);
+        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(strideApplication));
+        return strideApplication;
     }
 }

@@ -1,8 +1,8 @@
 package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.descoped.stride.application.jackson.JsonCreationStrategy;
 import io.descoped.stride.application.jackson.JsonElement;
-import io.descoped.stride.application.jackson.JsonElementStrategy;
 import no.cantara.config.ApplicationProperties;
 
 import java.util.Objects;
@@ -15,15 +15,15 @@ import static java.util.Optional.ofNullable;
  */
 public final class ApplicationConfiguration implements JsonElement {
     private final JsonNode json;
-    private final JsonElementStrategy strategy;
+    private final JsonCreationStrategy strategy;
 
-    public ApplicationConfiguration(JsonNode json, JsonElementStrategy strategy) {
+    public ApplicationConfiguration(JsonNode json, JsonCreationStrategy strategy) {
         this.json = json;
         this.strategy = strategy;
     }
 
     public ApplicationConfiguration(JsonNode json) {
-        this(json, JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
+        this(json, JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
     }
 
     public ApplicationConfiguration(ApplicationProperties properties) {
@@ -40,7 +40,7 @@ public final class ApplicationConfiguration implements JsonElement {
     }
 
     @Override
-    public JsonElementStrategy strategy() {
+    public JsonCreationStrategy strategy() {
         return strategy;
     }
 

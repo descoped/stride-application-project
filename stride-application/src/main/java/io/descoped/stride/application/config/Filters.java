@@ -45,7 +45,9 @@ public record Filters(ArrayNode json) {
      * @return Servlet config
      */
     public Optional<Filters.Filter> filterName(String name) {
-        return findNode("name", name).map(ObjectNode.class::cast).map(Filters.Filter::new);
+        return findNode("name", name)
+                .map(ObjectNode.class::cast)
+                .map(Filters.Filter::new);
     }
 
     /**

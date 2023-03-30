@@ -1,9 +1,11 @@
 package io.descoped.stride.application.config;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.jackson.JsonElement;
 import no.cantara.config.ApplicationProperties;
+
+import static java.util.Optional.ofNullable;
 
 public final class Deployment {
     private final ApplicationProperties applicationProperties;
@@ -23,15 +25,27 @@ public final class Deployment {
     }
 
     public Services services() {
-        return new Services(JsonElement.of(json).with("services").array());
+        return ofNullable(json)
+                .map(node -> node.get("services"))
+                .map(ArrayNode.class::cast)
+                .map(Services::new)
+                .orElse(new Services(JsonNodeFactory.instance.arrayNode()));
     }
 
     public Filters filters() {
-        return new Filters(JsonElement.of(json).with("filters").array());
+        return ofNullable(json)
+                .map(node -> node.get("filters"))
+                .map(ArrayNode.class::cast)
+                .map(Filters::new)
+                .orElse(new Filters(JsonNodeFactory.instance.arrayNode()));
     }
 
     public Servlets servlets() {
-        return new Servlets(JsonElement.of(json).with("servlets").array());
+        return ofNullable(json)
+                .map(node -> node.get("servlets"))
+                .map(ArrayNode.class::cast)
+                .map(Servlets::new)
+                .orElse(new Servlets(JsonNodeFactory.instance.arrayNode()));
     }
 
     public ObjectNode json() {

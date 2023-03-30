@@ -30,7 +30,7 @@ public interface JsonElement {
 
     JsonNode json();
 
-    JsonElementStrategy strategy();
+    JsonCreationStrategy strategy();
 
     default Optional<JsonNode> optionalNode() {
         return ofNullable(json());
@@ -41,7 +41,7 @@ public interface JsonElement {
     }
 
     private boolean isStrategyCreateEphemeralNodeIfNotExist() {
-        return strategy().equals(JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
+        return strategy().equals(JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
     }
 
     default <R extends JsonNode> Optional<R> to(Class<R> clazz) {
@@ -314,6 +314,6 @@ public interface JsonElement {
     }
 
     static JsonElement ofEphemeral(JsonNode json) {
-        return new JsonElementImpl(json, JsonElementStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
+        return new JsonElementImpl(json, JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
     }
 }
