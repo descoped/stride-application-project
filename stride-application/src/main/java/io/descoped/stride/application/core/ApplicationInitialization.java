@@ -46,6 +46,7 @@ public class ApplicationInitialization {
             dc.bind(descriptorImpl, false);
         }
 
+        // create application
         return new StrideApplicationImpl(configuration, beanDiscovery);
     }
 }

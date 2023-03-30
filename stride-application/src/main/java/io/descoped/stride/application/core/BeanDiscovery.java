@@ -7,7 +7,6 @@ import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.Populator;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
-import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -22,7 +21,6 @@ class BeanDiscovery {
     private static final Logger log = LoggerFactory.getLogger(BeanDiscovery.class);
 
     private final ApplicationConfiguration configuration;
-    private final InstanceFactory instanceFactory;
     private final ServiceLocator serviceLocator;
     private final AtomicBoolean committed = new AtomicBoolean();
     private final AtomicBoolean completed = new AtomicBoolean();
@@ -30,15 +28,7 @@ class BeanDiscovery {
 
     BeanDiscovery(ApplicationConfiguration configuration) {
         this.configuration = configuration;
-        this.instanceFactory = new InstanceFactory();
         this.serviceLocator = ServiceLocatorUtils.instance();
-        dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
-    }
-
-    BeanDiscovery(InstanceFactory instanceFactory, ServiceLocator serviceLocator) {
-        this.instanceFactory = instanceFactory;
-        this.configuration = instanceFactory.getOrNull(ApplicationConfiguration.class);
-        this.serviceLocator = serviceLocator;
         dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
     }
 
@@ -60,9 +50,6 @@ class BeanDiscovery {
     }
 
     private void propagate() throws MultiException {
-        for (Object instance : instanceFactory.instances()) {
-            dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(instance));
-        }
         dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
     }
 

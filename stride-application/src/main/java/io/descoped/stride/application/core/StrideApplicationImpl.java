@@ -31,27 +31,11 @@ public class StrideApplicationImpl implements StrideApplication {
 
     private static final Logger log = LoggerFactory.getLogger(StrideApplication.class);
     private final ApplicationConfiguration configuration;
-    private final InstanceFactory instanceFactory; // static instance configuration (yield pre-start)
     private final ServiceLocator serviceLocator; // dynamic instance configuration
     private final Lifecycle lifecycle;
 
-    public StrideApplicationImpl(ApplicationProperties configuration) {
-        this.configuration = new ApplicationConfiguration(configuration);
-        this.instanceFactory = new InstanceFactory();
-        this.serviceLocator = ServiceLocatorUtils.instance();
-
-        instanceFactory.put(StrideApplication.class, this);
-        instanceFactory.put(ApplicationConfiguration.class, this.configuration);
-
-        BeanDiscovery beanDiscovery = new BeanDiscovery(instanceFactory, serviceLocator);
-
-        this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
-        //log.debug("Config:\n{}", this.configuration.toPrettyString());
-    }
-
     public StrideApplicationImpl(ApplicationConfiguration configuration, BeanDiscovery beanDiscovery) {
         this.configuration = configuration;
-        this.instanceFactory = new InstanceFactory();
         this.serviceLocator = ServiceLocatorUtils.instance();
         DynamicConfiguration dynamicConfiguration = beanDiscovery.getDynamicConfiguration();
         dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
