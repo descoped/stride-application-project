@@ -1,6 +1,7 @@
 package io.descoped.stride.application;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.config.Deployment;
 import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Services;
 import io.descoped.stride.application.core.ServiceLocatorUtils;
@@ -29,7 +30,7 @@ class StrideApplicationTest {
 
     @Test
     void testBootstrap() throws IOException, InterruptedException {
-        StrideApplication.Builder builder = StrideApplication.builder()
+        Deployment deployment = Deployment.builder()
                 .services(Services.builder()
                         .service(Services.serviceBuilder()
                                 .name("testRepository")
@@ -43,9 +44,9 @@ class StrideApplicationTest {
                                 .clazz(ApplicationCORSServletFilter.class)
                                 .pathSpec("/*")
                                 .dispatches(EnumSet.allOf(DispatcherType.class)))
-                );
+                ).build();
 
-        try (StrideApplication application = builder.build()) {
+        try (StrideApplication application = StrideApplication.create(deployment)) {
             log.trace("proceedTo");
             application.activate();
 

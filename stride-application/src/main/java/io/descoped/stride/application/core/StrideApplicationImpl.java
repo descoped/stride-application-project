@@ -2,6 +2,7 @@ package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.config.Deployment;
 import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -190,7 +191,11 @@ public class StrideApplicationImpl implements StrideApplication {
                 .enableSystemProperties()
                 .build();
 
-        try (StrideApplication application = StrideApplication.create(properties)) {
+        Deployment deployment = Deployment.builder()
+                .configuration(properties)
+                .build();
+
+        try (StrideApplication application = StrideApplication.create(deployment)) {
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 application.close();

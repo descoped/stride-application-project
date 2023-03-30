@@ -6,6 +6,7 @@ import io.descoped.stride.application.server.JettyServerService;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.MetricsServlet;
 import jakarta.servlet.DispatcherType;
+import no.cantara.config.ApplicationProperties;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
@@ -161,7 +162,7 @@ class DeploymentTest {
 
         ApplicationJson applicationJson = new ApplicationJson(props);
 
-        Deployment deployment = new Deployment((ObjectNode) applicationJson.json());
+        Deployment deployment = new Deployment(ApplicationProperties.builder().build(), (ObjectNode) applicationJson.json());
 
         log.debug("\n{}", deployment.json().toPrettyString());
     }

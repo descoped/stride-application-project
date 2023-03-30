@@ -1,11 +1,8 @@
 package io.descoped.stride.application;
 
-import io.descoped.stride.application.config.Filters;
-import io.descoped.stride.application.config.Services;
-import io.descoped.stride.application.config.Servlets;
-import io.descoped.stride.application.core.ApplicationBuilder;
+import io.descoped.stride.application.config.Deployment;
+import io.descoped.stride.application.core.ApplicationInitialization;
 import io.descoped.stride.application.core.StrideApplicationImpl;
-import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -53,23 +50,8 @@ public interface StrideApplication extends AutoCloseable {
         return connector.map(ServerConnector::getPort).orElse(-1);
     }
 
-    static StrideApplication create(ApplicationProperties configuration) {
-        return new StrideApplicationImpl(configuration);
-    }
-
-    static StrideApplication.Builder builder() {
-        return new ApplicationBuilder();
-    }
-
-    interface Builder {
-        Builder configuration(ApplicationProperties applicationProperties);
-
-        Builder services(Services.Builder servicesBuilder);
-
-        Builder filters(Filters.Builder filtersBuilder);
-
-        Builder servlets(Servlets.Builder servletsBuilder);
-
-        StrideApplication build();
+    static StrideApplication create(Deployment deployment) {
+        ApplicationInitialization initialization = new ApplicationInitialization(deployment);
+        return initialization.initialize();
     }
 }
