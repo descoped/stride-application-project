@@ -60,6 +60,10 @@ public record Filters(ArrayNode json) {
         return findNode("filterClass", className).map(ObjectNode.class::cast).map(Filters.Filter::new);
     }
 
+    public Iterable<? extends Filter> iterator() {
+        return JsonElement.of(json).toList(Filter::new);
+    }
+
     // ----------------------------------------------------------------------------------------------------------------
 
     public record Builder(ArrayNode builder) {

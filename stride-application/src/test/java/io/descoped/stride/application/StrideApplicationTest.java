@@ -3,6 +3,7 @@ package io.descoped.stride.application;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Deployment;
 import io.descoped.stride.application.config.Filters;
+import io.descoped.stride.application.config.Resources;
 import io.descoped.stride.application.config.Services;
 import io.descoped.stride.application.core.ServiceLocatorUtils;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
@@ -45,6 +46,9 @@ class StrideApplicationTest {
                                 .pathSpec("/*")
                                 .dispatches(EnumSet.allOf(DispatcherType.class)))
                 )
+                .resources(Resources.builder()
+                        .resource(Resources.resourceBuilder()
+                                .clazz(EmbeddedApplicationTest.GreetingResource.class)))
                 .build();
 
         try (StrideApplication application = StrideApplication.create(deployment)) {

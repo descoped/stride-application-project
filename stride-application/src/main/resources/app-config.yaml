@@ -1,0 +1,5 @@
+services:
+  jersey.server:
+    enabled: true
+
+filters:

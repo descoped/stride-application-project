@@ -40,7 +40,13 @@ public record Resources(ArrayNode json) {
      * @return Servlet config
      */
     public Optional<Resource> clazz(String className) {
-        return findNode("resourceClass", className).map(ObjectNode.class::cast).map(Resource::new);
+        return findNode("resourceClass", className)
+                .map(ObjectNode.class::cast)
+                .map(Resource::new);
+    }
+
+    public Iterable<? extends Resource> iterator() {
+        return JsonElement.of(json).toList(Resource::new);
     }
 
     // ----------------------------------------------------------------------------------------------------------------

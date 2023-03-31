@@ -5,14 +5,18 @@ import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Resources;
 import io.descoped.stride.application.config.Servlets;
-import io.descoped.stride.application.jackson.JsonElement;
 import jakarta.inject.Inject;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletProperties;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +32,15 @@ public class JerseyServerService implements PreDestroy {
 
     private final JerseyServletContainer servletContainer;
 
+    @SuppressWarnings("JavacQuirks")
     @Inject
     public JerseyServerService(ApplicationConfiguration configuration,
                                Filters filters,
                                Servlets servlets,
                                Resources resources,
-                               ServletContextHandler ctx) throws ClassNotFoundException {
+                               ServletContextHandler servletContextHandler) throws ClassNotFoundException {
+
+        ServiceLocator serviceLocator = (ServiceLocator) servletContextHandler.getAttribute(ServletProperties.SERVICE_LOCATOR);
 
         ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
@@ -46,24 +53,36 @@ public class JerseyServerService implements PreDestroy {
         String mediaTypesString = String.join(",", mediaTypesList);
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
-        JsonElement resourceClassArray = configuration.with("jersey.server.register");
-        if (resourceClassArray.json().isArray() && !resourceClassArray.isEmpty()) {
-            for (JsonNode jsonNode : resourceClassArray.array()) {
-                String resourceClass = jsonNode.asText();
-                try {
-                    resourceConfig.register(getClass().getClassLoader().loadClass(resourceClass));
-                    log.debug("Registered: {}", resourceClass);
-                } catch (ClassNotFoundException e) {
-                    log.error("Could not load resource: {}", resourceClass, e);
-                    throw e;
-                }
+        // register filters
+        for (Filters.Filter filter : filters.iterator()) {
+            Class<? extends Filter> filterClass = filter.clazz();
+            Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
+            servletContextHandler.addFilter(new FilterHolder(filterInstance), filter.pathSpec(), filter.dispatches());
+        }
+
+        // register servlets
+        for (Servlets.Servlet servlet : servlets.iterator()) {
+            Class<? extends Servlet> servletClass = servlet.clazz();
+            Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
+            servletContextHandler.addServlet(new ServletHolder(servletInstance), servlet.pathSpec());
+        }
+
+        // register resources
+        for (Resources.Resource resource : resources.iterator()) {
+            String resourceClass = resource.className();
+            try {
+                resourceConfig.register(getClass().getClassLoader().loadClass(resourceClass));
+                log.debug("Registered: {}", resourceClass);
+            } catch (ClassNotFoundException e) {
+                log.error("Could not load resource: {}", resourceClass, e);
+                throw e;
             }
         }
 
         servletContainer = new JerseyServletContainer(resourceConfig);
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         servletHolder.setInitOrder(1);
-        ctx.addServlet(servletHolder, "/*");
+        servletContextHandler.addServlet(servletHolder, "/*");
 
         log.info("Jersey Servlet container started!");
     }
@@ -72,4 +91,5 @@ public class JerseyServerService implements PreDestroy {
     public void preDestroy() {
         servletContainer.stop();
     }
+
 }

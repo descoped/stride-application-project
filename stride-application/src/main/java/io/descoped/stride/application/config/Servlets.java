@@ -53,6 +53,10 @@ public record Servlets(ArrayNode json) {
         return findNode("servletClass", className).map(ObjectNode.class::cast).map(Servlet::new);
     }
 
+    public Iterable<? extends Servlet> iterator() {
+        return JsonElement.of(json).toList(Servlet::new);
+    }
+
     // ----------------------------------------------------------------------------------------------------------------
 
     public record Builder(ArrayNode builder) {
