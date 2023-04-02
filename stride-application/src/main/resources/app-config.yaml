@@ -1,5 +1,92 @@
+hk2:
+  SystemInjectResolver:
+    enabled: "true"
+  ObjectMapperFactory:
+    enabled: "true"
+  default:
+    enabled: "true"
+  HK2TopicDistributionService:
+    enabled: "true"
+  DefaultRunLevelContext:
+    enabled: "true"
+jersey:
+  server:
+    mediaTypes:
+      yaml: "application/yaml"
+      txt: "text/plain"
+      schema: "application/schema+json"
+      html: "text/html"
+      json: "application/json"
+    enabled: "true"
+    register:
+      - "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"
+jetty:
+  server:
+    http2:
+      enabled: "true"
+    enabled: "true"
+server:
+  host: "localhost"
+  context-path: "/"
+  port: "0"
+
+serv:
+  jersey:
+    server:
+      config:
+        enabled: "true"
+        register:
+          - "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"
+        mediaTypes:
+          yaml: "application/yaml"
+          txt: "text/plain"
+          schema: "application/schema+json"
+          html: "text/html"
+          json: "application/json"
+
+  jetty.server:
+    config:
+      http2:
+        enabled: "true"
+      enabled: "true"
+
 services:
+  jetty.server:
+    config:
+      enabled: "true"
+      class: "io.descoped.stride.application.server.JettyServerService"
+
   jersey.server:
-    enabled: true
+    config:
+      class: "io.descoped.stride.application.server.JerseyServerService"
+      mediaTypes:
+        yaml: "application/yaml"
+        txt: "text/plain"
+        schema: "application/schema+json"
+        html: "text/html"
+        json: "application/json"
+
+  dummy.service:
+    config:
+      enabled: "false"
+      class: "org.jvnet.hk2.annotations.Service"
+    metadata:
+      foo: "bar"
 
 filters:
+  - name: "dummy"
+    class: "jakarta.servlet.Filter"
+    pathSpec: "/dummy"
+    dispatches:
+      - "FORWARD"
+      - "REQUEST"
+
+servlets:
+  - class: "io.dropwizard.metrics.servlets.AdminServlet"
+    pathSpec: "/admin"
+  - name: "metrics"
+    class: "io.dropwizard.metrics.servlets.MetricsServlet"
+    pathSpec: "/metrics"
+
+resources:
+  - class: "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"

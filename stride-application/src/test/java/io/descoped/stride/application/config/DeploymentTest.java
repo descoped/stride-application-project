@@ -1,6 +1,10 @@
 package io.descoped.stride.application.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.EmbeddedApplicationTest;
 import io.descoped.stride.application.server.JerseyServerService;
 import io.descoped.stride.application.server.JettyServerService;
@@ -142,7 +146,7 @@ class DeploymentTest {
     }
 
     @Test
-    void deploymentBuilder() {
+    void deploymentBuilder() throws JsonProcessingException {
         Deployment deployment = Deployment.builder()
                 .services(Services.builder()
                         .service(Services.serviceBuilder()
@@ -174,6 +178,18 @@ class DeploymentTest {
                                 .clazz(EmbeddedApplicationTest.GreetingResource.class)))
                 .build();
         log.debug("\n{}", deployment.json().toPrettyString());
+        JavaPropsMapper propsMapper = new JavaPropsMapper();
+        log.trace("\n{}", propsMapper.writeValueAsString(deployment.json()));
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        log.trace("\n{}", propsMapper.writeValueAsString(deployment.json()));
+        log.trace("\n{}", mapper.writeValueAsString(deployment.json()));
+
+        ApplicationProperties applicationProperties = ApplicationProperties.builder()
+                .classpathPropertiesFile("application-defaults.properties")
+                .testDefaults()
+                .build();
+        ApplicationJson applicationJson = new ApplicationJson(applicationProperties);
+        log.trace("\n{}", mapper.writeValueAsString(applicationJson.json()));
     }
 
     @Test

@@ -1,9 +1,18 @@
 package io.descoped.stride.application.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.descoped.stride.application.core.ClassPathResourceUtils;
 import no.cantara.config.ApplicationProperties;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -38,5 +47,32 @@ class ApplicationConfigurationTest {
         log.trace("application.version: {}", configuration.application().version());
         log.trace("application.url: {}", configuration.application().url());
         log.trace("application.cors.headers: {}", configuration.application().cors().headers());
+    }
+
+    @Test
+    void newYamlToPropsConfig() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        String res = ClassPathResourceUtils.readResource("app-config.yaml");
+        JsonNode root = mapper.readTree(res);
+        JavaPropsMapper propsMapper = new JavaPropsMapper();
+        log.trace("\n{}", propsMapper.writeValueAsString(root));
+    }
+
+
+    @Test
+    void traverseAppYaml() throws JsonProcessingException {
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        String res = ClassPathResourceUtils.readResource("app-config.yaml");
+        JsonNode root = mapper.readTree(res);
+
+        JavaPropsMapper propsMapper = new JavaPropsMapper();
+        String props = propsMapper.writeValueAsString(root);
+        Set<String> propsHierachySet = new ApplicationJson(props).keys("services");
+
+        Set<String> yamlHierachySet = new ApplicationJson(root).keys("services");
+
+        assertEquals(propsHierachySet, yamlHierachySet);
+
+        yamlHierachySet.forEach(key -> log.trace("{}", key));
     }
 }
