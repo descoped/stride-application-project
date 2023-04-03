@@ -61,7 +61,7 @@
 
         <!-- Sonar -->
         <sonar.version>3.9.1.2184</sonar.version>
-        <jacoco.version>0.8.8</jacoco.version>
+        <jacoco.version>0.8.9</jacoco.version>
         <code.coverage.exclusions>
         </code.coverage.exclusions>
         <aggregate.report.dir>stride-application-junit5/target/site/jacoco-aggregate/jacoco.xml</aggregate.report.dir>
