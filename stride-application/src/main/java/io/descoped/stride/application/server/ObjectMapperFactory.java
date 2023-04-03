@@ -7,7 +7,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name = "jersey.objectMapper")
 public class ObjectMapperFactory implements Factory<ObjectMapper> {
     private final ObjectMapper objectMapper;
 

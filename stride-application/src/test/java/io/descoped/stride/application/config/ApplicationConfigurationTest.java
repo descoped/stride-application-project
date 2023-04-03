@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -64,15 +65,17 @@ class ApplicationConfigurationTest {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         String res = ClassPathResourceUtils.readResource("app-config.yaml");
         JsonNode root = mapper.readTree(res);
+        //log.trace("config:\n{}", root.toPrettyString());
 
         JavaPropsMapper propsMapper = new JavaPropsMapper();
         String props = propsMapper.writeValueAsString(root);
+        //log.trace("props:\n{}", props);
         Set<String> propsHierachySet = new ApplicationJson(props).keys("services");
+        log.trace("p: {}", new TreeSet<>(propsHierachySet));
 
         Set<String> yamlHierachySet = new ApplicationJson(root).keys("services");
+        log.trace("y: {}", new TreeSet<>(yamlHierachySet));
 
         assertEquals(propsHierachySet, yamlHierachySet);
-
-        yamlHierachySet.forEach(key -> log.trace("{}", key));
     }
 }

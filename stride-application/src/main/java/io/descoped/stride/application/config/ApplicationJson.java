@@ -3,22 +3,28 @@ package io.descoped.stride.application.config;
 import com.fasterxml.jackson.databind.JsonNode;
 import no.cantara.config.ApplicationProperties;
 import no.cantara.config.json.PropertyMapToJsonConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class ApplicationJson {
+
+    private static final Logger log = LoggerFactory.getLogger(ApplicationJson.class);
 
     private final ApplicationProperties properties;
     private final JsonNode json;
@@ -68,23 +74,36 @@ public final class ApplicationJson {
                 .build();
     }
 
+    static final List<String> fieldMatcher = List.of("enabled", "config", "metadata");
+    static final Predicate<String> edgeFieldPredicate = fieldMatcher::contains;
+    static final Function<Set<Node>, String> formatAncestors = (ancestors) ->
+            ancestors.stream().skip(1).map(Node::fieldName).collect(Collectors.joining("."));
+    static final Function<Set<Node>, String> indentAncestors = (ancestors) ->
+            Arrays.stream(new String[ancestors.size()]).map(element -> " ").collect(Collectors.joining());
+
     public Set<String> keys(String fieldName) {
         Set<String> keys = new LinkedHashSet<>();
-        depthFirstPreOrderFullTraversal(0, Node.of(null, json.get(fieldName)), new LinkedHashSet<>(), new LinkedList<>(), (ancestors, node) -> {
-            if (ancestors.size() == 0) return false;
-            //String indent = Arrays.stream(new String[ancestors.size()]).map(element -> " ").collect(Collectors.joining());
-            boolean match = List.of("enabled", "config", "metadata").contains(node.fieldName);
-            if (match) {
-                String key = ancestors.stream().skip(1).map(Node::fieldName).collect(Collectors.joining("."));
-                keys.add(key);
+        depthFirstPreOrderFullTraversal(Node.root(json.get(fieldName)), new LinkedHashSet<>(), new LinkedHashSet<>(), (ancestors, node) -> {
+            if (ancestors.size() == 0) {
+                return false;
             }
-            return match;
+            if (edgeFieldPredicate.test(node.fieldName)) {
+                String key = formatAncestors.apply(ancestors);
+                keys.add(key);
+                return true;
+            }
+            return false;
         });
         return keys;
     }
 
-    private void depthFirstPreOrderFullTraversal(int depth, Node current, Set<Node> visited, List<Node> ancestors, BiFunction<List<Node>, Node, Boolean> visit) {
-        if (!visited.add(current)) {
+    private void depthFirstPreOrderFullTraversal(Node current,
+                                                 Set<String> visited,
+                                                 Set<Node> ancestors,
+                                                 BiFunction<Set<Node>, Node, Boolean> visit) {
+
+        String currentPath = formatAncestors.apply(ancestors) + "." + current.fieldName;
+        if (!visited.add(currentPath)) {
             return;
         }
 
@@ -100,7 +119,7 @@ public final class ApplicationJson {
             for (Iterator<String> it = current.node.fieldNames(); it.hasNext(); ) {
                 String fieldName = it.next();
                 Node child = Node.of(fieldName, current.node.get(fieldName));
-                depthFirstPreOrderFullTraversal(depth + 1, child, visited, ancestors, visit);
+                depthFirstPreOrderFullTraversal(child, visited, ancestors, visit);
             }
         } finally {
             ancestors.remove(current);
@@ -108,6 +127,10 @@ public final class ApplicationJson {
     }
 
     private record Node(String fieldName, JsonNode node) {
+        static Node root(JsonNode node) {
+            return new Node(null, node);
+        }
+
         static Node of(String fieldName, JsonNode node) {
             return new Node(fieldName, node);
         }

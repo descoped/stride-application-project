@@ -1,64 +1,37 @@
-hk2:
-  SystemInjectResolver:
-    enabled: "true"
-  ObjectMapperFactory:
-    enabled: "true"
-  default:
-    enabled: "true"
-  HK2TopicDistributionService:
-    enabled: "true"
-  DefaultRunLevelContext:
-    enabled: "true"
-jersey:
-  server:
-    mediaTypes:
-      yaml: "application/yaml"
-      txt: "text/plain"
-      schema: "application/schema+json"
-      html: "text/html"
-      json: "application/json"
-    enabled: "true"
-    register:
-      - "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"
-jetty:
-  server:
-    http2:
-      enabled: "true"
-    enabled: "true"
-server:
-  host: "localhost"
-  context-path: "/"
-  port: "0"
-
-serv:
-  jersey:
-    server:
+services:
+  hk2:
+    default:
       config:
         enabled: "true"
-        register:
-          - "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"
-        mediaTypes:
-          yaml: "application/yaml"
-          txt: "text/plain"
-          schema: "application/schema+json"
-          html: "text/html"
-          json: "application/json"
+    SystemInjectResolver:
+      config:
+        enabled: "true"
+    HK2TopicDistributionService:
+      config:
+        enabled: "true"
+    DefaultRunLevelContext:
+      config:
+        enabled: "true"
 
   jetty.server:
     config:
+      enabled: "true"
+      host: "localhost"
+      context-path: "/"
+      port: "0"
       http2:
         enabled: "true"
-      enabled: "true"
+      # managed services doesn't require class
+      #class: "io.descoped.stride.application.server.JettyServerService"
 
-services:
-  jetty.server:
-    config:
-      enabled: "true"
-      class: "io.descoped.stride.application.server.JettyServerService"
+  jersey.objectMapper:
+    enabled: "true"
 
   jersey.server:
     config:
-      class: "io.descoped.stride.application.server.JerseyServerService"
+      enabled: true
+      # managed services doesn't require class
+      #class: "io.descoped.stride.application.server.JerseyServerService"
       mediaTypes:
         yaml: "application/yaml"
         txt: "text/plain"
@@ -74,19 +47,25 @@ services:
       foo: "bar"
 
 filters:
-  - name: "dummy"
-    class: "jakarta.servlet.Filter"
-    pathSpec: "/dummy"
-    dispatches:
-      - "FORWARD"
-      - "REQUEST"
+  cors:
+    config:
+      class: "io.descoped.stride.application.cors.ApplicationCORSServletFilter"
+      pathSpec: "/*"
+      dispatches:
+        - "FORWARD"
+        - "REQUEST"
 
 servlets:
-  - class: "io.dropwizard.metrics.servlets.AdminServlet"
-    pathSpec: "/admin"
-  - name: "metrics"
-    class: "io.dropwizard.metrics.servlets.MetricsServlet"
-    pathSpec: "/metrics"
+  admin:
+    config:
+      class: "io.dropwizard.metrics.servlets.AdminServlet"
+      pathSpec: "/admin"
+  metrics:
+    config:
+      class: "io.dropwizard.metrics.servlets.MetricsServlet"
+      pathSpec: "/metrics"
 
 resources:
-  - class: "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"
+  greeting:
+    config:
+      class: "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"
