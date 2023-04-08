@@ -170,7 +170,7 @@ public class TestApplication implements TestUriResolver {
                     .property("server.context-path", contextPath)
                     .build();
 
-            ApplicationConfiguration configuration = new ApplicationConfiguration(applicationPropertiesBuilder.build());
+            ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationPropertiesBuilder.build()).build();
             Application app = new Application(configuration, instanceFactory);
             app.initBuiltinDefaults();
 

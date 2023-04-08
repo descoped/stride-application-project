@@ -31,9 +31,9 @@ record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration confi
             return descriptorImpl;
         }
 
-        boolean defaultValue = configuration.asBoolean("hk2.defaults.enabled", false);
+        boolean defaultValue = configuration.asBoolean("services.hk2.defaults.enabled", false);
 
-        JsonElement serviceConfiguration = configuration.find(name);
+        JsonElement serviceConfiguration = configuration.with("services").find(name);
         boolean enabled = Optional.of(serviceConfiguration)
                 .map(e -> e.with("enabled"))
                 .map(e -> e.asBoolean(defaultValue))

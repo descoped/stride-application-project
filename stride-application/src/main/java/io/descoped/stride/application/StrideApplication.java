@@ -1,6 +1,6 @@
 package io.descoped.stride.application;
 
-import io.descoped.stride.application.config.Deployment;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.core.ApplicationInitialization;
 import io.descoped.stride.application.core.StrideApplicationImpl;
 import org.eclipse.jetty.server.ServerConnector;
@@ -50,8 +50,12 @@ public interface StrideApplication extends AutoCloseable {
         return connector.map(ServerConnector::getPort).orElse(-1);
     }
 
-    static StrideApplication create(Deployment deployment) {
-        ApplicationInitialization initialization = new ApplicationInitialization(deployment);
+    static StrideApplication create() {
+        return StrideApplication.create(ApplicationConfiguration.builder().build());
+    }
+
+    static StrideApplication create(ApplicationConfiguration configuration) {
+        ApplicationInitialization initialization = new ApplicationInitialization(configuration);
         return initialization.initialize();
     }
 }

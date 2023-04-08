@@ -1,7 +1,6 @@
 package io.descoped.stride.application;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.Deployment;
 import io.descoped.stride.application.config.Filter;
 import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Resource;
@@ -34,15 +33,17 @@ class StrideApplicationTest {
 
     @Test
     void testBootstrap() throws IOException, InterruptedException {
-        Deployment deployment = Deployment.builder()
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+//                .configuration(ApplicationProperties.builder().buildAndSetStaticSingleton())
                 .services(Services.builder()
                         .service(Service.builder("testRepository")
+                                .enabled(true)
                                 .clazz(TestRepository.class)
                                 .runLevel(12))
 
                 )
                 .filters(Filters.builder()
-                        .filter(Filter.builder("cors-filter")
+                        .filter(Filter.builder("cors")
                                 .clazz(ApplicationCORSServletFilter.class)
                                 .pathSpec("/*")
                                 .dispatches(EnumSet.allOf(DispatcherType.class)))
@@ -52,7 +53,7 @@ class StrideApplicationTest {
                                 .clazz(EmbeddedApplicationTest.GreetingResource.class)))
                 .build();
 
-        try (StrideApplication application = StrideApplication.create(deployment)) {
+        try (StrideApplication application = StrideApplication.create(configuration)) {
             log.trace("proceedTo");
             application.activate();
 

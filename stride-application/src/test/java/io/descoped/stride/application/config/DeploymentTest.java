@@ -2,7 +2,6 @@ package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.EmbeddedApplicationTest;
@@ -31,19 +30,19 @@ class DeploymentTest {
 
     @Test
     void emptyFilters() {
-        Deployment deployment = Deployment.builder()
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
                 .build();
 
-        Services services = deployment.services();
+        Services services = configuration.services();
         assertNotNull(services);
 
-        Filters filters = deployment.filters();
+        Filters filters = configuration.filters();
         assertNotNull(filters);
 
-        Servlets servlets = deployment.servlets();
+        Servlets servlets = configuration.servlets();
         assertNotNull(servlets);
 
-        Resources resources = deployment.resources();
+        Resources resources = configuration.resources();
         assertNotNull(resources);
     }
 
@@ -166,8 +165,8 @@ class DeploymentTest {
     }
 
     @Test
-    void deploymentBuilder() throws JsonProcessingException {
-        Deployment deployment = Deployment.builder()
+    void configurationBuilder() throws JsonProcessingException {
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
                 .services(Services.builder()
                         .service(Service.builder("jetty.server")
                                 .clazz(JettyServerService.class))
@@ -193,12 +192,12 @@ class DeploymentTest {
                         .resource(Resource.builder("greeting")
                                 .clazz(EmbeddedApplicationTest.GreetingResource.class)))
                 .build();
-        log.debug("\n{}", deployment.json().toPrettyString());
+        log.debug("\n{}", configuration.json().toPrettyString());
         JavaPropsMapper propsMapper = new JavaPropsMapper();
-        log.trace("\n{}", propsMapper.writeValueAsString(deployment.json()));
+        log.trace("\n{}", propsMapper.writeValueAsString(configuration.json()));
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        log.trace("\n{}", propsMapper.writeValueAsString(deployment.json()));
-        log.trace("\n{}", mapper.writeValueAsString(deployment.json()));
+        log.trace("\n{}", propsMapper.writeValueAsString(configuration.json()));
+        log.trace("\n{}", mapper.writeValueAsString(configuration.json()));
 
         ApplicationProperties applicationProperties = ApplicationProperties.builder()
                 .classpathPropertiesFile("application-defaults.properties")
@@ -231,10 +230,11 @@ class DeploymentTest {
                 servlets.1.pathSpec=/metrics
                 """;
 
-        ApplicationJson applicationJson = new ApplicationJson(props);
 
-        Deployment deployment = new Deployment(ApplicationProperties.builder().build(), (ObjectNode) applicationJson.json());
+        ApplicationProperties applicationProperties = ApplicationProperties.builder().map(ApplicationJson.propertiesToMap(props)).build();
 
-        log.debug("\n{}", deployment.json().toPrettyString());
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationProperties).build(); // ((ObjectNode) applicationJson.json());
+
+        log.debug("\n{}", configuration.json().toPrettyString());
     }
 }

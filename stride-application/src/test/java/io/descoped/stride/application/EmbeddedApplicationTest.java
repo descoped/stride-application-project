@@ -49,7 +49,8 @@ public class EmbeddedApplicationTest {
                 .property("server.port", Integer.toString(10990))
                 .property("server.context-path", "/")
                 .build();
-        ApplicationConfiguration configuration = new ApplicationConfiguration(applicationProperties);
+
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationProperties).build();
 
         Application application = new Application(configuration, new InstanceFactory());
         application.initBuiltinDefaults();

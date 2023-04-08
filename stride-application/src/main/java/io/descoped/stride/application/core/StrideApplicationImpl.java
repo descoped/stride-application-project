@@ -2,8 +2,6 @@ package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.Deployment;
-import no.cantara.config.ApplicationProperties;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -118,10 +116,10 @@ public class StrideApplicationImpl implements StrideApplication {
 
     Filter getEnabledServicesFilter() {
         return descriptor -> {
-            boolean defaultValue = configuration.asBoolean("hk2.defaults.enabled", false);
+            boolean defaultValue = configuration.asBoolean("services.hk2.defaults.enabled", false);
             String name = descriptor.getName();
             boolean enabled = ofNullable(name)
-                    .map(configuration::find)
+                    .map(configuration.with("services")::find)
                     .map(e -> e.with("enabled"))
                     .map(e -> e.asBoolean(defaultValue))
                     .orElse(true);
@@ -168,18 +166,10 @@ public class StrideApplicationImpl implements StrideApplication {
     public static void main(String[] args) {
         long startedAt = System.currentTimeMillis();
 
-        ApplicationProperties properties = ApplicationProperties.builder()
-                .classpathPropertiesFile("application-defaults.properties")
-                .defaults()
-                .enableEnvironmentVariables()
-                .enableSystemProperties()
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
                 .build();
 
-        Deployment deployment = Deployment.builder()
-                .configuration(properties)
-                .build();
-
-        try (StrideApplication application = StrideApplication.create(deployment)) {
+        try (StrideApplication application = StrideApplication.create(configuration)) {
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 application.close();

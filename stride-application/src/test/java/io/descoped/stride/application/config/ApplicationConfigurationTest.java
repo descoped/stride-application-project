@@ -22,11 +22,11 @@ class ApplicationConfigurationTest {
 
     @Test
     void testApplicationConfiguration() {
-        ApplicationJson jsonConfiguration = new ApplicationJson(ApplicationProperties.builder()
-                .testDefaults()
-                .build());
-
-        ApplicationConfiguration configuration = new ApplicationConfiguration(jsonConfiguration.json());
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+                .configuration(ApplicationProperties.builder()
+                        .testDefaults()
+                        .build())
+                .build();
         log.trace("{}", configuration.toPrettyString());
 
         assertEquals("localhost", configuration.asString("server.host", "example.com"));
