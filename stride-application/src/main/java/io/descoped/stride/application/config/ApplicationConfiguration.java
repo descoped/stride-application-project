@@ -72,7 +72,7 @@ public final class ApplicationConfiguration implements JsonElement {
                 .map(node -> node.get("services"))
                 .map(ObjectNode.class::cast)
                 .map(Services::new)
-                .orElse(new Services(JsonNodeFactory.instance.objectNode()));
+                .orElse(Services.builder().build());
     }
 
     public Filters filters() {
@@ -80,7 +80,7 @@ public final class ApplicationConfiguration implements JsonElement {
                 .map(node -> node.get("filters"))
                 .map(ObjectNode.class::cast)
                 .map(Filters::new)
-                .orElse(new Filters(JsonNodeFactory.instance.objectNode()));
+                .orElse(Filters.builder().build());
     }
 
     public Servlets servlets() {
@@ -88,7 +88,7 @@ public final class ApplicationConfiguration implements JsonElement {
                 .map(node -> node.get("servlets"))
                 .map(ObjectNode.class::cast)
                 .map(Servlets::new)
-                .orElse(new Servlets(JsonNodeFactory.instance.objectNode()));
+                .orElse(Servlets.builder().build());
     }
 
     public Resources resources() {
@@ -96,7 +96,7 @@ public final class ApplicationConfiguration implements JsonElement {
                 .map(node -> node.get("resources"))
                 .map(ObjectNode.class::cast)
                 .map(Resources::new)
-                .orElse(new Resources(JsonNodeFactory.instance.objectNode()));
+                .orElse(Resources.builder().build());
     }
 
     // ---------------------------------------------------------------------------------------------------------------
