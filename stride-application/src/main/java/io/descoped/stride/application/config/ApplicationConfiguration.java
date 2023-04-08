@@ -153,23 +153,24 @@ public final class ApplicationConfiguration implements JsonElement {
 
             // merge deployment builders
             JsonMerger merger = new JsonMerger();
+            ObjectNode parentNode = JsonNodeFactory.instance.objectNode();
             if (servicesBuilder != null) {
-                ObjectNode servicesJson = JsonNodeFactory.instance.objectNode().set("services", servicesBuilder.build().json());
+                ObjectNode servicesJson = parentNode.set("services", servicesBuilder.build().json());
                 merger.merge(jsonConfiguration, servicesJson);
             }
 
             if (filtersBuilder != null) {
-                ObjectNode filtersJson = JsonNodeFactory.instance.objectNode().set("filters", filtersBuilder.build().json());
+                ObjectNode filtersJson = parentNode.set("filters", filtersBuilder.build().json());
                 merger.merge(jsonConfiguration, filtersJson);
             }
 
             if (servletsBuilder != null) {
-                ObjectNode servletsJson = JsonNodeFactory.instance.objectNode().set("servlets", servletsBuilder.build().json());
+                ObjectNode servletsJson = parentNode.set("servlets", servletsBuilder.build().json());
                 merger.merge(jsonConfiguration, servletsJson);
             }
 
             if (resourcesBuilder != null) {
-                ObjectNode resourcesJson = JsonNodeFactory.instance.objectNode().set("resources", resourcesBuilder.build().json());
+                ObjectNode resourcesJson = parentNode.set("resources", resourcesBuilder.build().json());
                 merger.merge(jsonConfiguration, resourcesJson);
             }
 

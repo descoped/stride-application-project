@@ -113,56 +113,51 @@ public interface JsonElement {
         String childNodeName = hasNestedElements ? elements.remove(0) : name;
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(childNodeName));
 
-        if (isStrategyCreateDynamicNodeIfNotExist()) {
-            JsonElement jsonElement = JsonElement.ofDynamic(childNode.orElseGet(() -> {
-                // create new child node if empty
-                ObjectNode newNode = JsonNodeFactory.instance.objectNode();
-                object().set(childNodeName, newNode);
-                return newNode;
-            }));
-            // recurse nested child nodes
-            if (hasNestedElements) {
-                return jsonElement.with(String.join(".", elements));
-            }
-            return jsonElement;
-
-        } else if (isStrategyCreateEphemeralNodeIfNotExist()) {
-            JsonElement jsonElement = JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
-            // recurse nested child nodes
-            if (hasNestedElements) {
-                return jsonElement.with(String.join(".", elements));
-            }
-            return jsonElement;
-
-        } else {
-            JsonElement jsonElement = JsonElement.ofStrict(childNode.orElse(null));
-
-            // recurse nested child nodes
-            if (hasNestedElements) {
-                return jsonElement.with(String.join(".", elements));
+        return switch (strategy()) {
+            case STRICT -> {
+                JsonElement jsonElement = JsonElement.ofStrict(childNode.orElse(null));
+                // recurse nested child nodes
+                if (hasNestedElements) {
+                    yield jsonElement.with(String.join(".", elements));
+                }
+                yield jsonElement;
             }
 
-            return jsonElement;
-        }
+            case CREATE_NODE_IF_NOT_EXIST -> {
+                JsonElement jsonElement = JsonElement.ofDynamic(childNode.orElseGet(() -> {
+                    // create new child node if empty
+                    ObjectNode newNode = JsonNodeFactory.instance.objectNode();
+                    object().set(childNodeName, newNode);
+                    return newNode;
+                }));
+                // recurse nested child nodes
+                if (hasNestedElements) {
+                    yield jsonElement.with(String.join(".", elements));
+                }
+                yield jsonElement;
+            }
+
+            case CREATE_EPHEMERAL_NODE_IF_NOT_EXIST -> {
+                JsonElement jsonElement = JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
+                // recurse nested child nodes
+                if (hasNestedElements) {
+                    yield jsonElement.with(String.join(".", elements));
+                }
+                yield jsonElement;
+            }
+        };
     }
 
     default JsonElement at(int index) {
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(index));
 
-        if (isStrategyCreateDynamicNodeIfNotExist()) {
-            throw new UnsupportedOperationException("Dynamic node creation for at() is yet not supported!");
-        }
-
-        if (isStrategyCreateEphemeralNodeIfNotExist()) {
-            return JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
-        }
-
-        return JsonElement.ofStrict(childNode
-                .orElseThrow(() -> new IllegalArgumentException("Node at index '" + index + "' NOT found!\n" +
-                        optionalNode()
-                                .map(JsonNode::toString)
-                                .orElse(null)))
-        );
+        return switch (strategy()) {
+            case STRICT -> JsonElement.ofStrict(childNode.orElse(null));
+            case CREATE_NODE_IF_NOT_EXIST ->
+                    throw new UnsupportedOperationException("Dynamic node creation for at() is yet not supported!");
+            case CREATE_EPHEMERAL_NODE_IF_NOT_EXIST ->
+                    JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
+        };
     }
 
     default Optional<String> asString() {
