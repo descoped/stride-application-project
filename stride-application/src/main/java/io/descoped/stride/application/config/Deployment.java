@@ -1,6 +1,5 @@
 package io.descoped.stride.application.config;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.cantara.config.ApplicationProperties;
@@ -27,33 +26,33 @@ public final class Deployment {
     public Services services() {
         return ofNullable(json)
                 .map(node -> node.get("services"))
-                .map(ArrayNode.class::cast)
+                .map(ObjectNode.class::cast)
                 .map(Services::new)
-                .orElse(new Services(JsonNodeFactory.instance.arrayNode()));
+                .orElse(new Services(JsonNodeFactory.instance.objectNode()));
     }
 
     public Filters filters() {
         return ofNullable(json)
                 .map(node -> node.get("filters"))
-                .map(ArrayNode.class::cast)
+                .map(ObjectNode.class::cast)
                 .map(Filters::new)
-                .orElse(new Filters(JsonNodeFactory.instance.arrayNode()));
+                .orElse(new Filters(JsonNodeFactory.instance.objectNode()));
     }
 
     public Servlets servlets() {
         return ofNullable(json)
                 .map(node -> node.get("servlets"))
-                .map(ArrayNode.class::cast)
+                .map(ObjectNode.class::cast)
                 .map(Servlets::new)
-                .orElse(new Servlets(JsonNodeFactory.instance.arrayNode()));
+                .orElse(new Servlets(JsonNodeFactory.instance.objectNode()));
     }
 
     public Resources resources() {
         return ofNullable(json)
                 .map(node -> node.get("resources"))
-                .map(ArrayNode.class::cast)
+                .map(ObjectNode.class::cast)
                 .map(Resources::new)
-                .orElse(new Resources(JsonNodeFactory.instance.arrayNode()));
+                .orElse(new Resources(JsonNodeFactory.instance.objectNode()));
     }
 
     public ObjectNode json() {

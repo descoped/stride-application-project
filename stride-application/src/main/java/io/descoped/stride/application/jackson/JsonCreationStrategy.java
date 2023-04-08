@@ -7,7 +7,12 @@ public enum JsonCreationStrategy {
     /**
      * Default behaviour
      */
-    FAIL_FAST,
+    STRICT,
+
+    /**
+     * Dynamically create and add new ObjectNode and ArrayNode
+     */
+    CREATE_NODE_IF_NOT_EXIST,
 
     /**
      * Create new ObjectNode or ArrayNode for with and at during navigation

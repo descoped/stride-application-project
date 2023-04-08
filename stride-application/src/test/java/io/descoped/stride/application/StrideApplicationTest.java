@@ -2,8 +2,11 @@ package io.descoped.stride.application;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Deployment;
+import io.descoped.stride.application.config.Filter;
 import io.descoped.stride.application.config.Filters;
+import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Resources;
+import io.descoped.stride.application.config.Service;
 import io.descoped.stride.application.config.Services;
 import io.descoped.stride.application.core.ServiceLocatorUtils;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
@@ -33,21 +36,19 @@ class StrideApplicationTest {
     void testBootstrap() throws IOException, InterruptedException {
         Deployment deployment = Deployment.builder()
                 .services(Services.builder()
-                        .service(Services.serviceBuilder()
-                                .name("testRepository")
+                        .service(Service.builder("testRepository")
                                 .clazz(TestRepository.class)
                                 .runLevel(12))
 
                 )
                 .filters(Filters.builder()
-                        .filter(Filters.filterBuilder()
-                                .name("cors-filter")
+                        .filter(Filter.builder("cors-filter")
                                 .clazz(ApplicationCORSServletFilter.class)
                                 .pathSpec("/*")
                                 .dispatches(EnumSet.allOf(DispatcherType.class)))
                 )
                 .resources(Resources.builder()
-                        .resource(Resources.resourceBuilder()
+                        .resource(Resource.builder("greeting")
                                 .clazz(EmbeddedApplicationTest.GreetingResource.class)))
                 .build();
 

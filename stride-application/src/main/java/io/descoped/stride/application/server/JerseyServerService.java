@@ -3,6 +3,7 @@ package io.descoped.stride.application.server;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Filters;
+import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Resources;
 import io.descoped.stride.application.config.Servlets;
 import jakarta.inject.Inject;
@@ -47,28 +48,28 @@ public class JerseyServerService implements PreDestroy {
         resourceConfig.property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 
         List<String> mediaTypesList = new ArrayList<>();
-        configuration.with("jersey.server.mediaTypes").toMap(JsonNode::asText).forEach((key, mimeType) -> {
+        configuration.with("services.jersey.server.config.mediaTypes").toMap(JsonNode::asText).forEach((key, mimeType) -> {
             mediaTypesList.add(key + ":" + mimeType);
         });
         String mediaTypesString = String.join(",", mediaTypesList);
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
         // register filters
-        for (Filters.Filter filter : filters.iterator()) {
+        for (io.descoped.stride.application.config.Filter filter : filters.iterator()) {
             Class<? extends Filter> filterClass = filter.clazz();
             Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
             servletContextHandler.addFilter(new FilterHolder(filterInstance), filter.pathSpec(), filter.dispatches());
         }
 
         // register servlets
-        for (Servlets.Servlet servlet : servlets.iterator()) {
+        for (io.descoped.stride.application.config.Servlet servlet : servlets.iterator()) {
             Class<? extends Servlet> servletClass = servlet.clazz();
             Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
             servletContextHandler.addServlet(new ServletHolder(servletInstance), servlet.pathSpec());
         }
 
         // register resources
-        for (Resources.Resource resource : resources.iterator()) {
+        for (Resource resource : resources.iterator()) {
             String resourceClass = resource.className();
             try {
                 resourceConfig.register(getClass().getClassLoader().loadClass(resourceClass));
@@ -91,5 +92,4 @@ public class JerseyServerService implements PreDestroy {
     public void preDestroy() {
         servletContainer.stop();
     }
-
 }

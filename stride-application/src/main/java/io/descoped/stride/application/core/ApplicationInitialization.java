@@ -3,7 +3,6 @@ package io.descoped.stride.application.core;
 import io.descoped.stride.application.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Deployment;
-import io.descoped.stride.application.config.Services;
 import no.cantara.config.ApplicationProperties;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -36,7 +35,7 @@ public class ApplicationInitialization {
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
 
         // register services
-        for (Services.Service service : deployment.services().list()) {
+        for (io.descoped.stride.application.config.Service service : deployment.services().iterator()) {
             DescriptorImpl descriptorImpl = BuilderHelper.link(service.clazz(), true)
                     .to(Service.class)
                     .in(RunLevel.class)

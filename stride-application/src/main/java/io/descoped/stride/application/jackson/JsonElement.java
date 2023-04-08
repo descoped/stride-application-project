@@ -40,6 +40,10 @@ public interface JsonElement {
         return optionalNode().isEmpty();
     }
 
+    private boolean isStrategyCreateDynamicNodeIfNotExist() {
+        return strategy().equals(JsonCreationStrategy.CREATE_NODE_IF_NOT_EXIST);
+    }
+
     private boolean isStrategyCreateEphemeralNodeIfNotExist() {
         return strategy().equals(JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
     }
@@ -69,7 +73,7 @@ public interface JsonElement {
     }
 
     default Optional<JsonElement> get(String name) {
-        return optionalNode().filter(node -> node.has(name)).map(node -> node.get(name)).map(JsonElement::of);
+        return optionalNode().filter(node -> node.has(name)).map(node -> node.get(name)).map(JsonElement::ofStrict);
     }
 
     default JsonElement find(String name) {
@@ -77,7 +81,7 @@ public interface JsonElement {
         List<String> elements = new ArrayList<>(List.of(name.split("\\.")));
 
         if (elements.isEmpty()) {
-            return JsonElement.of(null);
+            return JsonElement.ofStrict(null);
         }
 
         JsonNode node = optionalNode().map(e -> e.findValue(elements.remove(0))).orElse(null);
@@ -88,51 +92,72 @@ public interface JsonElement {
             node = node.get(element);
         }
 
-        return isStrategyCreateEphemeralNodeIfNotExist() ? JsonElement.ofEphemeral(node) : JsonElement.of(node);
+        if (isStrategyCreateDynamicNodeIfNotExist()) {
+            return JsonElement.ofDynamic(node);
+        } else if (isStrategyCreateEphemeralNodeIfNotExist()) {
+            return JsonElement.ofEphemeral(node);
+        } else {
+            return JsonElement.ofStrict(node);
+        }
     }
 
     default JsonElement with(String name) {
         Objects.requireNonNull(name);
-        boolean hasNestedElements = name.contains(".");
+
+        boolean hasNestedElements = name.contains(".") && !optionalNode().map(node -> node.has(name)).orElse(false);
         List<String> elements = new ArrayList<>();
         if (hasNestedElements) {
             elements.addAll(List.of(name.split("\\.")));
         }
+
         String childNodeName = hasNestedElements ? elements.remove(0) : name;
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(childNodeName));
 
-        if (isStrategyCreateEphemeralNodeIfNotExist()) {
+        if (isStrategyCreateDynamicNodeIfNotExist()) {
+            JsonElement jsonElement = JsonElement.ofDynamic(childNode.orElseGet(() -> {
+                // create new child node if empty
+                ObjectNode newNode = JsonNodeFactory.instance.objectNode();
+                object().set(childNodeName, newNode);
+                return newNode;
+            }));
+            // recurse nested child nodes
+            if (hasNestedElements) {
+                return jsonElement.with(String.join(".", elements));
+            }
+            return jsonElement;
+
+        } else if (isStrategyCreateEphemeralNodeIfNotExist()) {
             JsonElement jsonElement = JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.objectNode()));
             // recurse nested child nodes
             if (hasNestedElements) {
                 return jsonElement.with(String.join(".", elements));
             }
             return jsonElement;
+
+        } else {
+            JsonElement jsonElement = JsonElement.ofStrict(childNode.orElse(null));
+
+            // recurse nested child nodes
+            if (hasNestedElements) {
+                return jsonElement.with(String.join(".", elements));
+            }
+
+            return jsonElement;
         }
-
-        JsonElement jsonElement = JsonElement.of(childNode
-                .orElseThrow(() -> new IllegalArgumentException("Node for '" + name + "' NOT found!\n" +
-                        optionalNode()
-                                .map(JsonNode::toString)
-                                .orElse(null)))
-        );
-
-        // recurse nested child nodes
-        if (hasNestedElements) {
-            return jsonElement.with(String.join(".", elements));
-        }
-
-        return jsonElement;
     }
 
     default JsonElement at(int index) {
         Optional<JsonNode> childNode = optionalNode().map(node -> node.get(index));
 
+        if (isStrategyCreateDynamicNodeIfNotExist()) {
+            throw new UnsupportedOperationException("Dynamic node creation for at() is yet not supported!");
+        }
+
         if (isStrategyCreateEphemeralNodeIfNotExist()) {
             return JsonElement.ofEphemeral(childNode.orElse(JsonNodeFactory.instance.arrayNode()));
         }
 
-        return JsonElement.of(childNode
+        return JsonElement.ofStrict(childNode
                 .orElseThrow(() -> new IllegalArgumentException("Node at index '" + index + "' NOT found!\n" +
                         optionalNode()
                                 .map(JsonNode::toString)
@@ -309,8 +334,12 @@ public interface JsonElement {
         return result;
     }
 
-    static JsonElement of(JsonNode json) {
+    static JsonElement ofStrict(JsonNode json) {
         return new JsonElementImpl(json);
+    }
+
+    static JsonElement ofDynamic(JsonNode json) {
+        return new JsonElementImpl(json, JsonCreationStrategy.CREATE_NODE_IF_NOT_EXIST);
     }
 
     static JsonElement ofEphemeral(JsonNode json) {

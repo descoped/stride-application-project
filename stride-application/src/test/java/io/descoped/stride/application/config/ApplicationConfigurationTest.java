@@ -69,7 +69,7 @@ class ApplicationConfigurationTest {
 
         JavaPropsMapper propsMapper = new JavaPropsMapper();
         String props = propsMapper.writeValueAsString(root);
-        //log.trace("props:\n{}", props);
+        log.trace("props:\n{}", props);
         Set<String> propsHierachySet = new ApplicationJson(props).keys("services");
         log.trace("p: {}", new TreeSet<>(propsHierachySet));
 

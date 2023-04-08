@@ -82,14 +82,20 @@ public final class ApplicationJson {
             Arrays.stream(new String[ancestors.size()]).map(element -> " ").collect(Collectors.joining());
 
     public Set<String> keys(String fieldName) {
+        return keys(json.get(fieldName));
+    }
+
+    public static Set<String> keys(JsonNode fromNode) {
         Set<String> keys = new LinkedHashSet<>();
-        depthFirstPreOrderFullTraversal(Node.root(json.get(fieldName)), new LinkedHashSet<>(), new LinkedHashSet<>(), (ancestors, node) -> {
+        depthFirstPreOrderFullTraversal(Node.root(fromNode), new LinkedHashSet<>(), new LinkedHashSet<>(), (ancestors, node) -> {
             if (ancestors.size() == 0) {
                 return false;
             }
             if (edgeFieldPredicate.test(node.fieldName)) {
                 String key = formatAncestors.apply(ancestors);
-                keys.add(key);
+                if (!key.isBlank()) {
+                    keys.add(key);
+                }
                 return true;
             }
             return false;
@@ -97,10 +103,10 @@ public final class ApplicationJson {
         return keys;
     }
 
-    private void depthFirstPreOrderFullTraversal(Node current,
-                                                 Set<String> visited,
-                                                 Set<Node> ancestors,
-                                                 BiFunction<Set<Node>, Node, Boolean> visit) {
+    private static void depthFirstPreOrderFullTraversal(Node current,
+                                                        Set<String> visited,
+                                                        Set<Node> ancestors,
+                                                        BiFunction<Set<Node>, Node, Boolean> visit) {
 
         String currentPath = formatAncestors.apply(ancestors) + "." + current.fieldName;
         if (!visited.add(currentPath)) {
