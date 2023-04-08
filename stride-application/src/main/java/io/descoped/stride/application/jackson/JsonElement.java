@@ -40,14 +40,6 @@ public interface JsonElement {
         return optionalNode().isEmpty();
     }
 
-    private boolean isStrategyCreateDynamicNodeIfNotExist() {
-        return strategy().equals(JsonCreationStrategy.CREATE_NODE_IF_NOT_EXIST);
-    }
-
-    private boolean isStrategyCreateEphemeralNodeIfNotExist() {
-        return strategy().equals(JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
-    }
-
     default <R extends JsonNode> Optional<R> to(Class<R> clazz) {
         return optionalNode().filter(node -> node.getClass().isAssignableFrom(clazz)).map(clazz::cast);
     }
@@ -92,13 +84,11 @@ public interface JsonElement {
             node = node.get(element);
         }
 
-        if (isStrategyCreateDynamicNodeIfNotExist()) {
-            return JsonElement.ofDynamic(node);
-        } else if (isStrategyCreateEphemeralNodeIfNotExist()) {
-            return JsonElement.ofEphemeral(node);
-        } else {
-            return JsonElement.ofStrict(node);
-        }
+        return switch (strategy()) {
+            case STRICT -> JsonElement.ofStrict(node);
+            case CREATE_NODE_IF_NOT_EXIST -> JsonElement.ofDynamic(node);
+            case CREATE_EPHEMERAL_NODE_IF_NOT_EXIST -> JsonElement.ofEphemeral(node);
+        };
     }
 
     default JsonElement with(String name) {
