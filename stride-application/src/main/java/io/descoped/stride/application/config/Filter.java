@@ -38,7 +38,7 @@ public record Filter(String name, ObjectNode json) {
     }
 
     @SuppressWarnings("unchecked")
-    public <R extends Filter> Class<R> clazz() {
+    public <R extends jakarta.servlet.Filter> Class<R> clazz() {
         return ofNullable(className())
                 .map(ExceptionFunction.call(() -> s -> (Class<R>) Class.forName(s))) // deal with hard exception
                 .orElse(null);

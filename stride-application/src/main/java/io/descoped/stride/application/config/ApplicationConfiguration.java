@@ -17,7 +17,7 @@ public final class ApplicationConfiguration implements JsonElement {
     private final JsonNode json;
     private final JsonCreationStrategy strategy;
 
-    public ApplicationConfiguration(JsonNode json, JsonCreationStrategy strategy) {
+    private ApplicationConfiguration(JsonNode json, JsonCreationStrategy strategy) {
         this.json = json;
         this.strategy = strategy;
     }
@@ -61,18 +61,6 @@ public final class ApplicationConfiguration implements JsonElement {
         return nonNullNode().toPrettyString();
     }
 
-    public boolean isVerboseLogging() {
-        return element().with("verbose.logging").asBoolean(false);
-    }
-
-    public Server server() {
-        return new Server(element().with("server"));
-    }
-
-    public Application application() {
-        return new Application(element().with("application"), server());
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -84,6 +72,20 @@ public final class ApplicationConfiguration implements JsonElement {
     @Override
     public int hashCode() {
         return Objects.hash(json);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------
+
+    public boolean isVerboseLogging() {
+        return element().asBoolean("verbose.logging", false);
+    }
+
+    public Server server() {
+        return new Server(element().with("server"));
+    }
+
+    public Application application() {
+        return new Application(element().with("application"), server());
     }
 
     public record Server(JsonElement element) {

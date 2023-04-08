@@ -31,7 +31,7 @@ public record Servlet(String name, ObjectNode json) {
     }
 
     @SuppressWarnings("unchecked")
-    public <R extends Servlet> Class<R> clazz() {
+    public <R extends jakarta.servlet.Servlet> Class<R> clazz() {
         return ofNullable(className())
                 .map(ExceptionFunction.call(() -> s -> (Class<R>) Class.forName(s))) // deal with hard exception
                 .orElse(null);
