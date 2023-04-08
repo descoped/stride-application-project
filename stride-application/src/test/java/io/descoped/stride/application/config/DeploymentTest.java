@@ -31,6 +31,7 @@ class DeploymentTest {
     @Test
     void emptyFilters() {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+                .configuration(ApplicationProperties.builder().build())
                 .build();
 
         Services services = configuration.services();
@@ -167,6 +168,7 @@ class DeploymentTest {
     @Test
     void configurationBuilder() throws JsonProcessingException {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+                .configuration(ApplicationProperties.builder().build())
                 .services(Services.builder()
                         .service(Service.builder("jetty.server")
                                 .clazz(JettyServerService.class))
