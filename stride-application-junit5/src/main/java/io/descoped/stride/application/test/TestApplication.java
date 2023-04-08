@@ -1,9 +1,9 @@
 package io.descoped.stride.application.test;
 
 import io.descoped.stride.application.Application;
-import io.descoped.stride.application.Logging;
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.factory.InstanceFactory;
+import io.descoped.stride.application.core.InstanceFactory;
+import io.descoped.stride.application.core.Logging;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServlet;
@@ -170,7 +170,7 @@ public class TestApplication implements TestUriResolver {
                     .property("server.context-path", contextPath)
                     .build();
 
-            ApplicationConfiguration configuration = new ApplicationConfiguration(applicationPropertiesBuilder.build());
+            ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationPropertiesBuilder.build()).build();
             Application app = new Application(configuration, instanceFactory);
             app.initBuiltinDefaults();
 

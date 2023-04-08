@@ -2,7 +2,9 @@ package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.jackson.JsonElement;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +24,16 @@ class JsonElementTest {
         String name = "foo.bar";
 
         ObjectNode jn = mapper.readValue(json, ObjectNode.class);
-        JsonElement je = JsonElement.of(jn).find(name);
+        JsonElement je = JsonElement.ofStrict(jn).find(name);
 
         //log.trace("match: {}", je.json());
         assertEquals("bar", je.asString(null));
+    }
+
+    @Test
+    void dynamicWith() {
+        JsonElement je = JsonElement.ofDynamic(JsonNodeFactory.instance.objectNode());
+        je.with("foo.bar").object().set("a", je.object().textNode("b"));
+        log.trace("\n{}", je.json().toPrettyString());
     }
 }

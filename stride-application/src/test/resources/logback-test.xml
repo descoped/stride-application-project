@@ -18,7 +18,7 @@
 
   <logger name="org.eclipse.jetty" level="INFO"/>
   <logger name="io.descoped.stride" level="TRACE"/>
-  <logger name="io.descoped.stride.application.server.RunLevelLogger" level="INFO" />
+<!--  <logger name="io.descoped.stride.application.server.RunLevelLogger" level="INFO" />-->
 
   <root level="INFO">
     <appender-ref ref="STDOUT"/>

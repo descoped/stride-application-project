@@ -1,5 +1,7 @@
 package io.descoped.stride.application.server;
 
+import io.descoped.stride.application.config.ApplicationConfiguration;
+import jakarta.inject.Inject;
 import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
 import org.glassfish.hk2.runlevel.ErrorInformation;
 import org.glassfish.hk2.runlevel.RunLevelFuture;
@@ -11,10 +13,18 @@ import org.slf4j.LoggerFactory;
 @Service
 public class RunLevelLogger implements RunLevelListener {
     private static final Logger log = LoggerFactory.getLogger(RunLevelLogger.class);
+    private final boolean verboseLogging;
+
+    @Inject
+    public RunLevelLogger(ApplicationConfiguration configuration) {
+        verboseLogging = configuration.isVerboseLogging();
+    }
 
     @Override
     public void onProgress(ChangeableRunLevelFuture currentJob, int levelAchieved) {
-        log.debug("Reached run level {}", levelAchieved);
+        if (verboseLogging) {
+            log.debug("Reached run level {}", levelAchieved);
+        }
     }
 
     @Override

@@ -1,0 +1,73 @@
+logging.verbose: "true"
+
+services:
+  hk2:
+    default:
+      enabled: "true"
+    SystemInjectResolver:
+      enabled: "true"
+    HK2TopicDistributionService:
+      enabled: "true"
+    DefaultRunLevelContext:
+      enabled: "true"
+
+  jetty.server:
+    enabled: "true"
+    config:
+      host: "localhost"
+      context-path: "/"
+      port: "0"
+      http2:
+        enabled: "true"
+      # managed services doesn't require class
+      #class: "io.descoped.stride.application.server.JettyServerService"
+
+  jersey.objectMapper:
+    enabled: "true"
+
+  jersey.server:
+    enabled: "true"
+    config:
+      # managed services doesn't require class
+      #class: "io.descoped.stride.application.server.JerseyServerService"
+      mediaTypes:
+        yaml: "application/yaml"
+        txt: "text/plain"
+        schema: "application/schema+json"
+        html: "text/html"
+        json: "application/json"
+
+  dummy.service:
+    enabled: "false"
+    config:
+      class: "org.jvnet.hk2.annotations.Service"
+    metadata:
+      foo: "bar"
+
+filters:
+  cors:
+    enabled: "true"
+    config:
+      class: "io.descoped.stride.application.cors.ApplicationCORSServletFilter"
+      pathSpec: "/*"
+      dispatches:
+        - "FORWARD"
+        - "REQUEST"
+
+servlets:
+  admin:
+    enabled: "false"
+    config:
+      class: "io.dropwizard.metrics.servlets.AdminServlet"
+      pathSpec: "/admin"
+  metrics:
+    enabled: "false"
+    config:
+      class: "io.dropwizard.metrics.servlets.MetricsServlet"
+      pathSpec: "/metrics"
+
+resources:
+  greeting:
+    enabled: "true"
+    config:
+      class: "io.descoped.stride.application.EmbeddedApplicationTest$GreetingResource"

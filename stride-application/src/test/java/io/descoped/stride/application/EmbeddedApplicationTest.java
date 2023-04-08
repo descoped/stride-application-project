@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.factory.InstanceFactory;
+import io.descoped.stride.application.core.InstanceFactory;
+import io.descoped.stride.application.core.Logging;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -48,7 +49,8 @@ public class EmbeddedApplicationTest {
                 .property("server.port", Integer.toString(10990))
                 .property("server.context-path", "/")
                 .build();
-        ApplicationConfiguration configuration = new ApplicationConfiguration(applicationProperties);
+
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationProperties).build();
 
         Application application = new Application(configuration, new InstanceFactory());
         application.initBuiltinDefaults();
@@ -97,7 +99,7 @@ public class EmbeddedApplicationTest {
         }
     }
 
-    static class Greeting {
+    public static class Greeting {
 
         final String name;
         final String greeting;

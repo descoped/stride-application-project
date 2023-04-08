@@ -1,4 +1,4 @@
-package io.descoped.stride.application;
+package io.descoped.stride.application.core;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 

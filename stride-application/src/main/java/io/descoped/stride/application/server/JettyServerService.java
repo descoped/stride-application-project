@@ -1,7 +1,7 @@
 package io.descoped.stride.application.server;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.JsonElement;
+import io.descoped.stride.application.jackson.JsonElement;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -28,6 +28,7 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.glassfish.jersey.servlet.ServletProperties;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ import java.io.StringWriter;
 import java.time.Duration;
 
 @Service(name = "jetty.server")
-@RunLevel(4)
+@RunLevel(RunLevelConstants.WEB_SERVER_RUN_LEVEL)
 public class JettyServerService implements Factory<ServletContextHandler>, PreDestroy {
 
     private static final Logger log = LoggerFactory.getLogger(JettyServerService.class);
@@ -55,7 +56,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         int httpPort = configuration.server().port();
 
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
-        jettyConnectorThreadPool.setName("jetty-http-server-");
+        jettyConnectorThreadPool.setName("jetty-http-server");
         jettyConnectorThreadPool.setMinThreads(jettyServerConfig.with("minThreads").asInt(10));
         jettyConnectorThreadPool.setMaxThreads(jettyServerConfig.with("maxThreads").asInt(150));
 
@@ -89,7 +90,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         server.setRequestLog(new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
 
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
+        servletContextHandler.setAttribute(ServletProperties.SERVICE_LOCATOR, serviceLocator);
         servletContextHandler.setContextPath("/");
 
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
@@ -112,6 +113,8 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
 
         server.setHandler(handler);
         server.start();
+
+        log.info("Jetty Server started");
 
         ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
     }
