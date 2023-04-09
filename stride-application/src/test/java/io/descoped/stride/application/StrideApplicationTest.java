@@ -34,7 +34,7 @@ class StrideApplicationTest {
     @Test
     void testBootstrap() throws IOException, InterruptedException {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-//                .configuration(ApplicationProperties.builder().buildAndSetStaticSingleton())
+                .defaults()
                 .services(Services.builder()
                         .service(Service.builder("testRepository")
                                 .enabled(true)
@@ -46,7 +46,7 @@ class StrideApplicationTest {
                         .filter(Filter.builder("cors")
                                 .clazz(ApplicationCORSServletFilter.class)
                                 .pathSpec("/*")
-                                .dispatches(EnumSet.allOf(DispatcherType.class)))
+                                .dispatches(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST)))
                 )
                 .resources(Resources.builder()
                         .resource(Resource.builder("greeting")

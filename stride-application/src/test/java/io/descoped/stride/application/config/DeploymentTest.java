@@ -31,7 +31,7 @@ class DeploymentTest {
     @Test
     void emptyFilters() {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-                .configuration(ApplicationProperties.builder().build())
+                .testDefaults()
                 .build();
 
         Services services = configuration.services();

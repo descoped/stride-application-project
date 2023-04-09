@@ -111,6 +111,18 @@ public final class ApplicationConfiguration implements JsonElement {
         private Filters.Builder filtersBuilder;
         private Servlets.Builder servletsBuilder;
         private Resources.Builder resourcesBuilder;
+        private boolean enableDefault;
+        private boolean enableTestDefault;
+
+        public Builder defaults() {
+            this.enableDefault = true;
+            return this;
+        }
+
+        public Builder testDefaults() {
+            this.enableTestDefault = true;
+            return this;
+        }
 
         public Builder configuration(ApplicationProperties applicationProperties) {
             this.applicationProperties = applicationProperties;
@@ -139,13 +151,18 @@ public final class ApplicationConfiguration implements JsonElement {
 
 
         public ApplicationConfiguration build() {
-            if (applicationProperties == null) {
+            if (enableDefault && applicationProperties == null) {
                 applicationProperties = ApplicationProperties.builder()
                         .classpathPropertiesFile("application-defaults.properties")
                         .defaults()
-                        .enableEnvironmentVariables()
-                        .enableSystemProperties()
                         .buildAndSetStaticSingleton();
+            } else if (enableTestDefault && applicationProperties == null) {
+                applicationProperties = ApplicationProperties.builder()
+                        .testDefaults()
+                        .build();
+            } else if (applicationProperties == null) {
+                applicationProperties = ApplicationProperties.builder()
+                        .build();
             }
 
             ApplicationJson applicationJson = new ApplicationJson(applicationProperties);
