@@ -5,6 +5,7 @@ import io.descoped.stride.application.config.ApplicationConfiguration;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.DescriptorImpl;
@@ -18,13 +19,15 @@ public class ApplicationInitialization {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationInitialization.class);
     private final ApplicationConfiguration configuration;
+    private final ServiceLocator serviceLocator;
 
-    public ApplicationInitialization(ApplicationConfiguration configuration) {
+    public ApplicationInitialization(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
         this.configuration = configuration;
+        this.serviceLocator = serviceLocator;
     }
 
     public StrideApplication initialize() {
-        BeanDiscovery beanDiscovery = new BeanDiscovery(configuration);
+        BeanDiscovery beanDiscovery = new BeanDiscovery(configuration, serviceLocator);
         DynamicConfiguration dc = beanDiscovery.getDynamicConfiguration();
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
 
@@ -62,7 +65,7 @@ public class ApplicationInitialization {
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration.resources()));
 
         // create application
-        StrideApplication strideApplication = new StrideApplicationImpl(configuration, beanDiscovery);
+        StrideApplication strideApplication = new StrideApplicationImpl(configuration, serviceLocator, beanDiscovery);
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(strideApplication));
         return strideApplication;
     }

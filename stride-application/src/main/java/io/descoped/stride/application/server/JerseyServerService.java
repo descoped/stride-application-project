@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Resource;
-import io.descoped.stride.application.config.Resources;
-import io.descoped.stride.application.config.Servlets;
+import io.descoped.stride.application.config.Services;
+import io.descoped.stride.application.config.ServletContext;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Optional.ofNullable;
+
 @Service(name = "jersey.server")
 @RunLevel(RunLevelConstants.WEB_SERVER_RUN_LEVEL)
 public class JerseyServerService implements PreDestroy {
@@ -36,9 +38,6 @@ public class JerseyServerService implements PreDestroy {
     @SuppressWarnings("JavacQuirks")
     @Inject
     public JerseyServerService(ApplicationConfiguration configuration,
-                               Filters filters,
-                               Servlets servlets,
-                               Resources resources,
                                ServletContextHandler servletContextHandler) throws ClassNotFoundException {
 
         ServiceLocator serviceLocator = (ServiceLocator) servletContextHandler.getAttribute(ServletProperties.SERVICE_LOCATOR);
@@ -55,21 +54,35 @@ public class JerseyServerService implements PreDestroy {
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
         // register filters
-        for (io.descoped.stride.application.config.Filter filter : filters.iterator()) {
+        Filters filters = configuration.filters();
+        for (io.descoped.stride.application.config.Filter filter : configuration.filters().iterator()) {
             Class<? extends Filter> filterClass = filter.clazz();
             Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
+
             servletContextHandler.addFilter(new FilterHolder(filterInstance), filter.pathSpec(), filter.dispatches());
         }
 
         // register servlets
-        for (io.descoped.stride.application.config.Servlet servlet : servlets.iterator()) {
+        Services services = configuration.services();
+        for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
             Class<? extends Servlet> servletClass = servlet.clazz();
             Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
+
+            // bind service to servlet context
+            ServletContext context = servlet.context();
+            if (context != null) {
+                context.names().forEach(name -> ofNullable(context.serviceRef(name))
+                        .flatMap(services::service)
+                        .map(io.descoped.stride.application.config.Service::clazz)
+                        .map(serviceLocator::getService)
+                        .ifPresent(instance -> servletContextHandler.getServletContext().setAttribute(name, instance)));
+            }
+
             servletContextHandler.addServlet(new ServletHolder(servletInstance), servlet.pathSpec());
         }
 
         // register resources
-        for (Resource resource : resources.iterator()) {
+        for (Resource resource : configuration.resources().iterator()) {
             String resourceClass = resource.className();
             try {
                 resourceConfig.register(getClass().getClassLoader().loadClass(resourceClass));

@@ -2,7 +2,8 @@ TODO
 --
 
 * Fix merge enum bug (duplicates)
-* Add enableDefaults to config
+(OK) Add enableDefaults to config
+* Use true for enabled builder as default
 * Add DefaultExceptionHandler (verify chain)
 * Register MetricRegistry and MetricServlet
 * Remove Application and InstanceFactory

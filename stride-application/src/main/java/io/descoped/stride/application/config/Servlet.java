@@ -45,6 +45,15 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    public ServletContext context() {
+        return ofNullable(json)
+                .map(node -> node.get("config"))
+                .map(node -> node.get("context"))
+                .map(ObjectNode.class::cast)
+                .map(ServletContext::new)
+                .orElse(null);
+    }
+
     // ------------------------------------------------------------------------------------------------------------
 
     public record Builder(String name, ObjectNode builder) {
@@ -74,6 +83,14 @@ public record Servlet(String name, ObjectNode json) {
                     .with("config")
                     .object()
                     .set("pathSpec", builder.textNode(pathSpec));
+            return this;
+        }
+
+        public Builder context(ServletContext.Builder contextBuilder) {
+            JsonElement.ofDynamic(builder)
+                    .with("config")
+                    .object()
+                    .set("context", contextBuilder.build().json());
             return this;
         }
 

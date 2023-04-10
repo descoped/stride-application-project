@@ -59,6 +59,15 @@ public record Filter(String name, ObjectNode json) {
         return EnumSet.copyOf(Set.copyOf(dispatches));
     }
 
+    public ServletContext context() {
+        return ofNullable(json)
+                .map(node -> node.get("config"))
+                .map(node -> node.get("context"))
+                .map(ObjectNode.class::cast)
+                .map(ServletContext::new)
+                .orElse(null);
+    }
+
     // ------------------------------------------------------------------------------------------------------------
 
     public record Builder(String name, ObjectNode builder) {
@@ -98,6 +107,14 @@ public record Filter(String name, ObjectNode json) {
                     .with("config")
                     .object()
                     .set("dispatches", arrayNode);
+            return this;
+        }
+
+        public Builder context(ServletContext.Builder contextBuilder) {
+            JsonElement.ofDynamic(builder)
+                    .with("config")
+                    .object()
+                    .set("context", contextBuilder.build().json());
             return this;
         }
 

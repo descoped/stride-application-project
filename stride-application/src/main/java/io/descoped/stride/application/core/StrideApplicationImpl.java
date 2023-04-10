@@ -30,12 +30,9 @@ public class StrideApplicationImpl implements StrideApplication {
     private final ServiceLocator serviceLocator; // dynamic instance configuration
     private final Lifecycle lifecycle;
 
-    public StrideApplicationImpl(ApplicationConfiguration configuration, BeanDiscovery beanDiscovery) {
+    public StrideApplicationImpl(ApplicationConfiguration configuration, ServiceLocator serviceLocator, BeanDiscovery beanDiscovery) {
         this.configuration = configuration;
-        this.serviceLocator = ServiceLocatorUtils.instance();
-//        DynamicConfiguration dynamicConfiguration = beanDiscovery.getDynamicConfiguration();
-//        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
-//        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
+        this.serviceLocator = serviceLocator;
         this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
     }
 
@@ -165,6 +162,7 @@ public class StrideApplicationImpl implements StrideApplication {
         long startedAt = System.currentTimeMillis();
 
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+                .defaults()
                 .build();
 
         try (StrideApplication application = StrideApplication.create(configuration)) {
