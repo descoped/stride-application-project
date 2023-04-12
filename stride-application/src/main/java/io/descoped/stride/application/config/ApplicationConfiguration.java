@@ -99,6 +99,14 @@ public final class ApplicationConfiguration implements JsonElement {
                 .orElse(Resources.builder().build());
     }
 
+    public ServletContext servletContext() {
+        return ofNullable(json)
+                .map(node -> node.get("servletContext"))
+                .map(ObjectNode.class::cast)
+                .map(ServletContext::new)
+                .orElse(ServletContext.builder().build());
+    }
+
     // ---------------------------------------------------------------------------------------------------------------
 
     public static Builder builder() {
@@ -111,6 +119,7 @@ public final class ApplicationConfiguration implements JsonElement {
         private Filters.Builder filtersBuilder;
         private Servlets.Builder servletsBuilder;
         private Resources.Builder resourcesBuilder;
+        private ServletContext.Builder servletContextBuilder;
         private boolean enableDefault;
         private boolean enableTestDefault;
 
@@ -149,6 +158,10 @@ public final class ApplicationConfiguration implements JsonElement {
             return this;
         }
 
+        public Builder servletContext(ServletContext.Builder servletContextBuilder) {
+            this.servletContextBuilder = servletContextBuilder;
+            return this;
+        }
 
         public ApplicationConfiguration build() {
             if (enableDefault && applicationProperties == null) {
@@ -170,30 +183,39 @@ public final class ApplicationConfiguration implements JsonElement {
 
             // merge deployment builders
             JsonMerger merger = new JsonMerger();
-            ObjectNode parentNode = JsonNodeFactory.instance.objectNode();
             if (servicesBuilder != null) {
-                ObjectNode servicesJson = parentNode.set("services", servicesBuilder.build().json());
-                merger.merge(jsonConfiguration, servicesJson);
+                mergeBuilder(jsonConfiguration, merger, "services", servicesBuilder.build().json());
             }
 
             if (filtersBuilder != null) {
-                ObjectNode filtersJson = parentNode.set("filters", filtersBuilder.build().json());
-                merger.merge(jsonConfiguration, filtersJson);
+                mergeBuilder(jsonConfiguration, merger, "filters", filtersBuilder.build().json());
             }
 
             if (servletsBuilder != null) {
-                ObjectNode servletsJson = parentNode.set("servlets", servletsBuilder.build().json());
-                merger.merge(jsonConfiguration, servletsJson);
+                mergeBuilder(jsonConfiguration, merger, "servlets", servletsBuilder.build().json());
             }
 
             if (resourcesBuilder != null) {
-                ObjectNode resourcesJson = parentNode.set("resources", resourcesBuilder.build().json());
-                merger.merge(jsonConfiguration, resourcesJson);
+                mergeBuilder(jsonConfiguration, merger, "resources", resourcesBuilder.build().json());
             }
 
-            System.err.println(jsonConfiguration.toPrettyString());
+            if (servletContextBuilder != null) {
+                mergeBuilder(jsonConfiguration, merger, "servletContext", servletContextBuilder.build().json());
+            }
+
+            //System.out.printf("config:\n%s\n", jsonConfiguration.toPrettyString());
 
             return new ApplicationConfiguration(jsonConfiguration, JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
+        }
+
+        private void mergeBuilder(ObjectNode jsonConfiguration, JsonMerger merger, String fieldName, ObjectNode jsonBuilder) {
+            if (jsonConfiguration.has(fieldName)) {
+                ObjectNode parentNode = JsonNodeFactory.instance.objectNode();
+                ObjectNode jsonNode = parentNode.set(fieldName, jsonBuilder);
+                merger.merge(jsonConfiguration, jsonNode);
+            } else {
+                jsonConfiguration.set(fieldName, jsonBuilder);
+            }
         }
     }
 

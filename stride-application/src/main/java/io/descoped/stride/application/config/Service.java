@@ -15,6 +15,10 @@ public record Service(String name, ObjectNode json) {
         return new Builder(name);
     }
 
+    public static Builder builder(Class<?> clazz) {
+        return new Builder(clazz.getName());
+    }
+
     public boolean isEnabled() {
         return ofNullable(json)
                 .map(node -> node.get("enabled"))
