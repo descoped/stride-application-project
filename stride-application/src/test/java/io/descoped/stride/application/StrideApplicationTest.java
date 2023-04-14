@@ -4,19 +4,7 @@ import com.codahale.metrics.DefaultSettableGauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jersey3.MetricsFeature;
-import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.Args;
-import io.descoped.stride.application.config.Filter;
-import io.descoped.stride.application.config.Filters;
-import io.descoped.stride.application.config.Resource;
-import io.descoped.stride.application.config.Resources;
-import io.descoped.stride.application.config.Service;
-import io.descoped.stride.application.config.Services;
-import io.descoped.stride.application.config.Servlet;
-import io.descoped.stride.application.config.ServletContextInitialization;
-import io.descoped.stride.application.config.ServletContextInitializer;
-import io.descoped.stride.application.config.ServletContextValidation;
-import io.descoped.stride.application.config.Servlets;
+import io.descoped.stride.application.config.*;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.HealthCheckServlet;
@@ -118,7 +106,13 @@ class StrideApplicationTest {
                         )
                 )
                 .initializer(ServletContextInitialization.builder()
-                        .initializer(MetricsServiceInitializer.class, ServletContextInitialization.produces().produce(Set.of("metric.jersey")))
+                        .initializer(MetricsServiceInitializer.class)
+                        .validate(ServletContextValidation.builder()
+                                .requires(Set.of(
+                                        MetricsServlet.METRICS_REGISTRY,
+                                        HealthCheckServlet.HEALTH_CHECK_REGISTRY)
+                                )
+                        )
                 )
                 .resources(Resources.builder()
                         .resource(Resource.builder("greeting")

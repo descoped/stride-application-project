@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.ofNullable;
+
 public record ServletContextInitialization(ObjectNode json) {
 
     public static Builder builder() {
@@ -24,6 +26,15 @@ public record ServletContextInitialization(ObjectNode json) {
                 .stream()
                 .map(ExceptionFunction.call(() -> classname -> (Class<ServletContextInitializer>) Class.forName(classname)))
                 .collect(Collectors.toList());
+    }
+
+    public ServletContextValidation validation() {
+        return ofNullable(json)
+                .map(node -> node.get("config"))
+                .map(node -> node.get("validation"))
+                .map(ObjectNode.class::cast)
+                .map(ServletContextValidation::new)
+                .orElse(null);
     }
 
     public record Builder(ObjectNode builder) {
@@ -44,6 +55,14 @@ public record ServletContextInitialization(ObjectNode json) {
                 builder.set("initializers", initializerClassArrayNode);
             }
             initializerClassArrayNode.add(builder.textNode(initializerClass.getName()));
+            return this;
+        }
+
+        public Builder validate(ServletContextValidation.Builder servletContextValidationBuilder) {
+            JsonElement.ofDynamic(builder)
+                    .with("config")
+                    .object()
+                    .set("validation", servletContextValidationBuilder.build().json());
             return this;
         }
 

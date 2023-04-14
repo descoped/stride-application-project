@@ -95,11 +95,11 @@ public record Servlet(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder validate(ServletContextValidation.Builder ServletContextValidationBuilder) {
+        public Builder validate(ServletContextValidation.Builder servletContextValidationBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
-                    .set("validation", ServletContextValidationBuilder.build().json());
+                    .set("validation", servletContextValidationBuilder.build().json());
             return this;
         }
 

@@ -119,7 +119,7 @@ public final class ApplicationConfiguration implements JsonElement {
         private Filters.Builder filtersBuilder;
         private Servlets.Builder servletsBuilder;
         private Resources.Builder resourcesBuilder;
-        private ServletContextInitialization.Builder servletContextBuilder;
+        private ServletContextInitialization.Builder servletContextInitializationBuilder;
         private boolean enableDefault;
         private boolean enableTestDefault;
 
@@ -159,7 +159,7 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         public Builder initializer(ServletContextInitialization.Builder servletContextInitializationBuilder) {
-            this.servletContextBuilder = servletContextInitializationBuilder;
+            this.servletContextInitializationBuilder = servletContextInitializationBuilder;
             return this;
         }
 
@@ -199,8 +199,8 @@ public final class ApplicationConfiguration implements JsonElement {
                 mergeBuilder(jsonConfiguration, merger, "resources", resourcesBuilder.build().json());
             }
 
-            if (servletContextBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "servletContext", servletContextBuilder.build().json());
+            if (servletContextInitializationBuilder != null) {
+                mergeBuilder(jsonConfiguration, merger, "servletContext", servletContextInitializationBuilder.build().json());
             }
 
             //System.out.printf("config:\n%s\n", jsonConfiguration.toPrettyString());
