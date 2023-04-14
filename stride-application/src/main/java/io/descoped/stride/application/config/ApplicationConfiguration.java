@@ -99,12 +99,12 @@ public final class ApplicationConfiguration implements JsonElement {
                 .orElse(Resources.builder().build());
     }
 
-    public ServletContext servletContext() {
+    public ServletContextInitialization servletContext() {
         return ofNullable(json)
                 .map(node -> node.get("servletContext"))
                 .map(ObjectNode.class::cast)
-                .map(ServletContext::new)
-                .orElse(ServletContext.builder().build());
+                .map(ServletContextInitialization::new)
+                .orElse(ServletContextInitialization.builder().build());
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ public final class ApplicationConfiguration implements JsonElement {
         private Filters.Builder filtersBuilder;
         private Servlets.Builder servletsBuilder;
         private Resources.Builder resourcesBuilder;
-        private ServletContext.Builder servletContextBuilder;
+        private ServletContextInitialization.Builder servletContextBuilder;
         private boolean enableDefault;
         private boolean enableTestDefault;
 
@@ -158,8 +158,8 @@ public final class ApplicationConfiguration implements JsonElement {
             return this;
         }
 
-        public Builder servletContext(ServletContext.Builder servletContextBuilder) {
-            this.servletContextBuilder = servletContextBuilder;
+        public Builder initializer(ServletContextInitialization.Builder servletContextInitializationBuilder) {
+            this.servletContextBuilder = servletContextInitializationBuilder;
             return this;
         }
 

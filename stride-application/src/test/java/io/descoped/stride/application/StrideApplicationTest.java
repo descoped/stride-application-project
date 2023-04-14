@@ -13,8 +13,9 @@ import io.descoped.stride.application.config.Resources;
 import io.descoped.stride.application.config.Service;
 import io.descoped.stride.application.config.Services;
 import io.descoped.stride.application.config.Servlet;
-import io.descoped.stride.application.config.ServletContext;
+import io.descoped.stride.application.config.ServletContextInitialization;
 import io.descoped.stride.application.config.ServletContextInitializer;
+import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.config.Servlets;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import io.dropwizard.metrics.servlets.AdminServlet;
@@ -37,6 +38,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.EnumSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -81,31 +83,47 @@ class StrideApplicationTest {
                         .service(Service.builder("testRepository")
                                 .enabled(true)
                                 .clazz(TestRepository.class)
-                                .runLevel(12))
+                                .runLevel(12)
+                        )
                 )
                 .filters(Filters.builder()
                         .filter(Filter.builder("cors")
                                 .clazz(ApplicationCORSServletFilter.class)
                                 .pathSpec("/*")
-                                .dispatches(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST)))
+                                .dispatches(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST))
+                        )
                 )
                 .servlets(Servlets.builder()
                         .servlet(Servlet.builder("admin")
                                 .enabled(true)
                                 .clazz(AdminServlet.class)
                                 .pathSpec("/admin/*")
+                                .validate(ServletContextValidation.builder()
+                                        .requires(Set.of(MetricsServlet.METRICS_REGISTRY)))
                         )
                         .servlet(Servlet.builder("metrics")
-                                .enabled(true)
-                                .clazz(MetricsServlet.class)
-                                .pathSpec("/admin/metrics/app/*"))
+                                        .enabled(true)
+                                        .clazz(MetricsServlet.class)
+                                        .pathSpec("/admin/metrics/app/*")
+                                        .validate(ServletContextValidation.builder()
+                                                .requires(Set.of(
+                                                        MetricsServlet.METRICS_REGISTRY,
+                                                        HealthCheckServlet.HEALTH_CHECK_REGISTRY)
+                                                )
+                                        )
+//                                .binding(ServletContextBinding.builder()
+//                                        .bind(MetricsServlet.METRICS_REGISTRY, "metrics.jersey")
+//                                        .bind(HealthCheckServlet.HEALTH_CHECK_REGISTRY, HealthCheckRegistry.class)
+//                                )
+                        )
                 )
-                .servletContext(ServletContext.builder()
-                        .initializer(MetricsServiceInitializer.class)
+                .initializer(ServletContextInitialization.builder()
+                        .initializer(MetricsServiceInitializer.class, ServletContextInitialization.produces().produce(Set.of("metric.jersey")))
                 )
                 .resources(Resources.builder()
                         .resource(Resource.builder("greeting")
-                                .clazz(EmbeddedApplicationTest.GreetingResource.class))
+                                .clazz(EmbeddedApplicationTest.GreetingResource.class)
+                        )
                         .resource(Resource.builder("metricResource")
                                 .clazz(MetricsFeature.class)
                                 .args(Args.builder()

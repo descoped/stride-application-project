@@ -7,30 +7,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.exception.ExceptionFunction;
 import io.descoped.stride.application.jackson.JsonElement;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static java.util.Optional.ofNullable;
-
-public record ServletContext(ObjectNode json) {
+public record ServletContextInitialization(ObjectNode json) {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public Set<String> names() {
-        Set<String> names = new LinkedHashSet<>();
-        json.fieldNames().forEachRemaining(names::add);
-        return names;
-    }
-
-    public String serviceRef(String name) {
-        return ofNullable(json)
-                .map(node -> node.get(name))
-                .map(JsonNode::asText)
-                .orElse(null);
     }
 
     public List<Class<ServletContextInitializer>> initializers() {
@@ -47,16 +31,11 @@ public record ServletContext(ObjectNode json) {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder bind(String name, String serviceRef) {
-            builder.set(name, builder.textNode(serviceRef));
-            return this;
-        }
-
-        public Builder bind(String name, Class<?> serviceRef) {
-            return bind(name, serviceRef.getName());
-        }
-
         public <R extends ServletContextInitializer> Builder initializer(Class<R> initializerClass) {
+            return initializer(initializerClass, ServletContextInitialization.produces());
+        }
+
+        public <R extends ServletContextInitializer> Builder initializer(Class<R> initializerClass, Produces.Builder producesBuilder) {
             ArrayNode initializerClassArrayNode;
             if (builder.has("initializers")) {
                 initializerClassArrayNode = (ArrayNode) builder.get("initializers");
@@ -68,8 +47,32 @@ public record ServletContext(ObjectNode json) {
             return this;
         }
 
-        public ServletContext build() {
-            return new ServletContext(builder);
+        public ServletContextInitialization build() {
+            return new ServletContextInitialization(builder);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------
+
+    public static Produces.Builder produces() {
+        return new Produces.Builder();
+    }
+
+    public record Produces(ObjectNode json) {
+
+        public record Builder(ObjectNode builder) {
+            public Builder() {
+                this(JsonNodeFactory.instance.objectNode());
+            }
+
+            public Builder produce(Set<String> namedSet) {
+
+                return this;
+            }
+
+            public Produces build() {
+                return new Produces(builder);
+            }
         }
     }
 }

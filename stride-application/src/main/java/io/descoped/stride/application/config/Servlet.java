@@ -45,12 +45,21 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(null);
     }
 
-    public ServletContext context() {
+    public ServletContextBinding binding() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
-                .map(node -> node.get("context"))
+                .map(node -> node.get("binding"))
                 .map(ObjectNode.class::cast)
-                .map(ServletContext::new)
+                .map(ServletContextBinding::new)
+                .orElse(null);
+    }
+
+    public ServletContextValidation validation() {
+        return ofNullable(json)
+                .map(node -> node.get("config"))
+                .map(node -> node.get("validation"))
+                .map(ObjectNode.class::cast)
+                .map(ServletContextValidation::new)
                 .orElse(null);
     }
 
@@ -86,11 +95,19 @@ public record Servlet(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder context(ServletContext.Builder contextBuilder) {
+        public Builder validate(ServletContextValidation.Builder ServletContextValidationBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
-                    .set("context", contextBuilder.build().json());
+                    .set("validation", ServletContextValidationBuilder.build().json());
+            return this;
+        }
+
+        public Builder binding(ServletContextBinding.Builder ServletContextBindingBuilder) {
+            JsonElement.ofDynamic(builder)
+                    .with("config")
+                    .object()
+                    .set("binding", ServletContextBindingBuilder.build().json());
             return this;
         }
 

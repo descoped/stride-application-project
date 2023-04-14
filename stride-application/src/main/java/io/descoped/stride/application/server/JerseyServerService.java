@@ -6,8 +6,9 @@ import io.descoped.stride.application.config.Arg;
 import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Services;
-import io.descoped.stride.application.config.ServletContext;
+import io.descoped.stride.application.config.ServletContextBinding;
 import io.descoped.stride.application.config.ServletContextInitializer;
+import io.descoped.stride.application.config.ServletContextValidation;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -80,15 +81,19 @@ public class JerseyServerService implements PreDestroy {
             Class<? extends Servlet> servletClass = servlet.clazz();
             Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
 
-
-            // bind service to servlet context
-            ServletContext context = servlet.context();
-            if (context != null) {
-                context.names().forEach(name -> ofNullable(context.serviceRef(name))
+            // bind service to servlet binding
+            ServletContextBinding binding = servlet.binding();
+            if (binding != null) {
+                binding.names().forEach(name -> ofNullable(binding.serviceRef(name))
                         .flatMap(services::service)
                         .map(io.descoped.stride.application.config.Service::clazz)
                         .map(serviceLocator::getService)
                         .ifPresent(instance -> servletContextHandler.getServletContext().setAttribute(name, instance)));
+            }
+
+            ServletContextValidation validation = servlet.validation();
+            if (validation != null) {
+                // TODO perform validation here
             }
 
             //ServiceLocatorUtilities.addOneConstant(jerseyServiceLocator, servletInstance, servlet.name());
