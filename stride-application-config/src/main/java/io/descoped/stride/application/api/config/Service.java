@@ -1,0 +1,44 @@
+package io.descoped.stride.application.api.config;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.internal.ServiceImpl;
+
+public interface Service {
+    static Builder builder(String name) {
+        return new ServiceImpl.ServiceBuilder(name);
+    }
+
+    static Builder builder(Class<?> clazz) {
+        return new ServiceImpl.ServiceBuilder(clazz.getName());
+    }
+
+    boolean isEnabled();
+
+    String className();
+
+    Class<?> clazz();
+
+    int runLevel();
+
+    Metadata metadata();
+
+    String name();
+
+    ObjectNode json();
+
+    interface Builder {
+        Builder enabled(boolean enabled);
+
+        Builder className(String serviceClassName);
+
+        Builder clazz(Class<?> serviceClass);
+
+        Builder runLevel(int runlevel);
+
+        Builder metadata(Metadata.Builder metadataBuilder);
+
+        Service build();
+
+        String name();
+    }
+}

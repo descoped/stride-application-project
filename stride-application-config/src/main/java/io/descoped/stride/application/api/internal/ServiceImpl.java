@@ -4,21 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.Metadata;
+import io.descoped.stride.application.api.config.Service;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import static java.util.Optional.ofNullable;
 
-public record Service(String name, ObjectNode json) {
+public record ServiceImpl(String name, ObjectNode json) implements Service {
 
-    public static Builder builder(String name) {
-        return new Builder(name);
-    }
-
-    public static Builder builder(Class<?> clazz) {
-        return new Builder(clazz.getName());
-    }
-
+    @Override
     public boolean isEnabled() {
         return ofNullable(json)
                 .map(node -> node.get("enabled"))
@@ -28,6 +22,7 @@ public record Service(String name, ObjectNode json) {
                 .orElse(false);
     }
 
+    @Override
     public String className() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -36,6 +31,7 @@ public record Service(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     @SuppressWarnings("Convert2MethodRef")
     public Class<?> clazz() {
         return ofNullable(className())
@@ -43,6 +39,7 @@ public record Service(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public int runLevel() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -52,6 +49,7 @@ public record Service(String name, ObjectNode json) {
                 .orElse(-2); // RunLevel.RUNLEVEL_VAL_INITIAL
     }
 
+    @Override
     public Metadata metadata() {
         return ofNullable(json)
                 .map(node -> node.get("metadata"))
@@ -59,25 +57,27 @@ public record Service(String name, ObjectNode json) {
                 .<Metadata>map(MetadataImpl::new)
                 .orElseGet(() -> {
                     Metadata.Builder builder = Metadata.builder();
-                    new Builder(name, json).metadata(builder).build();
+                    new ServiceBuilder(name, json).metadata(builder).build();
                     return builder.build();
                 });
     }
 
     // ------------------------------------------------------------------------------------------------------------
 
-    public record Builder(String name, ObjectNode builder) {
+    public record ServiceBuilder(String name, ObjectNode builder) implements Service.Builder {
 
-        public Builder(String name) {
+        public ServiceBuilder(String name) {
             this(name, JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder enabled(boolean enabled) {
+        @Override
+        public Service.Builder enabled(boolean enabled) {
             builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
-        public Builder className(String serviceClassName) {
+        @Override
+        public Service.Builder className(String serviceClassName) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -85,11 +85,13 @@ public record Service(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder clazz(Class<?> serviceClass) {
+        @Override
+        public Service.Builder clazz(Class<?> serviceClass) {
             return className(serviceClass.getName());
         }
 
-        public Builder runLevel(int runlevel) {
+        @Override
+        public Service.Builder runLevel(int runlevel) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -97,13 +99,15 @@ public record Service(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder metadata(Metadata.Builder metadataBuilder) {
+        @Override
+        public Service.Builder metadata(Metadata.Builder metadataBuilder) {
             builder.set("metadata", metadataBuilder.build().json());
             return this;
         }
 
+        @Override
         public Service build() {
-            return new Service(name, builder);
+            return new ServiceImpl(name, builder);
         }
     }
 }
