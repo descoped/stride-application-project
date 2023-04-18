@@ -1,6 +1,5 @@
 package io.descoped.stride.application.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 public class ClassPathResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ClassPathResourceUtils.class);
-    public static final ObjectMapper mapper = new ObjectMapper();
 
     public static String readResource(String resourceName) {
         InputStream resourceStream = ClassPathResourceUtils.class.getClassLoader()
@@ -32,13 +30,5 @@ public class ClassPathResourceUtils {
         public ResourceNotFoundException(String message) {
             super(message);
         }
-    }
-
-    static class InvalidContent extends RuntimeException {
-
-    }
-
-    static class CommunicatioException extends RuntimeException {
-
     }
 }

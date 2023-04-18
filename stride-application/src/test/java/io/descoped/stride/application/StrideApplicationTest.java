@@ -80,6 +80,7 @@ class StrideApplicationTest {
 
     @Test
     void testBootstrap() throws IOException, InterruptedException {
+        long past = System.currentTimeMillis();
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
                 .defaults()
                 .services(Services.builder()
@@ -140,8 +141,11 @@ class StrideApplicationTest {
                 )
                 .build();
 
+
+        long now = System.currentTimeMillis() - past;
+
         ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-        log.trace("\n{}", yamlMapper.writeValueAsString(configuration.json()));
+        log.trace("{}\n{}", now, yamlMapper.writeValueAsString(configuration.json()));
 
         try (StrideApplication application = StrideApplication.create(configuration)) {
             log.trace("activate");
