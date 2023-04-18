@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.ApplicationJson;
 import io.descoped.stride.application.api.config.Filter;
+import io.descoped.stride.application.api.config.Filters;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import java.util.ArrayList;
@@ -11,11 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public record Filters(ObjectNode json) {
-
-    public static Builder builder() {
-        return new Builder();
-    }
+public record FiltersImpl(ObjectNode json) implements Filters {
 
     /**
      * Get filter by name
@@ -23,6 +20,7 @@ public record Filters(ObjectNode json) {
      * @param name filter name
      * @return Filter config
      */
+    @Override
     public Optional<Filter> filter(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
@@ -37,6 +35,7 @@ public record Filters(ObjectNode json) {
      * @param className filter classname
      * @return Filter config
      */
+    @Override
     public Optional<Filter> filterByClass(String className) {
         for (Filter filter : iterator()) {
             if (className.equals(filter.className())) {
@@ -46,6 +45,7 @@ public record Filters(ObjectNode json) {
         return Optional.empty();
     }
 
+    @Override
     public Iterable<Filter> iterator() {
         List<Filter> filters = new ArrayList<>();
         Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) filters element
@@ -62,19 +62,21 @@ public record Filters(ObjectNode json) {
 
     // ----------------------------------------------------------------------------------------------------------------
 
-    public record Builder(ObjectNode builder) {
-        public Builder() {
+    public record FiltersBuilder(ObjectNode builder) implements Filters.Builder {
+        public FiltersBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder filter(Filter.Builder filterBuilder) {
+        @Override
+        public Filters.Builder filter(Filter.Builder filterBuilder) {
             Filter filter = filterBuilder.build();
             builder.set(filter.name(), filter.json());
             return this;
         }
 
+        @Override
         public Filters build() {
-            return new Filters(builder);
+            return new FiltersImpl(builder);
         }
     }
 }

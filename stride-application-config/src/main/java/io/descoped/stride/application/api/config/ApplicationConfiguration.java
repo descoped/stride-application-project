@@ -3,7 +3,7 @@ package io.descoped.stride.application.api.config;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.internal.Filters;
+import io.descoped.stride.application.api.internal.FiltersImpl;
 import io.descoped.stride.application.api.internal.Resources;
 import io.descoped.stride.application.api.internal.Services;
 import io.descoped.stride.application.api.internal.ServletContextInitialization;
@@ -84,7 +84,7 @@ public final class ApplicationConfiguration implements JsonElement {
         return ofNullable(json)
                 .map(node -> node.get("filters"))
                 .map(ObjectNode.class::cast)
-                .map(Filters::new)
+                .<Filters>map(FiltersImpl::new)
                 .orElse(Filters.builder().build());
     }
 
