@@ -46,28 +46,4 @@ public record ServletContextBinding(ObjectNode json) {
             return new ServletContextBinding(builder);
         }
     }
-
-    // --------------------------------------------------------------------------------------------------------------
-
-    public static Requires.Builder requires() {
-        return new Requires.Builder();
-    }
-
-    public record Requires(ObjectNode json) {
-
-        public record Builder(ObjectNode builder) {
-            public Builder() {
-                this(JsonNodeFactory.instance.objectNode());
-            }
-
-            public Builder require(Set<String> namedSet) {
-
-                return this;
-            }
-
-            public Requires build() {
-                return new Requires(builder);
-            }
-        }
-    }
 }
