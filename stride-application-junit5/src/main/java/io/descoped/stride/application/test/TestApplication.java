@@ -1,7 +1,7 @@
 package io.descoped.stride.application.test;
 
 import io.descoped.stride.application.Application;
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import io.descoped.stride.application.core.InstanceFactory;
 import io.descoped.stride.application.core.Logging;
 import jakarta.servlet.DispatcherType;

@@ -1,7 +1,7 @@
 package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.StrideApplication;
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -32,7 +32,7 @@ public class ApplicationInitialization {
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
 
         // register services
-        for (io.descoped.stride.application.config.Service service : configuration.services().iterator()) {
+        for (io.descoped.stride.application.api.config.Service service : configuration.services().iterator()) {
             // ignore disabled services
             if (!service.isEnabled()) {
                 continue;

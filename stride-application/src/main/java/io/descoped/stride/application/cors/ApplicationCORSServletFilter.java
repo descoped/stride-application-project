@@ -1,6 +1,6 @@
 package io.descoped.stride.application.cors;
 
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import jakarta.inject.Inject;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

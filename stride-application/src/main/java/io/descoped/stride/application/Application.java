@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import io.descoped.stride.application.core.DefaultExceptionServletFilter;
 import io.descoped.stride.application.core.InstanceFactory;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;

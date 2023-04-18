@@ -1,13 +1,13 @@
 package io.descoped.stride.application.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.config.Arg;
-import io.descoped.stride.application.config.Filters;
-import io.descoped.stride.application.config.Resource;
-import io.descoped.stride.application.config.Services;
-import io.descoped.stride.application.config.ServletContextBinding;
-import io.descoped.stride.application.config.ServletContextValidation;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.Arg;
+import io.descoped.stride.application.api.config.Filters;
+import io.descoped.stride.application.api.config.Resource;
+import io.descoped.stride.application.api.config.Services;
+import io.descoped.stride.application.api.config.ServletContextBinding;
+import io.descoped.stride.application.api.config.ServletContextValidation;
 import io.descoped.stride.application.core.ServletContextInitializer;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
@@ -64,7 +64,7 @@ public class JerseyServerService implements PreDestroy {
 
         // register filters
         Filters filters = configuration.filters();
-        for (io.descoped.stride.application.config.Filter filter : configuration.filters().iterator()) {
+        for (io.descoped.stride.application.api.config.Filter filter : configuration.filters().iterator()) {
             Class<? extends Filter> filterClass = filter.clazz();
             Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
 
@@ -77,7 +77,7 @@ public class JerseyServerService implements PreDestroy {
         ServiceLocator jerseyServiceLocator = ServiceLocatorFactory.getInstance().create("servletContextInit", serviceLocator);
 
         Services services = configuration.services();
-        for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
+        for (io.descoped.stride.application.api.config.Servlet servlet : configuration.servlets().iterator()) {
             Class<? extends Servlet> servletClass = servlet.clazz();
             Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
 
@@ -86,7 +86,7 @@ public class JerseyServerService implements PreDestroy {
             if (binding != null) {
                 binding.names().forEach(name -> ofNullable(binding.serviceRef(name))
                         .flatMap(services::service)
-                        .map(io.descoped.stride.application.config.Service::clazz)
+                        .map(io.descoped.stride.application.api.config.Service::clazz)
                         .map(serviceLocator::getService)
                         .ifPresent(instance -> servletContextHandler.getServletContext().setAttribute(name, instance)));
             }
