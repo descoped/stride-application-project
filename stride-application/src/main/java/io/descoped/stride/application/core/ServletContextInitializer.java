@@ -1,4 +1,4 @@
-package io.descoped.stride.application.config;
+package io.descoped.stride.application.core;
 
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.glassfish.hk2.api.ServiceLocator;

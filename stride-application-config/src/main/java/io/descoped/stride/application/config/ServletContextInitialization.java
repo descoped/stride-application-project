@@ -18,13 +18,13 @@ public record ServletContextInitialization(ObjectNode json) {
         return new Builder();
     }
 
-    public List<Class<ServletContextInitializer>> initializers() {
+    public List<Class<?>> initializers() {
         return JsonElement.ofStrict(json)
                 .with("config")
                 .with("classes")
                 .toList(JsonNode::asText)
                 .stream()
-                .map(ExceptionFunction.call(() -> classname -> (Class<ServletContextInitializer>) Class.forName(classname)))
+                .map(ExceptionFunction.call(() -> classname -> (Class<?>) Class.forName(classname)))
                 .collect(Collectors.toList());
     }
 
@@ -42,7 +42,7 @@ public record ServletContextInitialization(ObjectNode json) {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public <R extends ServletContextInitializer> Builder initializer(Class<R> initializerClass) {
+        public <R> Builder initializer(Class<R> initializerClass) {
             ArrayNode initializerClassArrayNode = ConfigHelper.createOrGet(JsonElement.ofDynamic(builder).with("config").object(), "classes");
             initializerClassArrayNode.add(builder.textNode(initializerClass.getName()));
             return this;

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.exception.ExceptionFunction;
 import io.descoped.stride.application.jackson.JsonElement;
-import org.glassfish.hk2.runlevel.RunLevel;
 
 import static java.util.Optional.ofNullable;
 
@@ -49,7 +48,7 @@ public record Service(String name, ObjectNode json) {
                 .map(node -> node.get("runLevel"))
                 .map(JsonNode::asText)
                 .map(Integer::valueOf)
-                .orElse(RunLevel.RUNLEVEL_VAL_INITIAL);
+                .orElse(-2); // RunLevel.RUNLEVEL_VAL_INITIAL
     }
 
     public Metadata metadata() {

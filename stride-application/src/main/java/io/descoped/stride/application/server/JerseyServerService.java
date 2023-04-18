@@ -7,8 +7,8 @@ import io.descoped.stride.application.config.Filters;
 import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Services;
 import io.descoped.stride.application.config.ServletContextBinding;
-import io.descoped.stride.application.config.ServletContextInitializer;
 import io.descoped.stride.application.config.ServletContextValidation;
+import io.descoped.stride.application.core.ServletContextInitializer;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -102,8 +102,8 @@ public class JerseyServerService implements PreDestroy {
             servletSpecList.add(new ServletSpec(servletHolder, servlet.pathSpec()));
         }
 
-        for (Class<ServletContextInitializer> initializerClass : configuration.servletContext().initializers()) {
-            ServletContextInitializer initializer = serviceLocator.createAndInitialize(initializerClass);
+        for (Class<?> initializerClass : configuration.servletContext().initializers()) {
+            ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
             initializer.initialize(jerseyServiceLocator, servletContextHandler.getServletContext());
         }
 

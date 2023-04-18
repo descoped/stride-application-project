@@ -36,18 +36,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>no.cantara.config</groupId>
-            <artifactId>property-config</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>no.cantara.config</groupId>
-            <artifactId>property-config-json</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>io.descoped.stride.application</groupId>
+            <artifactId>stride-application-config</artifactId>
+            <version>0.0.24-SNAPSHOT</version>
         </dependency>
 
         <dependency>
