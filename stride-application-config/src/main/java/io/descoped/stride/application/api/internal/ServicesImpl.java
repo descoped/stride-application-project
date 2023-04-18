@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.ApplicationJson;
 import io.descoped.stride.application.api.config.Service;
+import io.descoped.stride.application.api.config.Services;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import java.util.ArrayList;
@@ -11,11 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public record Services(ObjectNode json) {
-
-    public static Builder builder() {
-        return new Builder();
-    }
+public record ServicesImpl(ObjectNode json) implements Services {
 
     /**
      * Get service by name
@@ -23,6 +20,7 @@ public record Services(ObjectNode json) {
      * @param name service name
      * @return Service config
      */
+    @Override
     public Optional<Service> service(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
@@ -37,6 +35,7 @@ public record Services(ObjectNode json) {
      * @param className service class
      * @return Service config
      */
+    @Override
     public Optional<Service> serviceByClass(String className) {
         for (Service service : iterator()) {
             if (className.equals(service.className())) {
@@ -46,6 +45,7 @@ public record Services(ObjectNode json) {
         return Optional.empty();
     }
 
+    @Override
     public Iterable<Service> iterator() {
         List<Service> services = new ArrayList<>();
         Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) services element
@@ -62,20 +62,22 @@ public record Services(ObjectNode json) {
 
     // ----------------------------------------------------------------------------------------------------------------
 
-    public record Builder(ObjectNode builder) {
+    public record ServicesBuilder(ObjectNode builder) implements Services.Builder {
 
-        public Builder() {
+        public ServicesBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder service(Service.Builder serviceBuilder) {
+        @Override
+        public Services.Builder service(Service.Builder serviceBuilder) {
             Service service = serviceBuilder.build();
             builder.set(service.name(), service.json());
             return this;
         }
 
+        @Override
         public Services build() {
-            return new Services(builder);
+            return new ServicesImpl(builder);
         }
     }
 }

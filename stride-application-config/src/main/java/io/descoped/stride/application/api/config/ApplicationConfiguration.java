@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.internal.FiltersImpl;
 import io.descoped.stride.application.api.internal.ResourcesImpl;
-import io.descoped.stride.application.api.internal.Services;
+import io.descoped.stride.application.api.internal.ServicesImpl;
 import io.descoped.stride.application.api.internal.ServletContextInitialization;
 import io.descoped.stride.application.api.internal.Servlets;
 import io.descoped.stride.application.api.jackson.JsonCreationStrategy;
@@ -76,7 +76,7 @@ public final class ApplicationConfiguration implements JsonElement {
         return ofNullable(json)
                 .map(node -> node.get("services"))
                 .map(ObjectNode.class::cast)
-                .map(Services::new)
+                .<Services>map(ServicesImpl::new)
                 .orElse(Services.builder().build());
     }
 
