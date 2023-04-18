@@ -13,11 +13,14 @@ public interface Filter {
         return new FilterImpl.FilterBuilder(name);
     }
 
+    String name();
+
+    ObjectNode json();
+
     boolean isEnabled();
 
     String className();
 
-    @SuppressWarnings("unchecked")
     <R extends jakarta.servlet.Filter> Class<R> clazz();
 
     String pathSpec();
@@ -26,11 +29,9 @@ public interface Filter {
 
     ServletContextBinding context();
 
-    String name();
-
-    ObjectNode json();
-
     interface Builder {
+        String name();
+
         Builder enabled(boolean enabled);
 
         Builder className(String filterClassName);
@@ -44,7 +45,5 @@ public interface Filter {
         Builder context(ServletContextInitialization.Builder contextBuilder);
 
         Filter build();
-
-        String name();
     }
 }

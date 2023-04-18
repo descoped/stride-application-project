@@ -3,16 +3,14 @@ package io.descoped.stride.application.api.internal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Arg;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 
 import static java.util.Optional.ofNullable;
 
-public record ArgImpl(ObjectNode json) {
+public record ArgImpl(ObjectNode json) implements Arg {
 
-    public static ArgImpl.Builder builder() {
-        return new ArgImpl.Builder();
-    }
-
+    @Override
     public Class<?> clazz() {
         return ofNullable(json)
                 .map(node -> node.get("class"))
@@ -21,6 +19,7 @@ public record ArgImpl(ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public String named() {
         return ofNullable(json)
                 .map(node -> node.get("named"))
@@ -28,18 +27,20 @@ public record ArgImpl(ObjectNode json) {
                 .orElse(null);
     }
 
-    public record Builder(ObjectNode builder) {
-        public Builder() {
+    public record ArgBuilder(ObjectNode builder) implements Builder {
+        public ArgBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
+        @Override
         public Builder arg(Class<?> clazz, String named) {
             builder.set("class", builder.textNode(clazz.getName()));
             builder.set("named", builder.textNode(named));
             return this;
         }
 
-        public ArgImpl build() {
+        @Override
+        public Arg build() {
             return new ArgImpl(builder);
         }
     }

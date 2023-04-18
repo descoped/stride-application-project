@@ -1,7 +1,6 @@
 package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.descoped.stride.application.api.internal.ArgImpl;
 import io.descoped.stride.application.api.internal.ArgsImpl;
 
 import java.util.List;
@@ -11,7 +10,7 @@ public interface Args {
         return new ArgsImpl.ArgsBuilder();
     }
 
-    List<ArgImpl> args();
+    List<Arg> args();
 
     ArrayNode json();
 

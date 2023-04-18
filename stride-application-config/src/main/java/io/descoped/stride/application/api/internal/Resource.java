@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Arg;
 import io.descoped.stride.application.api.config.Args;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
@@ -42,7 +43,7 @@ public record Resource(String name, ObjectNode json) {
                 .orElse(null);
     }
 
-    public List<ArgImpl> args() {
+    public List<Arg> args() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
                 .map(node -> node.get("args"))
