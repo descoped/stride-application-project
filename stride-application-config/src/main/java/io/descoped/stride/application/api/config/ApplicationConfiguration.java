@@ -3,7 +3,7 @@ package io.descoped.stride.application.api.config;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.internal.ApplicationJson;
+import io.descoped.stride.application.api.internal.ApplicationConfigurationJson;
 import io.descoped.stride.application.api.internal.FiltersImpl;
 import io.descoped.stride.application.api.internal.ResourcesImpl;
 import io.descoped.stride.application.api.internal.ServicesImpl;
@@ -184,8 +184,8 @@ public final class ApplicationConfiguration implements JsonElement {
                         .build();
             }
 
-            ApplicationJson applicationJson = new ApplicationJson(applicationProperties);
-            ObjectNode jsonConfiguration = (ObjectNode) applicationJson.json();
+            ApplicationConfigurationJson applicationConfigurationJson = new ApplicationConfigurationJson(applicationProperties);
+            ObjectNode jsonConfiguration = (ObjectNode) applicationConfigurationJson.json();
 
             // merge deployment builders
             JsonMerger merger = new JsonMerger();

@@ -47,7 +47,7 @@ public record ServicesImpl(ObjectNode json) implements Services {
     @Override
     public Iterable<Service> iterator() {
         List<Service> services = new ArrayList<>();
-        Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) services element
+        Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) services element
         for (String key : keys) {
             JsonElement.ofStrict(json)
                     .with(key)

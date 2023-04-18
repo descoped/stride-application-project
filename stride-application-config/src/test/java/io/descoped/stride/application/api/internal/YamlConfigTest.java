@@ -29,10 +29,10 @@ public class YamlConfigTest {
         JavaPropsMapper propsMapper = new JavaPropsMapper();
         String props = propsMapper.writeValueAsString(root);
         log.trace("props:\n{}", props);
-        Set<String> propsHierachySet = new ApplicationJson(props).keys("services");
+        Set<String> propsHierachySet = new ApplicationConfigurationJson(props).keys("services");
         log.trace("p: {}", new TreeSet<>(propsHierachySet));
 
-        Set<String> yamlHierachySet = new ApplicationJson(root).keys("services");
+        Set<String> yamlHierachySet = new ApplicationConfigurationJson(root).keys("services");
         log.trace("y: {}", new TreeSet<>(yamlHierachySet));
 
         assertEquals(propsHierachySet, yamlHierachySet);

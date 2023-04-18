@@ -48,7 +48,7 @@ public record ResourcesImpl(ObjectNode json) implements Resources {
     @Override
     public Iterable<Resource> iterator() {
         List<Resource> resources = new ArrayList<>();
-        Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) resources element
+        Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) resources element
         for (String key : keys) {
             JsonElement.ofStrict(json)
                     .with(key)

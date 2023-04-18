@@ -22,24 +22,24 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public final class ApplicationJson {
+public final class ApplicationConfigurationJson {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationJson.class);
+    private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurationJson.class);
 
     private final ApplicationProperties properties;
     private final JsonNode json;
 
-    public ApplicationJson(String properties) {
+    public ApplicationConfigurationJson(String properties) {
         this(mapToApplicationProperties(propertiesToMap(properties)));
     }
 
-    public ApplicationJson(ApplicationProperties properties) {
+    public ApplicationConfigurationJson(ApplicationProperties properties) {
         this.properties = properties;
         PropertyMapToJsonConverter converter = new PropertyMapToJsonConverter(properties.map());
         json = converter.json();
     }
 
-    public ApplicationJson(JsonNode json) {
+    public ApplicationConfigurationJson(JsonNode json) {
         this.properties = null;
         this.json = json;
     }

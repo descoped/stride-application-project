@@ -48,7 +48,7 @@ public record ServletsImpl(ObjectNode json) implements Servlets {
     @Override
     public Iterable<Servlet> iterator() {
         List<Servlet> servlets = new ArrayList<>();
-        Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) servlets element
+        Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) servlets element
         for (String key : keys) {
             JsonElement.ofStrict(json)
                     .with(key)

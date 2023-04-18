@@ -47,7 +47,7 @@ public record FiltersImpl(ObjectNode json) implements Filters {
     @Override
     public Iterable<Filter> iterator() {
         List<Filter> filters = new ArrayList<>();
-        Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) filters element
+        Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) filters element
         for (String key : keys) {
             JsonElement.ofStrict(json)
                     .with(key)
