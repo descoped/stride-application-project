@@ -1,4 +1,4 @@
-package io.descoped.stride.application.api.config;
+package io.descoped.stride.application.api.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -7,10 +7,10 @@ import io.descoped.stride.application.api.exception.ExceptionFunction;
 
 import static java.util.Optional.ofNullable;
 
-public record Arg(ObjectNode json) {
+public record ArgImpl(ObjectNode json) {
 
-    public static Arg.Builder builder() {
-        return new Arg.Builder();
+    public static ArgImpl.Builder builder() {
+        return new ArgImpl.Builder();
     }
 
     public Class<?> clazz() {
@@ -39,8 +39,8 @@ public record Arg(ObjectNode json) {
             return this;
         }
 
-        public Arg build() {
-            return new Arg(builder);
+        public ArgImpl build() {
+            return new ArgImpl(builder);
         }
     }
 }

@@ -1,9 +1,10 @@
-package io.descoped.stride.application.api.config;
+package io.descoped.stride.application.api.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Args;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
@@ -41,12 +42,12 @@ public record Resource(String name, ObjectNode json) {
                 .orElse(null);
     }
 
-    public List<Arg> args() {
+    public List<ArgImpl> args() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
                 .map(node -> node.get("args"))
                 .map(ArrayNode.class::cast)
-                .map(Args::new)
+                .map(ArgsImpl::new)
                 .map(Args::args)
                 .orElse(Collections.emptyList());
     }
@@ -75,7 +76,7 @@ public record Resource(String name, ObjectNode json) {
             return className(resourceClass.getName());
         }
 
-        public Builder args(Args.Builder argsBuilder) {
+        public Builder args(ArgsImpl.ArgsBuilder argsBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()

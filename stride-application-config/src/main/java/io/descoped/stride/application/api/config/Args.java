@@ -1,42 +1,24 @@
 package io.descoped.stride.application.api.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.internal.ArgImpl;
+import io.descoped.stride.application.api.internal.ArgsImpl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public record Args(ArrayNode json) {
-
-    public static Builder builder() {
-        return new Builder();
+public interface Args {
+    static Builder builder() {
+        return new ArgsImpl.ArgsBuilder();
     }
 
-    public List<Arg> args() {
-        List<Arg> argList = new ArrayList<>();
-        for (Iterator<JsonNode> it = json.elements(); it.hasNext(); ) {
-            ObjectNode child = (ObjectNode) it.next();
-            argList.add(new Arg(child));
-        }
-        return argList;
+    List<ArgImpl> args();
+
+    ArrayNode json();
+
+    interface Builder {
+        Builder arg(Class<?> clazz, String named);
+
+        Args build();
     }
 
-    public record Builder(ArrayNode builder) {
-        public Builder() {
-            this(JsonNodeFactory.instance.arrayNode());
-        }
-
-        public Builder arg(Class<?> clazz, String named) {
-            Arg arg = Arg.builder().arg(clazz, named).build();
-            builder.add(arg.json());
-            return this;
-        }
-
-        public Args build() {
-            return new Args(builder);
-        }
-    }
 }

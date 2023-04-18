@@ -1,4 +1,4 @@
-package io.descoped.stride.application.api.config;
+package io.descoped.stride.application.api.internal;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
