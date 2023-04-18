@@ -3,6 +3,7 @@ package io.descoped.stride.application.api.internal;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.ApplicationJson;
+import io.descoped.stride.application.api.config.Filter;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public record Filters(ObjectNode json) {
                 .with(name)
                 .optionalNode()
                 .map(ObjectNode.class::cast)
-                .map(json -> new Filter(name, json));
+                .map(json -> new FilterImpl(name, json));
     }
 
     /**
@@ -53,7 +54,7 @@ public record Filters(ObjectNode json) {
                     .with(key)
                     .optionalNode()
                     .map(ObjectNode.class::cast)
-                    .map(json -> new Filter(key, json))
+                    .map(json -> new FilterImpl(key, json))
                     .map(filters::add);
         }
         return filters;

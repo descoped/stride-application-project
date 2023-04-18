@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Filter;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 import jakarta.servlet.DispatcherType;
@@ -14,12 +15,9 @@ import java.util.Set;
 
 import static java.util.Optional.ofNullable;
 
-public record Filter(String name, ObjectNode json) {
+public record FilterImpl(String name, ObjectNode json) implements Filter {
 
-    public static Builder builder(String name) {
-        return new Builder(name);
-    }
-
+    @Override
     public boolean isEnabled() {
         return ofNullable(json)
                 .map(node -> node.get("enabled"))
@@ -29,6 +27,7 @@ public record Filter(String name, ObjectNode json) {
                 .orElse(false);
     }
 
+    @Override
     public String className() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -37,6 +36,7 @@ public record Filter(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <R extends jakarta.servlet.Filter> Class<R> clazz() {
         return ofNullable(className())
@@ -44,6 +44,7 @@ public record Filter(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public String pathSpec() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -52,6 +53,7 @@ public record Filter(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public EnumSet<DispatcherType> dispatches() {
         List<DispatcherType> dispatches = JsonElement.ofStrict(json)
                 .with("config.dispatches")
@@ -59,6 +61,7 @@ public record Filter(String name, ObjectNode json) {
         return EnumSet.copyOf(Set.copyOf(dispatches));
     }
 
+    @Override
     public ServletContextBinding context() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -70,16 +73,18 @@ public record Filter(String name, ObjectNode json) {
 
     // ------------------------------------------------------------------------------------------------------------
 
-    public record Builder(String name, ObjectNode builder) {
-        public Builder(String name) {
+    public record FilterBuilder(String name, ObjectNode builder) implements Filter.Builder {
+        public FilterBuilder(String name) {
             this(name, JsonNodeFactory.instance.objectNode());
         }
 
+        @Override
         public Builder enabled(boolean enabled) {
             builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
+        @Override
         public Builder className(String filterClassName) {
             JsonElement.ofDynamic(builder)
                     .with("config")
@@ -88,10 +93,12 @@ public record Filter(String name, ObjectNode json) {
             return this;
         }
 
+        @Override
         public Builder clazz(Class<? extends jakarta.servlet.Filter> filterClass) {
             return className(filterClass.getName());
         }
 
+        @Override
         public Builder pathSpec(String pathSpec) {
             JsonElement.ofDynamic(builder)
                     .with("config")
@@ -100,6 +107,7 @@ public record Filter(String name, ObjectNode json) {
             return this;
         }
 
+        @Override
         public Builder dispatches(EnumSet<DispatcherType> dispatches) {
             ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
             dispatches.forEach(e -> arrayNode.add(builder.textNode(e.name())));
@@ -110,6 +118,7 @@ public record Filter(String name, ObjectNode json) {
             return this;
         }
 
+        @Override
         public Builder context(ServletContextInitialization.Builder contextBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
@@ -118,8 +127,9 @@ public record Filter(String name, ObjectNode json) {
             return this;
         }
 
+        @Override
         public Filter build() {
-            return new Filter(name, builder);
+            return new FilterImpl(name, builder);
         }
     }
 }
