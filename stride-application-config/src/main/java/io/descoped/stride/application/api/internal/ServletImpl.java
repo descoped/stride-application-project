@@ -3,16 +3,15 @@ package io.descoped.stride.application.api.internal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Servlet;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import static java.util.Optional.ofNullable;
 
-public record Servlet(String name, ObjectNode json) {
-    public static Builder builder(String name) {
-        return new Builder(name);
-    }
+public record ServletImpl(String name, ObjectNode json) implements Servlet {
 
+    @Override
     public boolean isEnabled() {
         return ofNullable(json)
                 .map(node -> node.get("enabled"))
@@ -22,6 +21,7 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(false);
     }
 
+    @Override
     public String className() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -30,6 +30,7 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <R extends jakarta.servlet.Servlet> Class<R> clazz() {
         return ofNullable(className())
@@ -37,6 +38,7 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public String pathSpec() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -45,6 +47,7 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public ServletContextBinding binding() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -54,6 +57,7 @@ public record Servlet(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public ServletContextValidation validation() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -65,17 +69,19 @@ public record Servlet(String name, ObjectNode json) {
 
     // ------------------------------------------------------------------------------------------------------------
 
-    public record Builder(String name, ObjectNode builder) {
-        public Builder(String name) {
+    public record ServletBuilder(String name, ObjectNode builder) implements Servlet.Builder {
+        public ServletBuilder(String name) {
             this(name, JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder enabled(boolean enabled) {
+        @Override
+        public Servlet.Builder enabled(boolean enabled) {
             builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
-        public Builder className(String servletClassName) {
+        @Override
+        public Servlet.Builder className(String servletClassName) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -83,11 +89,13 @@ public record Servlet(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder clazz(Class<? extends jakarta.servlet.Servlet> servletClass) {
+        @Override
+        public Servlet.Builder clazz(Class<? extends jakarta.servlet.Servlet> servletClass) {
             return className(servletClass.getName());
         }
 
-        public Builder pathSpec(String pathSpec) {
+        @Override
+        public Servlet.Builder pathSpec(String pathSpec) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -95,7 +103,8 @@ public record Servlet(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder validate(ServletContextValidation.Builder servletContextValidationBuilder) {
+        @Override
+        public Servlet.Builder validate(ServletContextValidation.Builder servletContextValidationBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -103,7 +112,8 @@ public record Servlet(String name, ObjectNode json) {
             return this;
         }
 
-        public Builder binding(ServletContextBinding.Builder ServletContextBindingBuilder) {
+        @Override
+        public Servlet.Builder binding(ServletContextBinding.Builder ServletContextBindingBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -111,8 +121,9 @@ public record Servlet(String name, ObjectNode json) {
             return this;
         }
 
+        @Override
         public Servlet build() {
-            return new Servlet(name, builder);
+            return new ServletImpl(name, builder);
         }
     }
 }
