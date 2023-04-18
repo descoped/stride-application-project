@@ -3,6 +3,7 @@ package io.descoped.stride.application.api.internal;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.ApplicationJson;
+import io.descoped.stride.application.api.config.Resource;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public record Resources(ObjectNode json) {
                 .with(name)
                 .optionalNode()
                 .map(ObjectNode.class::cast)
-                .map(json -> new Resource(name, json));
+                .map(json -> new ResourceImpl(name, json));
     }
 
 
@@ -53,7 +54,7 @@ public record Resources(ObjectNode json) {
                     .with(key)
                     .optionalNode()
                     .map(ObjectNode.class::cast)
-                    .map(json -> new Resource(key, json))
+                    .map(json -> new ResourceImpl(key, json))
                     .map(resources::add);
         }
         return resources;

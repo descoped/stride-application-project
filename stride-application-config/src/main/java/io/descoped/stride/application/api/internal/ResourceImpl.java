@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.Arg;
 import io.descoped.stride.application.api.config.Args;
+import io.descoped.stride.application.api.config.Resource;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
@@ -14,11 +15,9 @@ import java.util.List;
 
 import static java.util.Optional.ofNullable;
 
-public record Resource(String name, ObjectNode json) {
-    public static Builder builder(String name) {
-        return new Builder(name);
-    }
+public record ResourceImpl(String name, ObjectNode json) implements Resource {
 
+    @Override
     public boolean isEnabled() {
         return ofNullable(json)
                 .map(node -> node.get("enabled"))
@@ -28,6 +27,7 @@ public record Resource(String name, ObjectNode json) {
                 .orElse(false);
     }
 
+    @Override
     public String className() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -36,6 +36,7 @@ public record Resource(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <R> Class<R> clazz() {
         return ofNullable(className())
@@ -43,6 +44,7 @@ public record Resource(String name, ObjectNode json) {
                 .orElse(null);
     }
 
+    @Override
     public List<Arg> args() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
@@ -55,17 +57,19 @@ public record Resource(String name, ObjectNode json) {
 
     // ------------------------------------------------------------------------------------------------------------
 
-    public record Builder(String name, ObjectNode builder) {
-        public Builder(String name) {
+    public record ResourceBuilder(String name, ObjectNode builder) implements Resource.Builder {
+        public ResourceBuilder(String name) {
             this(name, JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder enabled(boolean enabled) {
+        @Override
+        public Resource.Builder enabled(boolean enabled) {
             builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
-        public Builder className(String resourceClassName) {
+        @Override
+        public Resource.Builder className(String resourceClassName) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -73,11 +77,13 @@ public record Resource(String name, ObjectNode json) {
             return this;
         }
 
-        public <R> Builder clazz(Class<R> resourceClass) {
+        @Override
+        public <R> Resource.Builder clazz(Class<R> resourceClass) {
             return className(resourceClass.getName());
         }
 
-        public Builder args(ArgsImpl.ArgsBuilder argsBuilder) {
+        @Override
+        public Resource.Builder args(ArgsImpl.ArgsBuilder argsBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
@@ -85,8 +91,9 @@ public record Resource(String name, ObjectNode json) {
             return this;
         }
 
+        @Override
         public Resource build() {
-            return new Resource(name, builder);
+            return new ResourceImpl(name, builder);
         }
     }
 }
