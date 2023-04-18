@@ -43,7 +43,7 @@ public record ServletContextInitialization(ObjectNode json) {
         }
 
         public <R> Builder initializer(Class<R> initializerClass) {
-            ArrayNode initializerClassArrayNode = ConfigHelper.createOrGet(JsonElement.ofDynamic(builder).with("config").object(), "classes");
+            ArrayNode initializerClassArrayNode = BuilderHelper.createOrGet(JsonElement.ofDynamic(builder).with("config").object(), "classes");
             initializerClassArrayNode.add(builder.textNode(initializerClass.getName()));
             return this;
         }

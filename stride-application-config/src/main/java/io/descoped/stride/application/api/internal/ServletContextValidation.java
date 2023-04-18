@@ -28,7 +28,7 @@ public record ServletContextValidation(ObjectNode json) {
         }
 
         public Builder require(String named) {
-            ArrayNode requiresArrayNode = ConfigHelper.createOrGet(builder, "requires");
+            ArrayNode requiresArrayNode = BuilderHelper.createOrGet(builder, "requires");
             requiresArrayNode.add(builder.textNode(named));
 
             return this;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ConfigHelper {
+public class BuilderHelper {
 
     public static ArrayNode createOrGet(ObjectNode builder, String field) {
         ArrayNode arrayNode;
