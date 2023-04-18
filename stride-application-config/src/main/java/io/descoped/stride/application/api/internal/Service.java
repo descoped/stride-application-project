@@ -3,6 +3,7 @@ package io.descoped.stride.application.api.internal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Metadata;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
@@ -55,7 +56,7 @@ public record Service(String name, ObjectNode json) {
         return ofNullable(json)
                 .map(node -> node.get("metadata"))
                 .map(ObjectNode.class::cast)
-                .map(Metadata::new)
+                .<Metadata>map(MetadataImpl::new)
                 .orElseGet(() -> {
                     Metadata.Builder builder = Metadata.builder();
                     new Builder(name, json).metadata(builder).build();

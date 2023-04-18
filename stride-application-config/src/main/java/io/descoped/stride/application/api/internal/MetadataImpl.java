@@ -2,33 +2,33 @@ package io.descoped.stride.application.api.internal;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.config.Metadata;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
-public record Metadata(ObjectNode json) {
+public record MetadataImpl(ObjectNode json) implements Metadata {
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
+    @Override
     public String value(String name) {
         return JsonElement.ofStrict(json).asString(name, null);
     }
 
     // ------------------------------------------------------------------------------------------------------------
 
-    public record Builder(ObjectNode builder) {
+    public record MetadataBuilder(ObjectNode builder) implements Metadata.Builder {
 
-        public Builder() {
+        public MetadataBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder property(String name, String value) {
+        @Override
+        public Metadata.Builder property(String name, String value) {
             builder.set(name, builder.textNode(value));
             return this;
         }
 
+        @Override
         public Metadata build() {
-            return new Metadata(builder);
+            return new MetadataImpl(builder);
         }
     }
 }

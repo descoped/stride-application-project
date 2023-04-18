@@ -27,7 +27,7 @@ public record ArgImpl(ObjectNode json) implements Arg {
                 .orElse(null);
     }
 
-    public record ArgBuilder(ObjectNode builder) implements Builder {
+    public record ArgBuilder(ObjectNode builder) implements Arg.Builder {
         public ArgBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }

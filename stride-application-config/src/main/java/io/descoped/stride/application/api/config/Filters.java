@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface Filters {
 
-    static Builder builder() {
+    static Filters.Builder builder() {
         return new FiltersImpl.FiltersBuilder();
     }
 
@@ -24,5 +24,4 @@ public interface Filters {
 
         Filters build();
     }
-
 }

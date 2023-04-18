@@ -19,5 +19,4 @@ public interface Args {
 
         Args build();
     }
-
 }
