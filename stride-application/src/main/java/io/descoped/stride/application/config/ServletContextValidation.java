@@ -27,6 +27,19 @@ public record ServletContextValidation(ObjectNode json) {
             this(JsonNodeFactory.instance.objectNode());
         }
 
+        public Builder require(String named) {
+            ArrayNode requiresArrayNode;
+            if (builder.has("requires")) {
+                requiresArrayNode = (ArrayNode) builder.get("requires");
+            } else {
+                requiresArrayNode = JsonNodeFactory.instance.arrayNode();
+                builder.set("requires", requiresArrayNode);
+            }
+            requiresArrayNode.add(builder.textNode(named));
+
+            return this;
+        }
+
         public Builder requires(Set<String> named) {
             ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
             ofNullable(named).ifPresent(set -> set.forEach(arrayNode::add));
@@ -36,30 +49,6 @@ public record ServletContextValidation(ObjectNode json) {
 
         public ServletContextValidation build() {
             return new ServletContextValidation(builder);
-        }
-    }
-
-    // --------------------------------------------------------------------------------------------------------------
-
-    public static Requires.Builder requires() {
-        return new Requires.Builder();
-    }
-
-    public record Requires(ObjectNode json) {
-
-        public record Builder(ObjectNode builder) {
-            public Builder() {
-                this(JsonNodeFactory.instance.objectNode());
-            }
-
-            public Builder require(Set<String> namedSet) {
-
-                return this;
-            }
-
-            public Requires build() {
-                return new Requires(builder);
-            }
         }
     }
 }

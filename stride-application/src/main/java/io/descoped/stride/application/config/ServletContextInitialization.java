@@ -8,7 +8,6 @@ import io.descoped.stride.application.exception.ExceptionFunction;
 import io.descoped.stride.application.jackson.JsonElement;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -21,7 +20,8 @@ public record ServletContextInitialization(ObjectNode json) {
 
     public List<Class<ServletContextInitializer>> initializers() {
         return JsonElement.ofStrict(json)
-                .with("initializers")
+                .with("config")
+                .with("classes")
                 .toList(JsonNode::asText)
                 .stream()
                 .map(ExceptionFunction.call(() -> classname -> (Class<ServletContextInitializer>) Class.forName(classname)))
@@ -43,17 +43,7 @@ public record ServletContextInitialization(ObjectNode json) {
         }
 
         public <R extends ServletContextInitializer> Builder initializer(Class<R> initializerClass) {
-            return initializer(initializerClass, ServletContextInitialization.produces());
-        }
-
-        public <R extends ServletContextInitializer> Builder initializer(Class<R> initializerClass, Produces.Builder producesBuilder) {
-            ArrayNode initializerClassArrayNode;
-            if (builder.has("initializers")) {
-                initializerClassArrayNode = (ArrayNode) builder.get("initializers");
-            } else {
-                initializerClassArrayNode = JsonNodeFactory.instance.arrayNode();
-                builder.set("initializers", initializerClassArrayNode);
-            }
+            ArrayNode initializerClassArrayNode = ConfigHelper.createOrGet(JsonElement.ofDynamic(builder).with("config").object(), "classes");
             initializerClassArrayNode.add(builder.textNode(initializerClass.getName()));
             return this;
         }
@@ -71,27 +61,4 @@ public record ServletContextInitialization(ObjectNode json) {
         }
     }
 
-    // --------------------------------------------------------------------------------------------------------------
-
-    public static Produces.Builder produces() {
-        return new Produces.Builder();
-    }
-
-    public record Produces(ObjectNode json) {
-
-        public record Builder(ObjectNode builder) {
-            public Builder() {
-                this(JsonNodeFactory.instance.objectNode());
-            }
-
-            public Builder produce(Set<String> namedSet) {
-
-                return this;
-            }
-
-            public Produces build() {
-                return new Produces(builder);
-            }
-        }
-    }
 }

@@ -4,7 +4,22 @@ import com.codahale.metrics.DefaultSettableGauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jersey3.MetricsFeature;
-import io.descoped.stride.application.config.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.config.Args;
+import io.descoped.stride.application.config.Filter;
+import io.descoped.stride.application.config.Filters;
+import io.descoped.stride.application.config.Resource;
+import io.descoped.stride.application.config.Resources;
+import io.descoped.stride.application.config.Service;
+import io.descoped.stride.application.config.Services;
+import io.descoped.stride.application.config.Servlet;
+import io.descoped.stride.application.config.ServletContextBinding;
+import io.descoped.stride.application.config.ServletContextInitialization;
+import io.descoped.stride.application.config.ServletContextInitializer;
+import io.descoped.stride.application.config.ServletContextValidation;
+import io.descoped.stride.application.config.Servlets;
 import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.HealthCheckServlet;
@@ -90,28 +105,26 @@ class StrideApplicationTest {
                                         .requires(Set.of(MetricsServlet.METRICS_REGISTRY)))
                         )
                         .servlet(Servlet.builder("metrics")
-                                        .enabled(true)
-                                        .clazz(MetricsServlet.class)
-                                        .pathSpec("/admin/metrics/app/*")
-                                        .validate(ServletContextValidation.builder()
-                                                .requires(Set.of(
-                                                        MetricsServlet.METRICS_REGISTRY,
-                                                        HealthCheckServlet.HEALTH_CHECK_REGISTRY)
-                                                )
+                                .enabled(true)
+                                .clazz(MetricsServlet.class)
+                                .pathSpec("/admin/metrics/app/*")
+                                .validate(ServletContextValidation.builder()
+                                        .requires(Set.of(
+                                                MetricsServlet.METRICS_REGISTRY,
+                                                HealthCheckServlet.HEALTH_CHECK_REGISTRY)
                                         )
-//                                .binding(ServletContextBinding.builder()
-//                                        .bind(MetricsServlet.METRICS_REGISTRY, "metrics.jersey")
-//                                        .bind(HealthCheckServlet.HEALTH_CHECK_REGISTRY, HealthCheckRegistry.class)
-//                                )
+                                )
+                                .binding(ServletContextBinding.builder()
+                                        .bind(MetricsServlet.METRICS_REGISTRY, "metrics.jersey")
+                                        .bind(HealthCheckServlet.HEALTH_CHECK_REGISTRY, HealthCheckRegistry.class)
+                                )
                         )
                 )
                 .initializer(ServletContextInitialization.builder()
                         .initializer(MetricsServiceInitializer.class)
                         .validate(ServletContextValidation.builder()
-                                .requires(Set.of(
-                                        MetricsServlet.METRICS_REGISTRY,
-                                        HealthCheckServlet.HEALTH_CHECK_REGISTRY)
-                                )
+                                .require(MetricsServlet.METRICS_REGISTRY)
+                                .require(HealthCheckServlet.HEALTH_CHECK_REGISTRY)
                         )
                 )
                 .resources(Resources.builder()
@@ -126,6 +139,9 @@ class StrideApplicationTest {
                         )
                 )
                 .build();
+
+        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+        log.trace("\n{}", yamlMapper.writeValueAsString(configuration.json()));
 
         try (StrideApplication application = StrideApplication.create(configuration)) {
             log.trace("activate");

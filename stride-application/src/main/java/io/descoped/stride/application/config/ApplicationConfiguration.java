@@ -101,7 +101,7 @@ public final class ApplicationConfiguration implements JsonElement {
 
     public ServletContextInitialization servletContext() {
         return ofNullable(json)
-                .map(node -> node.get("servletContext"))
+                .map(node -> node.get("initializers"))
                 .map(ObjectNode.class::cast)
                 .map(ServletContextInitialization::new)
                 .orElse(ServletContextInitialization.builder().build());
@@ -200,7 +200,7 @@ public final class ApplicationConfiguration implements JsonElement {
             }
 
             if (servletContextInitializationBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "servletContext", servletContextInitializationBuilder.build().json());
+                mergeBuilder(jsonConfiguration, merger, "initializers", servletContextInitializationBuilder.build().json());
             }
 
             //System.out.printf("config:\n%s\n", jsonConfiguration.toPrettyString());
