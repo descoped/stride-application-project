@@ -3,6 +3,7 @@ package io.descoped.stride.application.api.config;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.internal.ApplicationJson;
 import io.descoped.stride.application.api.internal.FiltersImpl;
 import io.descoped.stride.application.api.internal.ResourcesImpl;
 import io.descoped.stride.application.api.internal.ServicesImpl;

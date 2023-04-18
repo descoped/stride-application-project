@@ -1,4 +1,4 @@
-package io.descoped.stride.application.api.config;
+package io.descoped.stride.application.api.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import no.cantara.config.ApplicationProperties;
@@ -52,7 +52,7 @@ public final class ApplicationJson {
         return json;
     }
 
-    public static Map<String, String> propertiesToMap(String properties) {
+    static Map<String, String> propertiesToMap(String properties) {
         Properties props = new Properties();
         try {
             props.load(new StringReader(properties));
@@ -81,11 +81,11 @@ public final class ApplicationJson {
     static final Function<Set<Node>, String> indentAncestors = (ancestors) ->
             Arrays.stream(new String[ancestors.size()]).map(element -> " ").collect(Collectors.joining());
 
-    public Set<String> keys(String fieldName) {
+    Set<String> keys(String fieldName) {
         return keys(json.get(fieldName));
     }
 
-    public static Set<String> keys(JsonNode fromNode) {
+    static Set<String> keys(JsonNode fromNode) {
         Set<String> keys = new LinkedHashSet<>();
         depthFirstPreOrderFullTraversal(Node.root(fromNode), new LinkedHashSet<>(), new LinkedHashSet<>(), (ancestors, node) -> {
             if (ancestors.size() == 0) {
