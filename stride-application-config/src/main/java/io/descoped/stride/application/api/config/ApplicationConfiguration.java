@@ -7,7 +7,7 @@ import io.descoped.stride.application.api.internal.FiltersImpl;
 import io.descoped.stride.application.api.internal.ResourcesImpl;
 import io.descoped.stride.application.api.internal.ServicesImpl;
 import io.descoped.stride.application.api.internal.ServletContextInitialization;
-import io.descoped.stride.application.api.internal.Servlets;
+import io.descoped.stride.application.api.internal.ServletsImpl;
 import io.descoped.stride.application.api.jackson.JsonCreationStrategy;
 import io.descoped.stride.application.api.jackson.JsonElement;
 import io.descoped.stride.application.api.jackson.JsonMerger;
@@ -92,7 +92,7 @@ public final class ApplicationConfiguration implements JsonElement {
         return ofNullable(json)
                 .map(node -> node.get("servlets"))
                 .map(ObjectNode.class::cast)
-                .map(Servlets::new)
+                .<Servlets>map(ServletsImpl::new)
                 .orElse(Servlets.builder().build());
     }
 

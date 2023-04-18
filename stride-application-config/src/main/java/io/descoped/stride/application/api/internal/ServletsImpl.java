@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.ApplicationJson;
 import io.descoped.stride.application.api.config.Servlet;
+import io.descoped.stride.application.api.config.Servlets;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
 import java.util.ArrayList;
@@ -11,10 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public record Servlets(ObjectNode json) {
-    public static Builder builder() {
-        return new Builder();
-    }
+public record ServletsImpl(ObjectNode json) implements Servlets {
 
     /**
      * Get servlet by name
@@ -22,6 +20,7 @@ public record Servlets(ObjectNode json) {
      * @param name servlet name
      * @return Servlet config
      */
+    @Override
     public Optional<Servlet> servlet(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
@@ -37,6 +36,7 @@ public record Servlets(ObjectNode json) {
      * @param className servlet class
      * @return Servlet config
      */
+    @Override
     public Optional<Servlet> servletByClass(String className) {
         for (Servlet servlet : iterator()) {
             if (className.equals(servlet.className())) {
@@ -46,6 +46,7 @@ public record Servlets(ObjectNode json) {
         return Optional.empty();
     }
 
+    @Override
     public Iterable<Servlet> iterator() {
         List<Servlet> servlets = new ArrayList<>();
         Set<String> keys = ApplicationJson.keys(json); // resolve keySet for (this) servlets element
@@ -62,19 +63,21 @@ public record Servlets(ObjectNode json) {
 
     // ----------------------------------------------------------------------------------------------------------------
 
-    public record Builder(ObjectNode builder) {
-        public Builder() {
+    public record ServletsBuilder(ObjectNode builder) implements Servlets.Builder {
+        public ServletsBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder servlet(Servlet.Builder servletBuilder) {
+        @Override
+        public Servlets.Builder servlet(Servlet.Builder servletBuilder) {
             Servlet servlet = servletBuilder.build();
             builder.set(servlet.name(), servlet.json());
             return this;
         }
 
+        @Override
         public Servlets build() {
-            return new Servlets(builder);
+            return new ServletsImpl(builder);
         }
     }
 }
