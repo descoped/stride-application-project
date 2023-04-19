@@ -571,6 +571,7 @@
                         </dependency>
                     </dependencies>
                     <configuration>
+                        <useModulePath>false</useModulePath>
                         <reportFormat>plain</reportFormat>
                         <consoleOutputReporter>
                             <disable>true</disable>
