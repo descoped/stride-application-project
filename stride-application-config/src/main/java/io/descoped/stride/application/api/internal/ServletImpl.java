@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.Servlet;
+import io.descoped.stride.application.api.config.ServletContextBinding;
+import io.descoped.stride.application.api.config.ServletContextValidation;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 
@@ -53,17 +55,17 @@ public record ServletImpl(String name, ObjectNode json) implements Servlet {
                 .map(node -> node.get("config"))
                 .map(node -> node.get("binding"))
                 .map(ObjectNode.class::cast)
-                .map(ServletContextBinding::new)
+                .map(ServletContextBindingImpl::new)
                 .orElse(null);
     }
 
     @Override
-    public ServletContextValidation validation() {
+    public ServletContextValidationImpl validation() {
         return ofNullable(json)
                 .map(node -> node.get("config"))
                 .map(node -> node.get("validation"))
                 .map(ObjectNode.class::cast)
-                .map(ServletContextValidation::new)
+                .map(ServletContextValidationImpl::new)
                 .orElse(null);
     }
 

@@ -2,8 +2,6 @@ package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.internal.FilterImpl;
-import io.descoped.stride.application.api.internal.ServletContextBinding;
-import io.descoped.stride.application.api.internal.ServletContextInitialization;
 import jakarta.servlet.DispatcherType;
 
 import java.util.EnumSet;
@@ -42,7 +40,7 @@ public interface Filter {
 
         Builder dispatches(EnumSet<DispatcherType> dispatches);
 
-        Builder context(ServletContextInitialization.Builder contextBuilder);
+        Builder context(ServletContextValidation.Builder contextBuilder);
 
         Filter build();
     }

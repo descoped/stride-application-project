@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.Filter;
+import io.descoped.stride.application.api.config.ServletContextBinding;
+import io.descoped.stride.application.api.config.ServletContextValidation;
 import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 import jakarta.servlet.DispatcherType;
@@ -67,7 +69,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
                 .map(node -> node.get("config"))
                 .map(node -> node.get("context"))
                 .map(ObjectNode.class::cast)
-                .map(ServletContextBinding::new)
+                .map(ServletContextBindingImpl::new)
                 .orElse(null);
     }
 
@@ -119,7 +121,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
         }
 
         @Override
-        public Builder context(ServletContextInitialization.Builder contextBuilder) {
+        public Builder context(ServletContextValidation.Builder contextBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()

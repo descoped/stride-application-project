@@ -1,8 +1,6 @@
 package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.internal.ServletContextBinding;
-import io.descoped.stride.application.api.internal.ServletContextValidation;
 import io.descoped.stride.application.api.internal.ServletImpl;
 
 public interface Servlet {
