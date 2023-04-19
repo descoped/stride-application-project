@@ -1,7 +1,7 @@
 package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.internal.ResourcesImpl;
+import io.descoped.stride.application.api.config.internal.ResourcesImpl;
 
 import java.util.Optional;
 

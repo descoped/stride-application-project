@@ -10,5 +10,5 @@ module stride.application.config {
     exports io.descoped.stride.application.api.config;
     exports io.descoped.stride.application.api.exception;
     exports io.descoped.stride.application.api.utils;
-    exports io.descoped.stride.application.api.internal;
+    exports io.descoped.stride.application.api.config.internal;
 }

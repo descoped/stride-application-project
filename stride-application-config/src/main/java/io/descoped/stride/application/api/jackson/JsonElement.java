@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.jackson.internal.JsonElementImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;

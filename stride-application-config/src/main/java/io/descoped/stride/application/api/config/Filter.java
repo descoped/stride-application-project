@@ -1,7 +1,7 @@
 package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.internal.FilterImpl;
+import io.descoped.stride.application.api.config.internal.FilterImpl;
 import jakarta.servlet.DispatcherType;
 
 import java.util.EnumSet;

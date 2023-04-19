@@ -1,7 +1,7 @@
 package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.internal.ServletContextBindingImpl;
+import io.descoped.stride.application.api.config.internal.ServletContextBindingImpl;
 
 import java.util.Set;
 

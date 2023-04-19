@@ -1,7 +1,7 @@
 package io.descoped.stride.application.api.config;
 
-import io.descoped.stride.application.api.internal.FilterImpl;
-import io.descoped.stride.application.api.internal.FiltersImpl;
+import io.descoped.stride.application.api.config.internal.FilterImpl;
+import io.descoped.stride.application.api.config.internal.FiltersImpl;
 
 public class Builders {
 
