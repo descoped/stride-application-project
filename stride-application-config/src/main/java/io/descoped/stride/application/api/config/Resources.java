@@ -10,13 +10,13 @@ public interface Resources {
         return new ResourcesImpl.ResourcesBuilder();
     }
 
+    ObjectNode json();
+
     Optional<Resource> resource(String name);
 
     Optional<Resource> resourceByClass(String className);
 
     Iterable<Resource> iterator();
-
-    ObjectNode json();
 
     interface Builder {
         Builder resource(Resource.Builder resourceBuilder);

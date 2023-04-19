@@ -10,11 +10,11 @@ public interface ServletContextBinding {
         return new ServletContextBindingImpl.ServletContextBindingBuilder();
     }
 
+    ObjectNode json();
+
     Set<String> names();
 
     String serviceRef(String name);
-
-    ObjectNode json();
 
     interface Builder {
         Builder bind(String name, String named);

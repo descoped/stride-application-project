@@ -10,15 +10,15 @@ public interface ServletContextValidation {
         return new ServletContextValidationImpl.ServletContextValidationBuilder();
     }
 
-    Set<String> names();
-
     ObjectNode json();
+
+    Set<String> names();
 
     interface Builder {
         Builder require(String named);
 
         Builder requires(Set<String> named);
 
-        ServletContextValidationImpl build();
+        ServletContextValidation build();
     }
 }

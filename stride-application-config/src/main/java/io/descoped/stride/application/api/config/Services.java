@@ -10,13 +10,13 @@ public interface Services {
         return new ServicesImpl.ServicesBuilder();
     }
 
+    ObjectNode json();
+
     Optional<Service> service(String name);
 
     Optional<Service> serviceByClass(String className);
 
     Iterable<Service> iterator();
-
-    ObjectNode json();
 
     interface Builder {
         Builder service(Service.Builder serviceBuilder);

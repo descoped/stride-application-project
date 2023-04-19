@@ -8,11 +8,11 @@ public interface Arg {
         return new ArgImpl.ArgBuilder();
     }
 
+    ObjectNode json();
+
     Class<?> clazz();
 
     String named();
-
-    ObjectNode json();
 
     interface Builder {
         ObjectNode builder();

@@ -2,7 +2,6 @@ package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.internal.ServletContextInitializationImpl;
-import io.descoped.stride.application.api.internal.ServletContextValidationImpl;
 
 import java.util.List;
 
@@ -11,11 +10,11 @@ public interface ServletContextInitialization {
         return new ServletContextInitializationImpl.ServletContextInitializationBuilder();
     }
 
+    ObjectNode json();
+
     List<Class<?>> initializers();
 
-    ServletContextValidationImpl validation();
-
-    ObjectNode json();
+    ServletContextValidation validation();
 
     interface Builder {
         <R> Builder initializer(Class<R> initializerClass);

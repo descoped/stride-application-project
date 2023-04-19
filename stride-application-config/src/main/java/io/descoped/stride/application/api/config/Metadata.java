@@ -8,9 +8,9 @@ public interface Metadata {
         return new MetadataImpl.MetadataBuilder();
     }
 
-    String value(String name);
-
     ObjectNode json();
+
+    String value(String name);
 
     interface Builder {
         Metadata.Builder property(String name, String value);

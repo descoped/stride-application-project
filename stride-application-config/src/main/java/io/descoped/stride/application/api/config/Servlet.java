@@ -8,6 +8,8 @@ public interface Servlet {
         return new ServletImpl.ServletBuilder(name);
     }
 
+    String name();
+
     boolean isEnabled();
 
     String className();
@@ -20,11 +22,11 @@ public interface Servlet {
 
     ServletContextValidation validation();
 
-    String name();
-
     ObjectNode json();
 
     interface Builder {
+        String name();
+
         Builder enabled(boolean enabled);
 
         Builder className(String servletClassName);
@@ -38,7 +40,5 @@ public interface Servlet {
         Builder binding(ServletContextBinding.Builder ServletContextBindingBuilder);
 
         Servlet build();
-
-        String name();
     }
 }

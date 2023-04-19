@@ -12,6 +12,10 @@ public interface Service {
         return new ServiceImpl.ServiceBuilder(clazz.getName());
     }
 
+    String name();
+
+    ObjectNode json();
+
     boolean isEnabled();
 
     String className();
@@ -22,11 +26,9 @@ public interface Service {
 
     Metadata metadata();
 
-    String name();
-
-    ObjectNode json();
-
     interface Builder {
+        String name();
+
         Builder enabled(boolean enabled);
 
         Builder className(String serviceClassName);
@@ -38,7 +40,5 @@ public interface Service {
         Builder metadata(Metadata.Builder metadataBuilder);
 
         Service build();
-
-        String name();
     }
 }

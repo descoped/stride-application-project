@@ -11,6 +11,10 @@ public interface Resource {
         return new ResourceImpl.ResourceBuilder(name);
     }
 
+    String name();
+
+    ObjectNode json();
+
     boolean isEnabled();
 
     String className();
@@ -19,11 +23,9 @@ public interface Resource {
 
     List<Arg> args();
 
-    String name();
-
-    ObjectNode json();
-
     interface Builder {
+        String name();
+
         Builder enabled(boolean enabled);
 
         Builder className(String resourceClassName);
@@ -33,9 +35,5 @@ public interface Resource {
         Builder args(ArgsImpl.ArgsBuilder argsBuilder);
 
         Resource build();
-
-        String name();
-
-        ObjectNode builder();
     }
 }

@@ -10,9 +10,9 @@ public interface Args {
         return new ArgsImpl.ArgsBuilder();
     }
 
-    List<Arg> args();
-
     ArrayNode json();
+
+    List<Arg> args();
 
     interface Builder {
         Builder arg(Class<?> clazz, String named);

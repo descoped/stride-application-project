@@ -10,13 +10,13 @@ public interface Servlets {
         return new ServletsImpl.ServletsBuilder();
     }
 
+    ObjectNode json();
+
     Optional<Servlet> servlet(String name);
 
     Optional<Servlet> servletByClass(String className);
 
     Iterable<Servlet> iterator();
-
-    ObjectNode json();
 
     interface Builder {
         Builder servlet(Servlet.Builder servletBuilder);
