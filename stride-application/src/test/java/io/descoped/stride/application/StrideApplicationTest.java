@@ -81,6 +81,7 @@ class StrideApplicationTest {
     @Test
     void testBootstrap() throws IOException, InterruptedException {
         long past = System.currentTimeMillis();
+
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
                 .defaults()
                 .services(Services.builder()

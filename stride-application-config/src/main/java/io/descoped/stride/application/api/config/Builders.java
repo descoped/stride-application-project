@@ -5,11 +5,11 @@ import io.descoped.stride.application.api.config.internal.FiltersImpl;
 
 public class Builders {
 
-    static Filters.Builder filters() {
+    public static Filters.Builder filtersBuilder() {
         return new FiltersImpl.FiltersBuilder();
     }
 
-    static Filter.Builder filter(String name) {
+    public static Filter.Builder filterBuilder(String name) {
         return new FilterImpl.FilterBuilder(name);
     }
 }
