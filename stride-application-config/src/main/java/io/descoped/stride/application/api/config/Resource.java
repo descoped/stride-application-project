@@ -1,7 +1,6 @@
 package io.descoped.stride.application.api.config;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.descoped.stride.application.api.config.internal.ArgsImpl;
 import io.descoped.stride.application.api.config.internal.ResourceImpl;
 
 import java.util.List;
@@ -32,7 +31,7 @@ public interface Resource {
 
         <R> Builder clazz(Class<R> resourceClass);
 
-        Builder args(ArgsImpl.ArgsBuilder argsBuilder);
+        Builder args(Args.Builder argsBuilder);
 
         Resource build();
     }

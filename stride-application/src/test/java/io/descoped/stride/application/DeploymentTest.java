@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.api.config.ApplicationConfiguration;
-import io.descoped.stride.application.api.config.ApplicationJson;
 import io.descoped.stride.application.api.config.Filter;
 import io.descoped.stride.application.api.config.Filters;
 import io.descoped.stride.application.api.config.Metadata;
@@ -215,8 +214,8 @@ class DeploymentTest {
                 .classpathPropertiesFile("application-defaults.properties")
                 .testDefaults()
                 .build();
-        ApplicationJson applicationJson = new ApplicationJson(applicationProperties);
-        log.trace("\n{}", mapper.writeValueAsString(applicationJson.json()));
+        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.builder().configuration(applicationProperties).build();
+        log.trace("\n{}", mapper.writeValueAsString(applicationConfiguration.json()));
     }
 
     @Disabled
@@ -243,10 +242,10 @@ class DeploymentTest {
                 """;
 
 
-        ApplicationProperties applicationProperties = ApplicationProperties.builder().map(ApplicationJson.propertiesToMap(props)).build();
+//        ApplicationProperties applicationProperties = ApplicationProperties.builder().map(ApplicationJson.propertiesToMap(props)).build();
 
-        ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationProperties).build(); // ((ObjectNode) applicationJson.json());
+//        ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationProperties).build(); // ((ObjectNode) applicationJson.json());
 
-        log.debug("\n{}", configuration.json().toPrettyString());
+//        log.debug("\n{}", configuration.json().toPrettyString());
     }
 }

@@ -13,8 +13,16 @@ public class ClassPathResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ClassPathResourceUtils.class);
 
+    static ClassLoader tccl() {
+        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        if (contextClassLoader == null) {
+            return ClassLoader.getSystemClassLoader();
+        }
+        return contextClassLoader;
+    }
+
     public static String readResource(String resourceName) {
-        InputStream resourceStream = ClassPathResourceUtils.class.getClassLoader()
+        InputStream resourceStream = tccl()
                 .getResourceAsStream(resourceName);
         if (resourceStream == null) {
             log.error("Resource NOT Found: {}", resourceName);

@@ -83,7 +83,7 @@ public record ResourceImpl(String name, ObjectNode json) implements Resource {
         }
 
         @Override
-        public Resource.Builder args(ArgsImpl.ArgsBuilder argsBuilder) {
+        public Resource.Builder args(Args.Builder argsBuilder) {
             JsonElement.ofDynamic(builder)
                     .with("config")
                     .object()
