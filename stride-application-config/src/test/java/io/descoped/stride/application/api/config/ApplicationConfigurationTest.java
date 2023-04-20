@@ -26,16 +26,13 @@ class ApplicationConfigurationTest {
                 .build();
         log.trace("{}", configuration.toPrettyString());
 
-        assertEquals("localhost", configuration.asString("server.host", "example.com"));
-        assertEquals(0, configuration.asInt("server.port", 9090));
-        assertEquals("default", configuration.with("application.alias").asString("default"));
-
-        assertEquals(configuration.asString("application.alias", "default"), configuration.application().alias());
+        assertEquals("localhost", configuration.server().host());
+        assertEquals(9090, configuration.server().port());
 
         assertEquals("default", configuration.application().alias());
         assertEquals("unknown", configuration.application().version());
         assertEquals("localhost", configuration.server().host());
-        assertEquals(0, configuration.server().port());
+        assertEquals(9090, configuration.server().port());
 
         log.trace("server.host: {}", configuration.server().host());
         log.trace("server.port: {}", configuration.server().port());
@@ -50,7 +47,7 @@ class ApplicationConfigurationTest {
     @Test
     void newYamlToPropsConfig() throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        String res = ClassPathResourceUtils.readResource("app-config.yaml");
+        String res = ClassPathResourceUtils.readResource("application-config-test.yaml");
         JsonNode root = mapper.readTree(res);
         JavaPropsMapper propsMapper = new JavaPropsMapper();
         log.trace("\n{}", propsMapper.writeValueAsString(root));

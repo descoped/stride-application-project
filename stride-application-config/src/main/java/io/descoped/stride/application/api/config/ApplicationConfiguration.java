@@ -25,15 +25,50 @@ import static java.util.Optional.ofNullable;
 public final class ApplicationConfiguration implements JsonElement {
     private final ObjectNode json;
     private final JsonCreationStrategy strategy;
+    private final Services services;
+    private final Filters filters;
+    private final Servlets servlets;
+    private final Resources resources;
+    private final ServletContextInitialization initializers;
 
     private ApplicationConfiguration(ObjectNode json, JsonCreationStrategy strategy) {
         this.json = json;
         this.strategy = strategy;
+
+        services = ofNullable(json)
+                .map(node -> node.get("services"))
+                .map(ObjectNode.class::cast)
+                .<Services>map(ServicesImpl::new)
+                .orElse(Services.builder().build());
+
+        filters = ofNullable(json)
+                .map(node -> node.get("filters"))
+                .map(ObjectNode.class::cast)
+                .<Filters>map(FiltersImpl::new)
+                .orElse(Filters.builder().build());
+
+        servlets = ofNullable(json)
+                .map(node -> node.get("servlets"))
+                .map(ObjectNode.class::cast)
+                .<Servlets>map(ServletsImpl::new)
+                .orElse(Servlets.builder().build());
+
+        resources = ofNullable(json)
+                .map(node -> node.get("resources"))
+                .map(ObjectNode.class::cast)
+                .<Resources>map(ResourcesImpl::new)
+                .orElse(Resources.builder().build());
+
+        initializers = ofNullable(json)
+                .map(node -> node.get("initializers"))
+                .map(ObjectNode.class::cast)
+                .<ServletContextInitialization>map(ServletContextInitializationImpl::new)
+                .orElse(ServletContextInitialization.builder().build());
     }
 
     @Override
     public JsonNode json() {
-        return json;
+        return json.deepCopy();
     }
 
     @Override
@@ -50,12 +85,32 @@ public final class ApplicationConfiguration implements JsonElement {
         return JsonElement.ofEphemeral(nonNullNode());
     }
 
-    public String toString() {
-        return nonNullNode().toString();
+    public Services services() {
+        return services;
+    }
+
+    public Filters filters() {
+        return filters;
+    }
+
+    public Servlets servlets() {
+        return servlets;
+    }
+
+    public Resources resources() {
+        return resources;
+    }
+
+    public ServletContextInitialization servletContext() {
+        return initializers;
     }
 
     public String toPrettyString() {
         return nonNullNode().toPrettyString();
+    }
+
+    public String toString() {
+        return nonNullNode().toString();
     }
 
     @Override
@@ -69,48 +124,6 @@ public final class ApplicationConfiguration implements JsonElement {
     @Override
     public int hashCode() {
         return Objects.hash(json);
-    }
-
-    // ---------------------------------------------------------------------------------------------------------------
-
-    public Services services() {
-        return ofNullable(json)
-                .map(node -> node.get("services"))
-                .map(ObjectNode.class::cast)
-                .<Services>map(ServicesImpl::new)
-                .orElse(Services.builder().build());
-    }
-
-    public Filters filters() {
-        return ofNullable(json)
-                .map(node -> node.get("filters"))
-                .map(ObjectNode.class::cast)
-                .<Filters>map(FiltersImpl::new)
-                .orElse(Filters.builder().build());
-    }
-
-    public Servlets servlets() {
-        return ofNullable(json)
-                .map(node -> node.get("servlets"))
-                .map(ObjectNode.class::cast)
-                .<Servlets>map(ServletsImpl::new)
-                .orElse(Servlets.builder().build());
-    }
-
-    public Resources resources() {
-        return ofNullable(json)
-                .map(node -> node.get("resources"))
-                .map(ObjectNode.class::cast)
-                .<Resources>map(ResourcesImpl::new)
-                .orElse(Resources.builder().build());
-    }
-
-    public ServletContextInitialization servletContext() {
-        return ofNullable(json)
-                .map(node -> node.get("initializers"))
-                .map(ObjectNode.class::cast)
-                .<ServletContextInitialization>map(ServletContextInitializationImpl::new)
-                .orElse(ServletContextInitialization.builder().build());
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -232,11 +245,7 @@ public final class ApplicationConfiguration implements JsonElement {
     }
 
     public Server server() {
-        return new Server(element().with("server"));
-    }
-
-    public Application application() {
-        return new Application(element().with("application"), server());
+        return new Server(element().with("services.jetty.server.config"));
     }
 
     public record Server(JsonElement element) {
@@ -252,6 +261,10 @@ public final class ApplicationConfiguration implements JsonElement {
         public String contextPath() {
             return element.with("context-path").asString("/");
         }
+    }
+
+    public Application application() {
+        return new Application(element().with("application"), server());
     }
 
     public record Application(JsonElement element, Server server) {
@@ -278,5 +291,4 @@ public final class ApplicationConfiguration implements JsonElement {
             }
         }
     }
-
 }

@@ -22,7 +22,7 @@ public class YamlConfigTest {
     @Test
     void traverseAppYaml() throws JsonProcessingException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        String res = ClassPathResourceUtils.readResource("app-config.yaml");
+        String res = ClassPathResourceUtils.readResource("application-config-test.yaml");
         JsonNode root = mapper.readTree(res);
         //log.trace("config:\n{}", root.toPrettyString());
 
