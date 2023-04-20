@@ -14,6 +14,25 @@
     <url>https://github.com/descoped</url>
     <inceptionYear>2023</inceptionYear>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>cantara-releases</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+        </repository>
+    </repositories>
+
     <scm>
         <connection>scm:git:git://github.com/descoped/stride-application-project.git</connection>
         <developerConnection>scm:git:https://github.com/descoped/stride-application-project.git</developerConnection>
