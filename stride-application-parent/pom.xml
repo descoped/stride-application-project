@@ -58,7 +58,7 @@
         <junit-vintage-engine.version>5.9.1</junit-vintage-engine.version>
 
         <junit.version>4.13.2</junit.version>
-        <mockito.version>5.3.0</mockito.version>
+        <mockito.version>5.3.1</mockito.version>
 
         <!-- Sonar -->
         <sonar.version>3.9.1.2184</sonar.version>
