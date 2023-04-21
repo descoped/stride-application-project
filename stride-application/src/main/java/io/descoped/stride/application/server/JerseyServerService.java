@@ -18,6 +18,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.JustInTimeInjectionResolver;
 import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -71,13 +72,26 @@ public class JerseyServerService implements PreDestroy {
             // validate requires
             ServletContextValidation validation = initialization.validation();
             if (validation != null) {
-                Set<String> requires = validation.names();
-                for (String require : requires) {
-                    boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
+                Set<ServletContextValidation.NamedService> namedServices = validation.serviceLocatorNamedServices();
+                for (ServletContextValidation.NamedService namedService : namedServices) {
+                    ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
+                    if (serviceHandle == null) {
+                        throw new ValidationException(
+                                String.format("Required service '%s' named '%s' NOT available!",
+                                        namedService.type(),
+                                        namedService.named()
+                                )
+                        );
+                    }
+                }
+
+                Set<String> attributes = validation.servletContextAttributes();
+                for (String attribute : attributes) {
+                    boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
                     if (!valid) {
                         throw new ValidationException(
                                 String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
-                                        require,
+                                        attribute,
                                         initializerClass
                                 )
                         );
@@ -115,7 +129,7 @@ public class JerseyServerService implements PreDestroy {
             // validate servletContext attributes
             ServletContextValidation validation = servlet.validation();
             if (validation != null) {
-                Set<String> requires = validation.names();
+                Set<String> requires = validation.servletContextAttributes();
                 for (String require : requires) {
                     boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
                     if (!valid) {

@@ -17,7 +17,7 @@ import static java.util.Optional.ofNullable;
 public record ServletContextInitializationImpl(ObjectNode json) implements ServletContextInitialization {
 
     @Override
-    public List<Class<?>> initializers() {
+    public List<Class<?>> classes() {
         return JsonElement.ofStrict(json)
                 .with("config")
                 .with("classes")
@@ -37,14 +37,15 @@ public record ServletContextInitializationImpl(ObjectNode json) implements Servl
                 .orElse(null);
     }
 
-    public record ServletContextInitializationBuilder(
-            ObjectNode builder) implements ServletContextInitialization.Builder {
+    public record ServletContextInitializationBuilder(ObjectNode builder)
+            implements ServletContextInitialization.Builder {
+
         public ServletContextInitializationBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
         @Override
-        public <R> ServletContextInitialization.Builder initializer(Class<R> initializerClass) {
+        public <R> ServletContextInitialization.Builder initializerClass(Class<R> initializerClass) {
             ArrayNode initializerClassArrayNode = BuilderHelper.createOrGet(JsonElement.ofDynamic(builder).with("config").object(), "classes");
             initializerClassArrayNode.add(builder.textNode(initializerClass.getName()));
             return this;

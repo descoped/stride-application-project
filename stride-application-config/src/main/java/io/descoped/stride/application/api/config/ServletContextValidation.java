@@ -12,12 +12,19 @@ public interface ServletContextValidation {
 
     ObjectNode json();
 
-    Set<String> names();
+    Set<NamedService> serviceLocatorNamedServices();
+
+    Set<String> servletContextAttributes();
+
+    record NamedService(Class<?> type, String named) {
+    }
 
     interface Builder {
-        Builder require(String named);
+        Builder requireNamedService(Class<?> type, String named);
 
-        Builder requires(Set<String> named);
+        Builder requireAttribute(String name);
+
+        Builder requireAttributes(Set<String> nameSet);
 
         ServletContextValidation build();
     }

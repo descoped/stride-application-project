@@ -12,12 +12,12 @@ public interface ServletContextInitialization {
 
     ObjectNode json();
 
-    List<Class<?>> initializers();
+    List<Class<?>> classes();
 
     ServletContextValidation validation();
 
     interface Builder {
-        <R> Builder initializer(Class<R> initializerClass);
+        <R> Builder initializerClass(Class<R> initializerClass);
 
         Builder validate(ServletContextValidation.Builder servletContextValidationBuilder);
 

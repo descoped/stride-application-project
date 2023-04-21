@@ -93,8 +93,9 @@ class StrideApplicationTest {
                 .initialization(ServletContextInitialization.builder()
                         .initializerClass(MetricsServiceInitializer.class)
                         .validate(ServletContextValidation.builder()
-                                .require(MetricsServlet.METRICS_REGISTRY)
-                                .require(HealthCheckServlet.HEALTH_CHECK_REGISTRY)
+                                .requireNamedService(MetricRegistry.class, "metric.jersey")
+                                .requireAttribute(MetricsServlet.METRICS_REGISTRY)
+                                .requireAttribute(HealthCheckServlet.HEALTH_CHECK_REGISTRY)
                         )
                 )
                 .filters(Filters.builder()
@@ -110,14 +111,14 @@ class StrideApplicationTest {
                                 .clazz(AdminServlet.class)
                                 .pathSpec("/admin/*")
                                 .validate(ServletContextValidation.builder()
-                                        .requires(Set.of(MetricsServlet.METRICS_REGISTRY)))
+                                        .requireAttributes(Set.of(MetricsServlet.METRICS_REGISTRY)))
                         )
                         .servlet(Servlet.builder("metrics")
                                 .enabled(true)
                                 .clazz(MetricsServlet.class)
                                 .pathSpec("/admin/metrics/app/*")
                                 .validate(ServletContextValidation.builder()
-                                        .requires(Set.of(
+                                        .requireAttributes(Set.of(
                                                 MetricsServlet.METRICS_REGISTRY,
                                                 HealthCheckServlet.HEALTH_CHECK_REGISTRY)
                                         )
