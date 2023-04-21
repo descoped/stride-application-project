@@ -1,17 +1,17 @@
 package io.descoped.stride.application.server;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import io.descoped.stride.application.api.config.Arg;
-import io.descoped.stride.application.api.config.Filters;
 import io.descoped.stride.application.api.config.Resource;
 import io.descoped.stride.application.api.config.Services;
 import io.descoped.stride.application.api.config.ServletContextBinding;
+import io.descoped.stride.application.api.config.ServletContextInitialization;
 import io.descoped.stride.application.api.config.ServletContextValidation;
 import io.descoped.stride.application.core.ServletContextInitializer;
 import jakarta.inject.Inject;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
+import jakarta.validation.ValidationException;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -32,6 +32,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Optional.ofNullable;
 
@@ -49,21 +50,43 @@ public class JerseyServerService implements PreDestroy {
                                ServiceLocator serviceLocator,
                                ServletContextHandler servletContextHandler) throws ClassNotFoundException {
 
-        //ServiceLocator serviceLocator = (ServiceLocator) servletContextHandler.getAttribute(ServletProperties.SERVICE_LOCATOR);
+        ApplicationConfiguration.Jersey jerseyConfig = configuration.jersey();
 
+        // create rest resource config
         ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
         resourceConfig.property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 
-        List<String> mediaTypesList = new ArrayList<>();
-        configuration.with("services.jersey.server.config.mediaTypes")
-                .toMap(JsonNode::asText)
-                .forEach((key, mimeType) -> mediaTypesList.add(key + ":" + mimeType));
-        String mediaTypesString = String.join(",", mediaTypesList);
+        // register supported mediaTypes
+        String mediaTypesString = String.join(",", jerseyConfig.mediaTypes());
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
+        // initialize initializers
+        ServiceLocator jerseyServiceLocator = ServiceLocatorFactory.getInstance().create("servletContextInit", serviceLocator);
+        ServletContextInitialization initialization = configuration.initialization();
+        for (Class<?> initializerClass : initialization.classes()) {
+            ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
+            initializer.initialize(jerseyServiceLocator, servletContextHandler.getServletContext());
+
+            // validate requires
+            ServletContextValidation validation = initialization.validation();
+            if (validation != null) {
+                Set<String> requires = validation.names();
+                for (String require : requires) {
+                    boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
+                    if (!valid) {
+                        throw new ValidationException(
+                                String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
+                                        require,
+                                        initializerClass
+                                )
+                        );
+                    }
+                }
+            }
+        }
+
         // register filters
-        Filters filters = configuration.filters();
         for (io.descoped.stride.application.api.config.Filter filter : configuration.filters().iterator()) {
             Class<? extends Filter> filterClass = filter.clazz();
             Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
@@ -74,8 +97,6 @@ public class JerseyServerService implements PreDestroy {
         // register servlets
         List<ServletSpec> servletSpecList = new ArrayList<>();
 
-        ServiceLocator jerseyServiceLocator = ServiceLocatorFactory.getInstance().create("servletContextInit", serviceLocator);
-
         Services services = configuration.services();
         for (io.descoped.stride.application.api.config.Servlet servlet : configuration.servlets().iterator()) {
             Class<? extends Servlet> servletClass = servlet.clazz();
@@ -84,27 +105,32 @@ public class JerseyServerService implements PreDestroy {
             // bind service to servlet binding
             ServletContextBinding binding = servlet.binding();
             if (binding != null) {
-                binding.names().forEach(name -> ofNullable(binding.serviceRef(name))
+                binding.names().forEach(name -> ofNullable(binding.namedServiceByName(name))
                         .flatMap(services::service)
                         .map(io.descoped.stride.application.api.config.Service::clazz)
                         .map(serviceLocator::getService)
                         .ifPresent(instance -> servletContextHandler.getServletContext().setAttribute(name, instance)));
             }
 
+            // validate servletContext attributes
             ServletContextValidation validation = servlet.validation();
             if (validation != null) {
-                // TODO perform validation here
+                Set<String> requires = validation.names();
+                for (String require : requires) {
+                    boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
+                    if (!valid) {
+                        throw new ValidationException(
+                                String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
+                                        require,
+                                        servlet.name()
+                                )
+                        );
+                    }
+                }
             }
-
-            //ServiceLocatorUtilities.addOneConstant(jerseyServiceLocator, servletInstance, servlet.name());
 
             ServletHolder servletHolder = new ServletHolder(servletInstance);
             servletSpecList.add(new ServletSpec(servletHolder, servlet.pathSpec()));
-        }
-
-        for (Class<?> initializerClass : configuration.servletContext().initializers()) {
-            ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
-            initializer.initialize(jerseyServiceLocator, servletContextHandler.getServletContext());
         }
 
         for (ServletSpec servletSpec : servletSpecList) {
@@ -148,6 +174,7 @@ public class JerseyServerService implements PreDestroy {
             }
         }
 
+        // initialize container
         servletContainer = new JerseyServletContainer(resourceConfig);
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         servletHolder.setInitOrder(1);

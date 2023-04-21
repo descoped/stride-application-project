@@ -15,6 +15,9 @@ import io.descoped.stride.application.api.jackson.internal.JsonMerger;
 import no.cantara.config.ApplicationProperties;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import static java.util.Optional.ofNullable;
@@ -102,7 +105,7 @@ public final class ApplicationConfiguration implements JsonElement {
         return resources;
     }
 
-    public ServletContextInitialization servletContext() {
+    public ServletContextInitialization initialization() {
         return initializers;
     }
 
@@ -178,7 +181,7 @@ public final class ApplicationConfiguration implements JsonElement {
             return this;
         }
 
-        public Builder initializer(ServletContextInitialization.Builder servletContextInitializationBuilder) {
+        public Builder initialization(ServletContextInitialization.Builder servletContextInitializationBuilder) {
             this.servletContextInitializationBuilder = servletContextInitializationBuilder;
             return this;
         }
@@ -287,6 +290,23 @@ public final class ApplicationConfiguration implements JsonElement {
 
         public long idleTimeout() {
             return Duration.parse(element.asString("idleTimeout", "PT-1s")).toSeconds();
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------
+
+    public Jersey jersey() {
+        return new Jersey(element().with("services.jersey.server.config"));
+    }
+
+
+    public record Jersey(JsonElement jsonElement) {
+        public Collection<String> mediaTypes() {
+            List<String> mediaTypesList = new ArrayList<>();
+            jsonElement.with("mediaTypes")
+                    .toMap(JsonNode::asText)
+                    .forEach((key, mimeType) -> mediaTypesList.add(key + ":" + mimeType));
+            return mediaTypesList;
         }
     }
 

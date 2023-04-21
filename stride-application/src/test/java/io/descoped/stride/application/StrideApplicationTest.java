@@ -15,7 +15,6 @@ import io.descoped.stride.application.api.config.Resources;
 import io.descoped.stride.application.api.config.Service;
 import io.descoped.stride.application.api.config.Services;
 import io.descoped.stride.application.api.config.Servlet;
-import io.descoped.stride.application.api.config.ServletContextBinding;
 import io.descoped.stride.application.api.config.ServletContextInitialization;
 import io.descoped.stride.application.api.config.ServletContextValidation;
 import io.descoped.stride.application.api.config.Servlets;
@@ -91,6 +90,13 @@ class StrideApplicationTest {
                                 .runLevel(12)
                         )
                 )
+                .initialization(ServletContextInitialization.builder()
+                        .initializerClass(MetricsServiceInitializer.class)
+                        .validate(ServletContextValidation.builder()
+                                .require(MetricsServlet.METRICS_REGISTRY)
+                                .require(HealthCheckServlet.HEALTH_CHECK_REGISTRY)
+                        )
+                )
                 .filters(Filters.builder()
                         .filter(Filter.builder("cors")
                                 .clazz(ApplicationCORSServletFilter.class)
@@ -110,23 +116,12 @@ class StrideApplicationTest {
                                 .enabled(true)
                                 .clazz(MetricsServlet.class)
                                 .pathSpec("/admin/metrics/app/*")
-                                .binding(ServletContextBinding.builder()
-                                        .bind(MetricsServlet.METRICS_REGISTRY, "metrics.jersey")
-                                        .bind(HealthCheckServlet.HEALTH_CHECK_REGISTRY, HealthCheckRegistry.class)
-                                )
                                 .validate(ServletContextValidation.builder()
                                         .requires(Set.of(
                                                 MetricsServlet.METRICS_REGISTRY,
                                                 HealthCheckServlet.HEALTH_CHECK_REGISTRY)
                                         )
                                 )
-                        )
-                )
-                .initializer(ServletContextInitialization.builder()
-                        .initializer(MetricsServiceInitializer.class)
-                        .validate(ServletContextValidation.builder()
-                                .require(MetricsServlet.METRICS_REGISTRY)
-                                .require(HealthCheckServlet.HEALTH_CHECK_REGISTRY)
                         )
                 )
                 .resources(Resources.builder()

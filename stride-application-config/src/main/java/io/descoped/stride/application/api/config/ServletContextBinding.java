@@ -14,7 +14,7 @@ public interface ServletContextBinding {
 
     Set<String> names();
 
-    String serviceRef(String name);
+    String namedServiceByName(String name);
 
     interface Builder {
         Builder bind(String name, String named);

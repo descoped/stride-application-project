@@ -13,10 +13,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import static java.util.Optional.ofNullable;
@@ -294,6 +296,17 @@ public interface JsonElement {
                 result.put(prefix + next.getKey(), mappedValue);
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    default <R, U extends JsonNode> Set<R> toSet(Function<U, R> mapFunction) {
+        Set<R> result = new LinkedHashSet<>(optionalNode().map(JsonNode::size).orElse(0));
+        toArrayNode().ifPresent(node -> {
+            for (JsonNode child : node) {
+                result.add(mapFunction.apply((U) child));
+            }
+        });
+        return result;
     }
 
     @SuppressWarnings("unchecked")

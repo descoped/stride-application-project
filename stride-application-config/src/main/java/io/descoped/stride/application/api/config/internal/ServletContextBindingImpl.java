@@ -20,7 +20,7 @@ public record ServletContextBindingImpl(ObjectNode json) implements ServletConte
     }
 
     @Override
-    public String serviceRef(String name) {
+    public String namedServiceByName(String name) {
         return ofNullable(json)
                 .map(node -> node.get(name))
                 .map(JsonNode::asText)
