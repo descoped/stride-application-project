@@ -111,7 +111,7 @@ class StrideApplicationTest {
                                 .clazz(AdminServlet.class)
                                 .pathSpec("/admin/*")
                                 .validate(ServletContextValidation.builder()
-                                        .requireAttributes(Set.of(MetricsServlet.METRICS_REGISTRY)))
+                                        .requireAttribute(MetricsServlet.METRICS_REGISTRY))
                         )
                         .servlet(Servlet.builder("metrics")
                                 .enabled(true)
