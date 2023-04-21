@@ -14,6 +14,7 @@ import io.descoped.stride.application.api.jackson.JsonElement;
 import io.descoped.stride.application.api.jackson.internal.JsonMerger;
 import no.cantara.config.ApplicationProperties;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import static java.util.Optional.ofNullable;
@@ -244,6 +245,8 @@ public final class ApplicationConfiguration implements JsonElement {
         return element().asBoolean("logging.verbose", false);
     }
 
+    // ---------------------------------------------------------------------------------------------------------------
+
     public Server server() {
         return new Server(element().with("services.jetty.server.config"));
     }
@@ -251,17 +254,43 @@ public final class ApplicationConfiguration implements JsonElement {
     public record Server(JsonElement element) {
 
         public String host() {
-            return element.with("host").asString("localhost");
+            return element.asString("host", "localhost");
         }
 
         public int port() {
-            return element.with("port").asInt(9090);
+            return element.asInt("port", 9090);
         }
 
         public String contextPath() {
-            return element.with("context-path").asString("/");
+            return element.asString("context-path", "/");
+        }
+
+        public int minThreads() {
+            return element.asInt("minThreads", 10);
+        }
+
+        public int maxThreads() {
+            return element.asInt("maxThreads", 150);
+        }
+
+        public int outputBufferSize() {
+            return element.asInt("outputBufferSize", 32768);
+        }
+
+        public int requestHeaderSize() {
+            return element.asInt("requestHeaderSize", 16384);
+        }
+
+        public boolean isHttp2Enabled() {
+            return element.asBoolean("http2.enabled", false);
+        }
+
+        public long idleTimeout() {
+            return Duration.parse(element.asString("idleTimeout", "PT-1s")).toSeconds();
         }
     }
+
+    // ---------------------------------------------------------------------------------------------------------------
 
     public Application application() {
         return new Application(element().with("application"), server());
@@ -280,6 +309,8 @@ public final class ApplicationConfiguration implements JsonElement {
             return element.with("url").asString(String.format("http://%s:%s%s",
                     server.host(), server.port(), server.contextPath()));
         }
+
+        // ---------------------------------------------------------------------------------------------------------------
 
         public Cors cors() {
             return new Cors(element.with("cors"));

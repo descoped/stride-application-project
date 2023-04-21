@@ -29,6 +29,8 @@ public class ApplicationInitialization {
     public StrideApplication initialize() {
         BeanDiscovery beanDiscovery = new BeanDiscovery(configuration, serviceLocator);
         DynamicConfiguration dc = beanDiscovery.getDynamicConfiguration();
+
+        // register configuration
         dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
 
         // register services
@@ -54,15 +56,6 @@ public class ApplicationInitialization {
             //log.trace("--> {}", descriptorImpl);
             dc.bind(descriptorImpl, false);
         }
-
-        // register filters config
-        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration.filters()));
-
-        // register servlets config
-        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration.servlets()));
-
-        // register resources config
-        dc.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration.resources()));
 
         // create application
         StrideApplication strideApplication = new StrideApplicationImpl(configuration, serviceLocator, beanDiscovery);

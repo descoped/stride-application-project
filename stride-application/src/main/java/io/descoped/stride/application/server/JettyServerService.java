@@ -1,7 +1,6 @@
 package io.descoped.stride.application.server;
 
 import io.descoped.stride.application.api.config.ApplicationConfiguration;
-import io.descoped.stride.application.api.jackson.JsonElement;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Duration;
 
 @Service(name = "jetty.server")
 @RunLevel(RunLevelConstants.WEB_SERVER_RUN_LEVEL)
@@ -49,27 +47,25 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
                               ServiceLocator serviceLocator,
                               IterableProvider<SecurityHandler> securityHandlerProvider) throws Exception {
 
-        JsonElement jettyServerConfig = configuration.server().element().with("jetty.server");
-
-        int httpPort = configuration.server().port();
+        ApplicationConfiguration.Server jettyServerConfig = configuration.server();
 
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
         jettyConnectorThreadPool.setName("jetty-http-server");
-        jettyConnectorThreadPool.setMinThreads(jettyServerConfig.with("minThreads").asInt(10));
-        jettyConnectorThreadPool.setMaxThreads(jettyServerConfig.with("maxThreads").asInt(150));
+        jettyConnectorThreadPool.setMinThreads(jettyServerConfig.minThreads());
+        jettyConnectorThreadPool.setMaxThreads(jettyServerConfig.maxThreads());
 
         server = new Server(jettyConnectorThreadPool);
 
         final HttpConfiguration httpConfig = new HttpConfiguration();
-        httpConfig.setOutputBufferSize(jettyServerConfig.with("outputBufferSize").asInt(32768));
-        httpConfig.setRequestHeaderSize(jettyServerConfig.with("requestHeaderSize").asInt(16384));
+        httpConfig.setOutputBufferSize(jettyServerConfig.outputBufferSize());
+        httpConfig.setRequestHeaderSize(jettyServerConfig.requestHeaderSize());
 
         // Added for X-Forwarded-For support, from ALB
         httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
         HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
         ServerConnector httpConnector;
-        if (jettyServerConfig.with("http2.enabled").asBoolean(false)) {
+        if (jettyServerConfig.isHttp2Enabled()) {
             // The ConnectionFactory for clear-text HTTP/2.
             HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
@@ -79,8 +75,8 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
             // Create and configure the HTTP 1.1 connector
             httpConnector = new ServerConnector(server, http11);
         }
-        httpConnector.setIdleTimeout(Duration.parse(jettyServerConfig.with("idleTimeout").asString("PT-1s")).toSeconds());
-        httpConnector.setPort(httpPort);
+        httpConnector.setIdleTimeout(jettyServerConfig.idleTimeout());
+        httpConnector.setPort(jettyServerConfig.port());
         server.addConnector(httpConnector);
 
         Slf4jRequestLogWriter requestLog = new Slf4jRequestLogWriter();
