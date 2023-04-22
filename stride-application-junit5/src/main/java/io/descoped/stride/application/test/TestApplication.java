@@ -1,7 +1,7 @@
 package io.descoped.stride.application.test;
 
 import io.descoped.stride.application.Application;
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import io.descoped.stride.application.core.InstanceFactory;
 import io.descoped.stride.application.core.Logging;
 import jakarta.servlet.DispatcherType;
@@ -170,7 +170,7 @@ public class TestApplication implements TestUriResolver {
                     .property("server.context-path", contextPath)
                     .build();
 
-            ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationPropertiesBuilder.build()).build();
+            ApplicationConfiguration configuration = ApplicationConfiguration.builder().testDefaults().build();
             Application app = new Application(configuration, instanceFactory);
             app.initBuiltinDefaults();
 

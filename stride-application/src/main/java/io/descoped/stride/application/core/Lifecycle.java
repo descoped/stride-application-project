@@ -1,6 +1,6 @@
 package io.descoped.stride.application.core;
 
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import io.descoped.stride.application.server.RunLevelConstants;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevelController;
@@ -26,8 +26,8 @@ class Lifecycle {
         if (configured.compareAndSet(false, true)) {
             RunLevelController runLevelController = ofNullable(serviceLocator.getService(RunLevelController.class)).orElseThrow(() -> new IllegalStateException("RunLevelController is yet not available!"));
 
-            runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.asString("hk2.threadpolicy", RunLevelController.ThreadingPolicy.FULLY_THREADED.name())));
-            runLevelController.setMaximumUseableThreads(configuration.asInt("hk2.threadcount", 20));
+            runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.asString("services.hk2.threadpolicy", RunLevelController.ThreadingPolicy.FULLY_THREADED.name())));
+            runLevelController.setMaximumUseableThreads(configuration.asInt("services.hk2.threadcount", 20));
         }
     }
 
@@ -47,7 +47,7 @@ class Lifecycle {
     int getMaxRunLevel() {
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
         if (runLevelController == null) {
-            return configuration.asInt("hk2.threadcount", 20);
+            return configuration.asInt("services.hk2.threadcount", 20);
         }
         return runLevelController.getMaximumUseableThreads();
     }

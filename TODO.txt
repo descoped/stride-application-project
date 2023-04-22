@@ -1,0 +1,10 @@
+TODO
+--
+
+* Fix merge enum bug (duplicates)
+(OK) Add enableDefaults to config
+* Use true for enabled builder as default
+* Add DefaultExceptionHandler (verify chain)
+* Register MetricRegistry and MetricServlet
+* Remove Application and InstanceFactory
+* Fix snapshot deploy to oss sonatype

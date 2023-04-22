@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class JettyConnectorThreadPool extends QueuedThreadPool {
+
     private static final Logger log = LoggerFactory.getLogger(JettyConnectorThreadPool.class);
 
     @Override

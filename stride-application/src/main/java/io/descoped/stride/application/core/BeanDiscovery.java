@@ -1,6 +1,6 @@
 package io.descoped.stride.application.core;
 
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.MultiException;
@@ -26,9 +26,9 @@ class BeanDiscovery {
     private final AtomicBoolean completed = new AtomicBoolean();
     private final DynamicConfiguration dynamicConfiguration;
 
-    BeanDiscovery(ApplicationConfiguration configuration) {
+    BeanDiscovery(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
         this.configuration = configuration;
-        this.serviceLocator = ServiceLocatorUtils.instance();
+        this.serviceLocator = serviceLocator;
         dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
     }
 

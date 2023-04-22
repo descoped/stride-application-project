@@ -1,11 +1,9 @@
 package io.descoped.stride.application.server;
 
-import io.descoped.stride.application.config.ApplicationConfiguration;
-import io.descoped.stride.application.jackson.JsonElement;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,10 +31,8 @@ import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Duration;
 
 @Service(name = "jetty.server")
 @RunLevel(RunLevelConstants.WEB_SERVER_RUN_LEVEL)
@@ -51,27 +47,25 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
                               ServiceLocator serviceLocator,
                               IterableProvider<SecurityHandler> securityHandlerProvider) throws Exception {
 
-        JsonElement jettyServerConfig = configuration.server().element().with("jetty.server");
-
-        int httpPort = configuration.server().port();
+        ApplicationConfiguration.Server jettyConfig = configuration.server();
 
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
         jettyConnectorThreadPool.setName("jetty-http-server");
-        jettyConnectorThreadPool.setMinThreads(jettyServerConfig.with("minThreads").asInt(10));
-        jettyConnectorThreadPool.setMaxThreads(jettyServerConfig.with("maxThreads").asInt(150));
+        jettyConnectorThreadPool.setMinThreads(jettyConfig.minThreads());
+        jettyConnectorThreadPool.setMaxThreads(jettyConfig.maxThreads());
 
         server = new Server(jettyConnectorThreadPool);
 
         final HttpConfiguration httpConfig = new HttpConfiguration();
-        httpConfig.setOutputBufferSize(jettyServerConfig.with("outputBufferSize").asInt(32768));
-        httpConfig.setRequestHeaderSize(jettyServerConfig.with("requestHeaderSize").asInt(16384));
+        httpConfig.setOutputBufferSize(jettyConfig.outputBufferSize());
+        httpConfig.setRequestHeaderSize(jettyConfig.requestHeaderSize());
 
         // Added for X-Forwarded-For support, from ALB
         httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
         HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
         ServerConnector httpConnector;
-        if (jettyServerConfig.with("http2.enabled").asBoolean(false)) {
+        if (jettyConfig.isHttp2Enabled()) {
             // The ConnectionFactory for clear-text HTTP/2.
             HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
@@ -81,8 +75,8 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
             // Create and configure the HTTP 1.1 connector
             httpConnector = new ServerConnector(server, http11);
         }
-        httpConnector.setIdleTimeout(Duration.parse(jettyServerConfig.with("idleTimeout").asString("PT-1s")).toSeconds());
-        httpConnector.setPort(httpPort);
+        httpConnector.setIdleTimeout(jettyConfig.idleTimeout());
+        httpConnector.setPort(jettyConfig.port());
         server.addConnector(httpConnector);
 
         Slf4jRequestLogWriter requestLog = new Slf4jRequestLogWriter();
@@ -98,7 +92,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         // ping servlet
         ServletHolder pingServletHolder = new ServletHolder(new HttpServlet() {
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
                 resp.setStatus(200);
             }
         });

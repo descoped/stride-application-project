@@ -1,16 +1,14 @@
 package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.StrideApplication;
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevelController;
-import org.glassfish.hk2.utilities.BuilderHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +30,9 @@ public class StrideApplicationImpl implements StrideApplication {
     private final ServiceLocator serviceLocator; // dynamic instance configuration
     private final Lifecycle lifecycle;
 
-    public StrideApplicationImpl(ApplicationConfiguration configuration, BeanDiscovery beanDiscovery) {
+    public StrideApplicationImpl(ApplicationConfiguration configuration, ServiceLocator serviceLocator, BeanDiscovery beanDiscovery) {
         this.configuration = configuration;
-        this.serviceLocator = ServiceLocatorUtils.instance();
-        DynamicConfiguration dynamicConfiguration = beanDiscovery.getDynamicConfiguration();
-        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
-        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
+        this.serviceLocator = serviceLocator;
         this.lifecycle = new Lifecycle(this.configuration, serviceLocator, beanDiscovery);
     }
 
@@ -167,6 +162,7 @@ public class StrideApplicationImpl implements StrideApplication {
         long startedAt = System.currentTimeMillis();
 
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+                .defaults()
                 .build();
 
         try (StrideApplication application = StrideApplication.create(configuration)) {

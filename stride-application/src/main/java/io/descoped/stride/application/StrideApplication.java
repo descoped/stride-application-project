@@ -1,10 +1,11 @@
 package io.descoped.stride.application;
 
-import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.api.config.ApplicationConfiguration;
 import io.descoped.stride.application.core.ApplicationInitialization;
 import io.descoped.stride.application.core.StrideApplicationImpl;
 import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 
 import java.util.Optional;
 
@@ -55,7 +56,8 @@ public interface StrideApplication extends AutoCloseable {
     }
 
     static StrideApplication create(ApplicationConfiguration configuration) {
-        ApplicationInitialization initialization = new ApplicationInitialization(configuration);
+        ServiceLocator serviceLocator = ServiceLocatorFactory.getInstance().create(null);
+        ApplicationInitialization initialization = new ApplicationInitialization(configuration, serviceLocator);
         return initialization.initialize();
     }
 }

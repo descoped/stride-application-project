@@ -9,11 +9,14 @@ import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jersey.objectMapper")
 public class ObjectMapperFactory implements Factory<ObjectMapper> {
-    private final ObjectMapper objectMapper;
+    private final static ObjectMapper objectMapper;
 
-    public ObjectMapperFactory() {
+    static {
         objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    }
+
+    public ObjectMapperFactory() {
     }
 
     @Override
