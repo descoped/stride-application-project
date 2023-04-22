@@ -1,59 +1,46 @@
 package io.descoped.stride.application.api.config.internal;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.Metadata;
 import io.descoped.stride.application.api.config.Service;
-import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
-
-import static java.util.Optional.ofNullable;
 
 public record ServiceImpl(String name, ObjectNode json) implements Service {
 
     @Override
     public boolean isEnabled() {
-        return ofNullable(json)
-                .map(node -> node.get("enabled"))
-                .map(JsonNode::asText)
-                .map(Boolean::parseBoolean)
-                .map(Boolean.TRUE::equals)
-                .orElse(false);
+        return JsonElement.ofEphemeral(json)
+                .with("enabled")
+                .asBoolean(false);
     }
 
     @Override
     public String className() {
-        return ofNullable(json)
-                .map(node -> node.get("config"))
-                .map(node -> node.get("class"))
-                .map(JsonNode::asText)
-                .orElse(null);
+        return JsonElement.ofEphemeral(json)
+                .with("config.class")
+                .asString(null);
     }
 
     @Override
-    @SuppressWarnings("Convert2MethodRef")
     public Class<?> clazz() {
-        return ofNullable(className())
-                .map(ExceptionFunction.call(() -> s -> Class.forName(s))) // deal with hard exception
-                .orElse(null);
+        return JsonElement.ofEphemeral(json)
+                .with("config.class")
+                .asClass();
     }
 
     @Override
     public int runLevel() {
-        return ofNullable(json)
-                .map(node -> node.get("config"))
-                .map(node -> node.get("runLevel"))
-                .map(JsonNode::asText)
-                .map(Integer::valueOf)
-                .orElse(-2); // RunLevel.RUNLEVEL_VAL_INITIAL
+        return JsonElement.ofEphemeral(json)
+                .with("config.runLevel")
+                .asInt(-2); // RunLevel.RUNLEVEL_VAL_INITIAL
     }
 
     @Override
     public Metadata metadata() {
-        return ofNullable(json)
-                .map(node -> node.get("metadata"))
-                .map(ObjectNode.class::cast)
+        return JsonElement.ofEphemeral(json)
+                .with("metadata")
+                .toObjectNode()
                 .<Metadata>map(MetadataImpl::new)
                 .orElseGet(() -> {
                     Metadata.Builder builder = Metadata.builder();

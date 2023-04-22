@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ServicesImpl;
 import java.util.Optional;
 
 public interface Services {
+
     static Builder builder() {
         return new ServicesImpl.ServicesBuilder();
     }
@@ -19,6 +20,7 @@ public interface Services {
     Iterable<Service> iterator();
 
     interface Builder {
+
         Builder service(Service.Builder serviceBuilder);
 
         Services build();

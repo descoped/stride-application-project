@@ -24,6 +24,7 @@ public record ArgsImpl(ArrayNode json) implements Args {
     }
 
     public record ArgsBuilder(ArrayNode builder) implements Args.Builder {
+
         public ArgsBuilder() {
             this(JsonNodeFactory.instance.arrayNode());
         }

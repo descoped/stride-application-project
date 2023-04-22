@@ -34,6 +34,7 @@ public record ServletContextValidationImpl(ObjectNode json) implements ServletCo
     }
 
     public record ServletContextValidationBuilder(ObjectNode builder) implements ServletContextValidation.Builder {
+
         public ServletContextValidationBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.internal.ServletImpl;
 
 public interface Servlet {
+
     static Builder builder(String name) {
         return new ServletImpl.ServletBuilder(name);
     }
@@ -25,6 +26,7 @@ public interface Servlet {
     ObjectNode json();
 
     interface Builder {
+
         String name();
 
         Builder enabled(boolean enabled);

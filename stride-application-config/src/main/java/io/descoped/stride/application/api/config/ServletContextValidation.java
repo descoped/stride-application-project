@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ServletContextValidati
 import java.util.Set;
 
 public interface ServletContextValidation {
+
     static Builder builder() {
         return new ServletContextValidationImpl.ServletContextValidationBuilder();
     }
@@ -20,6 +21,7 @@ public interface ServletContextValidation {
     }
 
     interface Builder {
+        
         Builder requireNamedService(Class<?> type, String named);
 
         Builder requireAttribute(String name);

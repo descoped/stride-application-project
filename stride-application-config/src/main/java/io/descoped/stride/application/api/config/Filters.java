@@ -20,6 +20,7 @@ public interface Filters {
     Iterable<Filter> iterator();
 
     interface Builder {
+
         Builder filter(Filter.Builder filterBuilder);
 
         Filters build();

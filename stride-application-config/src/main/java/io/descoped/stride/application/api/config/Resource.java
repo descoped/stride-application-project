@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ResourceImpl;
 import java.util.List;
 
 public interface Resource {
+
     static Builder builder(String name) {
         return new ResourceImpl.ResourceBuilder(name);
     }
@@ -23,6 +24,7 @@ public interface Resource {
     List<Arg> args();
 
     interface Builder {
+
         String name();
 
         Builder enabled(boolean enabled);

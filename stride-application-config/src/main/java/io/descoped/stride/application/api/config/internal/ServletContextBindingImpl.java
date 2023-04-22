@@ -1,14 +1,12 @@
 package io.descoped.stride.application.api.config.internal;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.ServletContextBinding;
+import io.descoped.stride.application.api.jackson.JsonElement;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import static java.util.Optional.ofNullable;
 
 public record ServletContextBindingImpl(ObjectNode json) implements ServletContextBinding {
 
@@ -21,13 +19,13 @@ public record ServletContextBindingImpl(ObjectNode json) implements ServletConte
 
     @Override
     public String namedServiceByName(String name) {
-        return ofNullable(json)
-                .map(node -> node.get(name))
-                .map(JsonNode::asText)
-                .orElse(null);
+        return JsonElement.ofEphemeral(json)
+                .with(name)
+                .asString(null);
     }
 
     public record ServletContextBindingBuilder(ObjectNode builder) implements ServletContextBinding.Builder {
+
         public ServletContextBindingBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }

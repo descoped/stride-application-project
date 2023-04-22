@@ -27,6 +27,7 @@ import static java.util.Optional.ofNullable;
  * json is updated, this will automatically be reflected by any lookup.
  */
 public final class ApplicationConfiguration implements JsonElement {
+
     private final ObjectNode json;
     private final JsonCreationStrategy strategy;
     private final Services services;
@@ -39,33 +40,33 @@ public final class ApplicationConfiguration implements JsonElement {
         this.json = json;
         this.strategy = strategy;
 
-        services = ofNullable(json)
-                .map(node -> node.get("services"))
-                .map(ObjectNode.class::cast)
+        services = element()
+                .with("services")
+                .toObjectNode()
                 .<Services>map(ServicesImpl::new)
                 .orElse(Services.builder().build());
 
-        filters = ofNullable(json)
-                .map(node -> node.get("filters"))
-                .map(ObjectNode.class::cast)
+        filters = element()
+                .with("filters")
+                .toObjectNode()
                 .<Filters>map(FiltersImpl::new)
                 .orElse(Filters.builder().build());
 
-        servlets = ofNullable(json)
-                .map(node -> node.get("servlets"))
-                .map(ObjectNode.class::cast)
+        servlets = element()
+                .with("servlets")
+                .toObjectNode()
                 .<Servlets>map(ServletsImpl::new)
                 .orElse(Servlets.builder().build());
 
-        resources = ofNullable(json)
-                .map(node -> node.get("resources"))
-                .map(ObjectNode.class::cast)
+        resources = element()
+                .with("resources")
+                .toObjectNode()
                 .<Resources>map(ResourcesImpl::new)
                 .orElse(Resources.builder().build());
 
-        initializers = ofNullable(json)
-                .map(node -> node.get("initializers"))
-                .map(ObjectNode.class::cast)
+        initializers = element()
+                .with("initializers")
+                .toObjectNode()
                 .<ServletContextInitialization>map(ServletContextInitializationImpl::new)
                 .orElse(ServletContextInitialization.builder().build());
     }
@@ -137,6 +138,7 @@ public final class ApplicationConfiguration implements JsonElement {
     }
 
     public static class Builder {
+
         private ApplicationProperties applicationProperties;
         private Services.Builder servicesBuilder;
         private Filters.Builder filtersBuilder;
@@ -338,7 +340,7 @@ public final class ApplicationConfiguration implements JsonElement {
 
         public record Cors(JsonElement element) {
             public String headers() {
-                return element.with("headers").asString("origin, content-type, accept, authorization");
+                return element.asString("headers", "origin, content-type, accept, authorization");
             }
         }
     }

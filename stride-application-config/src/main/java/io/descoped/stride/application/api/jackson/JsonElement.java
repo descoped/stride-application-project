@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.internal.JsonElementImpl;
 
 import java.util.ArrayList;
@@ -268,6 +269,11 @@ public interface JsonElement {
 
     default boolean asBoolean(String with, Boolean defaultValue) {
         return Boolean.TRUE.equals(with(with).asBoolean(defaultValue));
+    }
+
+    @SuppressWarnings("unchecked")
+    default <R> Class<R> asClass() {
+        return (Class<R>) asString().map(ExceptionFunction.call(() -> classname -> Class.forName(classname))).orElse(null);
     }
 
     default <T> Optional<T> getObjectAs(Function<ObjectNode, T> mapper) {

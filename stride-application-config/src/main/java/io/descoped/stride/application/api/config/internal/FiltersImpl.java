@@ -23,8 +23,7 @@ public record FiltersImpl(ObjectNode json) implements Filters {
     public Optional<Filter> filter(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
-                .optionalNode()
-                .map(ObjectNode.class::cast)
+                .toObjectNode()
                 .map(json -> new FilterImpl(name, json));
     }
 
@@ -51,8 +50,7 @@ public record FiltersImpl(ObjectNode json) implements Filters {
         for (String key : keys) {
             JsonElement.ofStrict(json)
                     .with(key)
-                    .optionalNode()
-                    .map(ObjectNode.class::cast)
+                    .toObjectNode()
                     .map(json -> new FilterImpl(key, json))
                     .map(filters::add);
         }
@@ -62,6 +60,7 @@ public record FiltersImpl(ObjectNode json) implements Filters {
     // ----------------------------------------------------------------------------------------------------------------
 
     public record FiltersBuilder(ObjectNode builder) implements Filters.Builder {
+
         public FiltersBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }

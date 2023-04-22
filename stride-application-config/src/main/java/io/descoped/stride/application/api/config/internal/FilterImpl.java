@@ -1,13 +1,11 @@
 package io.descoped.stride.application.api.config.internal;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.Filter;
 import io.descoped.stride.application.api.config.ServletContextBinding;
 import io.descoped.stride.application.api.config.ServletContextValidation;
-import io.descoped.stride.application.api.exception.ExceptionFunction;
 import io.descoped.stride.application.api.jackson.JsonElement;
 import jakarta.servlet.DispatcherType;
 
@@ -15,44 +13,34 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Optional.ofNullable;
-
 public record FilterImpl(String name, ObjectNode json) implements Filter {
 
     @Override
     public boolean isEnabled() {
-        return ofNullable(json)
-                .map(node -> node.get("enabled"))
-                .map(JsonNode::asText)
-                .map(Boolean::parseBoolean)
-                .map(Boolean.TRUE::equals)
-                .orElse(false);
+        return JsonElement.ofEphemeral(json)
+                .with("enabled")
+                .asBoolean(false);
     }
 
     @Override
     public String className() {
-        return ofNullable(json)
-                .map(node -> node.get("config"))
-                .map(node -> node.get("class"))
-                .map(JsonNode::asText)
-                .orElse(null);
+        return JsonElement.ofEphemeral(json)
+                .with("config.class")
+                .asString(null);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public <R extends jakarta.servlet.Filter> Class<R> clazz() {
-        return ofNullable(className())
-                .map(ExceptionFunction.call(() -> s -> (Class<R>) Class.forName(s))) // deal with hard exception
-                .orElse(null);
+        return JsonElement.ofEphemeral(json)
+                .with("config.class")
+                .asClass();
     }
 
     @Override
     public String pathSpec() {
-        return ofNullable(json)
-                .map(node -> node.get("config"))
-                .map(node -> node.get("pathSpec"))
-                .map(JsonNode::asText)
-                .orElse(null);
+        return JsonElement.ofEphemeral(json)
+                .with("config.pathSpec")
+                .asString(null);
     }
 
     @Override
@@ -65,10 +53,9 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
 
     @Override
     public ServletContextBinding context() {
-        return ofNullable(json)
-                .map(node -> node.get("config"))
-                .map(node -> node.get("context"))
-                .map(ObjectNode.class::cast)
+        return JsonElement.ofEphemeral(json)
+                .with("config.context")
+                .toObjectNode()
                 .map(ServletContextBindingImpl::new)
                 .orElse(null);
     }
@@ -76,6 +63,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
     // ------------------------------------------------------------------------------------------------------------
 
     public record FilterBuilder(String name, ObjectNode builder) implements Filter.Builder {
+
         public FilterBuilder(String name) {
             this(name, JsonNodeFactory.instance.objectNode());
         }

@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ServletContextInitiali
 import java.util.List;
 
 public interface ServletContextInitialization {
+
     static Builder builder() {
         return new ServletContextInitializationImpl.ServletContextInitializationBuilder();
     }
@@ -17,6 +18,7 @@ public interface ServletContextInitialization {
     ServletContextValidation validation();
 
     interface Builder {
+
         <R> Builder initializerClass(Class<R> initializerClass);
 
         Builder validate(ServletContextValidation.Builder servletContextValidationBuilder);

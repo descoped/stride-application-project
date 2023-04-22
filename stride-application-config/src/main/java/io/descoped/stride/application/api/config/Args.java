@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ArgsImpl;
 import java.util.List;
 
 public interface Args {
+
     static Builder builder() {
         return new ArgsImpl.ArgsBuilder();
     }
@@ -15,6 +16,7 @@ public interface Args {
     List<Arg> args();
 
     interface Builder {
+
         Builder arg(Class<?> clazz, String named);
 
         Args build();

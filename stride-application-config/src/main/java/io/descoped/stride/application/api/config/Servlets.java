@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ServletsImpl;
 import java.util.Optional;
 
 public interface Servlets {
+
     static Builder builder() {
         return new ServletsImpl.ServletsBuilder();
     }
@@ -19,6 +20,7 @@ public interface Servlets {
     Iterable<Servlet> iterator();
 
     interface Builder {
+
         Builder servlet(Servlet.Builder servletBuilder);
 
         Servlets build();

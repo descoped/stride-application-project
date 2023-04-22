@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ResourcesImpl;
 import java.util.Optional;
 
 public interface Resources {
+
     static Builder builder() {
         return new ResourcesImpl.ResourcesBuilder();
     }
@@ -19,6 +20,7 @@ public interface Resources {
     Iterable<Resource> iterator();
 
     interface Builder {
+
         Builder resource(Resource.Builder resourceBuilder);
 
         Resources build();

@@ -12,15 +12,12 @@ import io.descoped.stride.application.api.jackson.JsonElement;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.util.Optional.ofNullable;
-
 public record ServletContextInitializationImpl(ObjectNode json) implements ServletContextInitialization {
 
     @Override
     public List<Class<?>> classes() {
         return JsonElement.ofStrict(json)
-                .with("config")
-                .with("classes")
+                .with("config.classes")
                 .toList(JsonNode::asText)
                 .stream()
                 .map(ExceptionFunction.call(() -> classname -> (Class<?>) Class.forName(classname)))
@@ -29,10 +26,9 @@ public record ServletContextInitializationImpl(ObjectNode json) implements Servl
 
     @Override
     public ServletContextValidationImpl validation() {
-        return ofNullable(json)
-                .map(node -> node.get("config"))
-                .map(node -> node.get("validation"))
-                .map(ObjectNode.class::cast)
+        return JsonElement.ofStrict(json)
+                .with("conifg.validation")
+                .toObjectNode()
                 .map(ServletContextValidationImpl::new)
                 .orElse(null);
     }

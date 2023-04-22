@@ -23,8 +23,7 @@ public record ResourcesImpl(ObjectNode json) implements Resources {
     public Optional<Resource> resource(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
-                .optionalNode()
-                .map(ObjectNode.class::cast)
+                .toObjectNode()
                 .map(json -> new ResourceImpl(name, json));
     }
 
@@ -49,11 +48,11 @@ public record ResourcesImpl(ObjectNode json) implements Resources {
     public Iterable<Resource> iterator() {
         List<Resource> resources = new ArrayList<>();
         Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) resources element
+        JsonElement jsonElement = JsonElement.ofStrict(json);
         for (String key : keys) {
-            JsonElement.ofStrict(json)
+            jsonElement
                     .with(key)
-                    .optionalNode()
-                    .map(ObjectNode.class::cast)
+                    .toObjectNode()
                     .map(json -> new ResourceImpl(key, json))
                     .map(resources::add);
         }
@@ -63,6 +62,7 @@ public record ResourcesImpl(ObjectNode json) implements Resources {
     // ----------------------------------------------------------------------------------------------------------------
 
     public record ResourcesBuilder(ObjectNode builder) implements Resources.Builder {
+
         public ResourcesBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }

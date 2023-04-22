@@ -23,8 +23,7 @@ public record ServletsImpl(ObjectNode json) implements Servlets {
     public Optional<Servlet> servlet(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
-                .optionalNode()
-                .map(ObjectNode.class::cast)
+                .toObjectNode()
                 .map(json -> new ServletImpl(name, json));
     }
 
@@ -49,11 +48,11 @@ public record ServletsImpl(ObjectNode json) implements Servlets {
     public Iterable<Servlet> iterator() {
         List<Servlet> servlets = new ArrayList<>();
         Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) servlets element
+        JsonElement jsonElement = JsonElement.ofStrict(json);
         for (String key : keys) {
-            JsonElement.ofStrict(json)
+            jsonElement
                     .with(key)
-                    .optionalNode()
-                    .map(ObjectNode.class::cast)
+                    .toObjectNode()
                     .map(json -> new ServletImpl(key, json))
                     .map(servlets::add);
         }
@@ -63,6 +62,7 @@ public record ServletsImpl(ObjectNode json) implements Servlets {
     // ----------------------------------------------------------------------------------------------------------------
 
     public record ServletsBuilder(ObjectNode builder) implements Servlets.Builder {
+
         public ServletsBuilder() {
             this(JsonNodeFactory.instance.objectNode());
         }

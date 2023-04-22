@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.api.config.internal.ServiceImpl;
 
 public interface Service {
+
     static Builder builder(String name) {
         return new ServiceImpl.ServiceBuilder(name);
     }
@@ -27,6 +28,7 @@ public interface Service {
     Metadata metadata();
 
     interface Builder {
+
         String name();
 
         Builder enabled(boolean enabled);

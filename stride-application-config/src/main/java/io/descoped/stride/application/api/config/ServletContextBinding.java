@@ -6,6 +6,7 @@ import io.descoped.stride.application.api.config.internal.ServletContextBindingI
 import java.util.Set;
 
 public interface ServletContextBinding {
+
     static Builder builder() {
         return new ServletContextBindingImpl.ServletContextBindingBuilder();
     }
@@ -17,6 +18,7 @@ public interface ServletContextBinding {
     String namedServiceByName(String name);
 
     interface Builder {
+
         Builder bind(String name, String named);
 
         Builder bind(String name, Class<?> named);

@@ -22,8 +22,7 @@ public class ClassPathResourceUtils {
     }
 
     public static String readResource(String resourceName) {
-        InputStream resourceStream = tccl()
-                .getResourceAsStream(resourceName);
+        InputStream resourceStream = tccl().getResourceAsStream(resourceName);
         if (resourceStream == null) {
             log.error("Resource NOT Found: {}", resourceName);
             throw new ResourceNotFoundException("Resource NOT Found: " + resourceName);

@@ -7,6 +7,7 @@ import jakarta.servlet.DispatcherType;
 import java.util.EnumSet;
 
 public interface Filter {
+
     static Builder builder(String name) {
         return new FilterImpl.FilterBuilder(name);
     }
@@ -28,6 +29,7 @@ public interface Filter {
     ServletContextBinding context();
 
     interface Builder {
+
         String name();
 
         Builder enabled(boolean enabled);

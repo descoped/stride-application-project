@@ -23,8 +23,7 @@ public record ServicesImpl(ObjectNode json) implements Services {
     public Optional<Service> service(String name) {
         return JsonElement.ofEphemeral(json)
                 .with(name)
-                .optionalNode()
-                .map(ObjectNode.class::cast)
+                .toObjectNode()
                 .map(json -> new ServiceImpl(name, json));
     }
 
@@ -48,11 +47,10 @@ public record ServicesImpl(ObjectNode json) implements Services {
     public Iterable<Service> iterator() {
         List<Service> services = new ArrayList<>();
         Set<String> keys = ApplicationConfigurationJson.keys(json); // resolve keySet for (this) services element
-        JsonElement je = JsonElement.ofStrict(json);
+        JsonElement jsonElement = JsonElement.ofStrict(json);
         for (String key : keys) {
-            je.with(key)
-                    .optionalNode()
-                    .map(ObjectNode.class::cast)
+            jsonElement.with(key)
+                    .toObjectNode()
                     .map(json -> new ServiceImpl(key, json))
                     .map(services::add);
         }
