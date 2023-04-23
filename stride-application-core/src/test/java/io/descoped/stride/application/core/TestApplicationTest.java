@@ -22,9 +22,7 @@ public class TestApplicationTest {
                         )
                 );
 
-        application = new TestApplication.Builder()
-                .configuration(configuration)
-                .build();
+        application = new TestApplication.Builder().configuration(configuration).build();
         application.start();
     }
 
