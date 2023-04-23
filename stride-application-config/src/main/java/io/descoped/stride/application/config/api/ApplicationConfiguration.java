@@ -203,6 +203,7 @@ public final class ApplicationConfiguration implements JsonElement {
                         .defaults();
             } else if (enableTestDefault && applicationPropertiesBuilder == null) {
                 applicationPropertiesBuilder = ApplicationProperties.builder()
+                        .classpathPropertiesFile("application-defaults.properties")
                         .testDefaults();
             } else if (applicationPropertiesBuilder == null) {
                 applicationPropertiesBuilder = ApplicationProperties.builder();

@@ -3,8 +3,7 @@ package io.descoped.stride.application.test;
 import io.descoped.stride.application.api.Logging;
 import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.api.ApplicationConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -12,32 +11,67 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TestApplication implements TestUriResolver {
+public class TestApplication implements TestUriResolver, StrideApplication {
 
     static {
         Logging.init();
     }
 
-    static final Logger log = LoggerFactory.getLogger(TestApplication.class);
     private final StrideApplication application;
-    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     private TestApplication(StrideApplication application) {
         this.application = application;
     }
 
-    public void start() {
-        if (closed.compareAndSet(false, true)) {
-            application.start();
-        }
+    @Override
+    public void activate() {
+        application.activate();
     }
 
-    public void shutdown() {
-        if (closed.compareAndSet(true, false)) {
-            application.stop();
-        }
+    @Override
+    public void proceedTo(int runLevel) {
+        application.proceedTo(runLevel);
+    }
+
+    @Override
+    public void start() {
+        application.start();
+    }
+
+    @Override
+    public void stop() {
+        application.stop();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return application.isRunning();
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return application.isCompleted();
+    }
+
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return application.getServiceLocator();
+    }
+
+    @Override
+    public String getHost() {
+        return application.getHost();
+    }
+
+    @Override
+    public int getLocalPort() {
+        return application.getLocalPort();
+    }
+
+    @Override
+    public int getPort() {
+        return application.getPort();
     }
 
     @Override
@@ -48,6 +82,11 @@ public class TestApplication implements TestUriResolver {
         } catch (MalformedURLException e) {
             throw new TestServerException(e);
         }
+    }
+
+    @Override
+    public void close() {
+        application.close();
     }
 
     public static class Builder {
@@ -113,12 +152,11 @@ public class TestApplication implements TestUriResolver {
                         .testDefaults();
             }
 
-
             if (host != null) {
                 configurationBuilder.overrideProperty("services.jetty.server.config.host", host);
             }
 
-            int pickPort = (port == -1) ? findFreePort(new SecureRandom(), 9000, 9499) : port;
+            int pickPort = (port <= 0) ? findFreePort(new SecureRandom(), 9000, 9499) : port;
             configurationBuilder.overrideProperty("services.jetty.server.config.port", Integer.toString(pickPort));
 
             if (contextPath != null) {

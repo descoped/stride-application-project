@@ -32,7 +32,11 @@ class Lifecycle {
     }
 
     boolean isRunning() {
-        return !completed.get();
+        return configured.get() && !completed.get();
+    }
+
+    boolean isCompleted() {
+        return completed.get();
     }
 
     synchronized int getCurrentRunLevel() {

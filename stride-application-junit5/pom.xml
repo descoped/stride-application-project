@@ -46,7 +46,7 @@
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-api</artifactId>
             <version>0.0.24-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

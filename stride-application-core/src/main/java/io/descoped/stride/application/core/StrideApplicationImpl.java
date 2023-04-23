@@ -65,6 +65,16 @@ public class StrideApplicationImpl implements StrideApplication {
         doStop();
     }
 
+    @Override
+    public boolean isRunning() {
+        return lifecycle.isRunning();
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return lifecycle.isCompleted();
+    }
+
     private void doStart() {
         lifecycle.start();
 

@@ -25,6 +25,10 @@ public interface StrideApplication extends AutoCloseable {
      */
     void stop();
 
+    boolean isRunning();
+
+    boolean isCompleted();
+
     @Override
     void close();
 
