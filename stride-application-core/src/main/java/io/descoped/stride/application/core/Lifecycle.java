@@ -1,6 +1,6 @@
 package io.descoped.stride.application.core;
 
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.server.RunLevelConstants;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevelController;

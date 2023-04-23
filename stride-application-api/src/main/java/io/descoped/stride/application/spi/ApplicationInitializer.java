@@ -1,7 +1,7 @@
 package io.descoped.stride.application.spi;
 
 import io.descoped.stride.application.api.StrideApplication;
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 
 public interface ApplicationInitializer {
 

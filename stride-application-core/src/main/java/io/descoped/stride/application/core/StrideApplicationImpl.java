@@ -2,7 +2,7 @@ package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.api.Logging;
 import io.descoped.stride.application.api.StrideApplication;
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;

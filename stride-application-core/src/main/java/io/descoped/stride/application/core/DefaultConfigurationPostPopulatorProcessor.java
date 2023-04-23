@@ -2,8 +2,8 @@ package io.descoped.stride.application.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
-import io.descoped.stride.application.jackson.api.JsonElement;
+import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.jackson.JsonElement;
 import org.glassfish.hk2.api.PopulatorPostProcessor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.DescriptorImpl;

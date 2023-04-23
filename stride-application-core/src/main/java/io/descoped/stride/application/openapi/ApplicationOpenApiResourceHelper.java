@@ -1,6 +1,6 @@
 package io.descoped.stride.application.openapi;
 
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

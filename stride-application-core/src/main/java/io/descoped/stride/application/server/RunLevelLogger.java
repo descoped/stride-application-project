@@ -1,6 +1,6 @@
 package io.descoped.stride.application.server;
 
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
 import org.glassfish.hk2.runlevel.ErrorInformation;

@@ -1,6 +1,6 @@
 package io.descoped.stride.application.api;
 
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.spi.ApplicationInitializer;
 
 import java.util.ServiceLoader;

@@ -1,6 +1,6 @@
 package io.descoped.stride.application.api;
 
-import io.descoped.stride.application.config.api.ApplicationConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 
 public interface StrideApplication extends AutoCloseable {

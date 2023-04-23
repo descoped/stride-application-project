@@ -11,8 +11,8 @@ module stride.application.config {
 
     requires org.slf4j;
 
-    exports io.descoped.stride.application.config.api;
-    exports io.descoped.stride.application.jackson.api;
-    exports io.descoped.stride.application.exception.api;
-    exports io.descoped.stride.application.utils.api;
+    exports io.descoped.stride.application.jackson;
+    exports io.descoped.stride.application.config;
+    exports io.descoped.stride.application.config.exception;
+    exports io.descoped.stride.application.config.utils;
 }
