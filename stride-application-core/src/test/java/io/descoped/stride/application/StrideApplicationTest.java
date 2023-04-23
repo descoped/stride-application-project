@@ -128,7 +128,7 @@ class StrideApplicationTest {
                 )
                 .resources(Resources.builder()
                         .resource(Resource.builder("greeting")
-                                .clazz(EmbeddedApplicationTest.GreetingResource.class)
+                                .clazz(GreetingResource.class)
                         )
                         .resource(Resource.builder("metricResource")
                                 .clazz(MetricsFeature.class)
@@ -204,4 +204,5 @@ class StrideApplicationTest {
             log.warn("Destroy: {}", l);
         }
     }
+
 }

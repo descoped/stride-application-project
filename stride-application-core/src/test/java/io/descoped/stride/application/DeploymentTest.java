@@ -164,11 +164,11 @@ class DeploymentTest {
     void testResourcesBuilder() {
         Resources resources = Resources.builder()
                 .resource(Resource.builder("greeting")
-                        .clazz(EmbeddedApplicationTest.GreetingResource.class))
+                        .clazz(GreetingResource.class))
                 .build();
 
         //log.debug("{}", servlets.json().toPrettyString());
-        assertEquals(EmbeddedApplicationTest.GreetingResource.class.getName(), resources.resourceByClass(EmbeddedApplicationTest.GreetingResource.class.getName())
+        assertEquals(GreetingResource.class.getName(), resources.resourceByClass(GreetingResource.class.getName())
                 .map(Resource::clazz)
                 .map(Class::getName)
                 .orElse(null));
@@ -201,7 +201,7 @@ class DeploymentTest {
                                 .pathSpec("/metrics")))
                 .resources(Resources.builder()
                         .resource(Resource.builder("greeting")
-                                .clazz(EmbeddedApplicationTest.GreetingResource.class)))
+                                .clazz(GreetingResource.class)))
                 .build();
         log.debug("\n{}", configuration.json().toPrettyString());
         JavaPropsMapper propsMapper = new JavaPropsMapper();
