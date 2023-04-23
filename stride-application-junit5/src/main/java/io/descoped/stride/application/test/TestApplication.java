@@ -1,85 +1,106 @@
 package io.descoped.stride.application.test;
 
-import io.descoped.stride.application.Application;
-import io.descoped.stride.application.api.config.ApplicationConfiguration;
-import io.descoped.stride.application.core.InstanceFactory;
-import io.descoped.stride.application.core.Logging;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.http.HttpFilter;
-import jakarta.servlet.http.HttpServlet;
-import no.cantara.config.ApplicationProperties;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.descoped.stride.application.api.Logging;
+import io.descoped.stride.application.api.StrideApplication;
+import io.descoped.stride.application.config.ApplicationConfiguration;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-public class TestApplication implements TestUriResolver {
+public class TestApplication implements TestUriResolver, StrideApplication {
 
     static {
         Logging.init();
     }
 
-    static final Logger log = LoggerFactory.getLogger(TestApplication.class);
-    private final Application application;
-    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final StrideApplication application;
 
-    private TestApplication(Application application) {
+    private TestApplication(StrideApplication application) {
         this.application = application;
     }
 
-    public void start() {
-        if (closed.compareAndSet(false, true)) {
-            application.start();
-        }
+    @Override
+    public void activate() {
+        application.activate();
     }
 
-    public void shutdown() {
-        if (closed.compareAndSet(true, false)) {
-            application.stop();
-        }
+    @Override
+    public void proceedTo(int runLevel) {
+        application.proceedTo(runLevel);
+    }
+
+    @Override
+    public void start() {
+        application.start();
+    }
+
+    @Override
+    public void stop() {
+        application.stop();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return application.isRunning();
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return application.isCompleted();
+    }
+
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return application.getServiceLocator();
+    }
+
+    @Override
+    public String getHost() {
+        return application.getHost();
+    }
+
+    @Override
+    public int getLocalPort() {
+        return application.getLocalPort();
+    }
+
+    @Override
+    public int getPort() {
+        return application.getPort();
     }
 
     @Override
     public String testURL(String uri) {
         try {
-            URL url = new URL("http", application.getHost(), application.getPort(), uri);
+            URL url = new URL("http", application.getHost(), application.getLocalPort(), uri);
             return url.toExternalForm();
         } catch (MalformedURLException e) {
             throw new TestServerException(e);
         }
     }
 
+    @Override
+    public void close() {
+        application.close();
+    }
+
     public static class Builder {
 
-        private ApplicationProperties.Builder applicationPropertiesBuilder;
-        private final InstanceFactory instanceFactory;
+        private ApplicationConfiguration.Builder configurationBuilder;
         private String host = "localhost";
         private int port = -1;
         private String contextPath = "";
-        private Map<String, Supplier<?>> instanceRegistryMap = new LinkedHashMap<>();
-        private Map<String, HttpFilter> filtersMap = new LinkedHashMap<>();
-        private Map<String, HttpServlet> servletsMap = new LinkedHashMap<>();
-        private Map<String, Supplier<?>> jaxRsWsComponentMap = new LinkedHashMap<>();
 
         public Builder() {
-            instanceFactory = new InstanceFactory();
         }
 
-        public Builder properties(ApplicationProperties.Builder applicationPropertiesBuilder) {
-            this.applicationPropertiesBuilder = applicationPropertiesBuilder;
+        public Builder configuration(ApplicationConfiguration.Builder configurationBuilder) {
+            this.configurationBuilder = configurationBuilder;
             return this;
         }
 
@@ -95,38 +116,6 @@ public class TestApplication implements TestUriResolver {
 
         public Builder contextPath(String contextPath) {
             this.contextPath = contextPath;
-            return this;
-        }
-
-        public Builder register(Class<?> clazz, Supplier<?> instance) {
-            this.instanceRegistryMap.put(clazz.getName(), instance);
-            return this;
-        }
-
-        public Builder register(String name, Supplier<?> instance) {
-            this.instanceRegistryMap.put(name, instance);
-            return this;
-        }
-
-        public Builder filter(String pathSpec, HttpFilter httpFilter) {
-            this.filtersMap.put(pathSpec, httpFilter);
-            return this;
-        }
-
-        public Builder servlet(String urlMapping, HttpServlet httpServlet) {
-            this.servletsMap.put(urlMapping, httpServlet);
-            return this;
-        }
-
-        public <R> Builder jaxRsWsComponent(Class<R> clazz,
-                                            Function<InstanceFactory, Supplier<Object>> component) {
-            this.jaxRsWsComponentMap.put(clazz.getName(), component.apply(instanceFactory));
-            return this;
-        }
-
-        public <R> Builder jaxRsWsComponent(String key,
-                                            Function<InstanceFactory, Supplier<?>> component) {
-            this.jaxRsWsComponentMap.put(key, component.apply(instanceFactory));
             return this;
         }
 
@@ -158,50 +147,24 @@ public class TestApplication implements TestUriResolver {
         }
 
         public TestApplication build() {
-            int pickPort = port == -1 ? findFreePort(new SecureRandom(), 9000, 9499) : port;
-
-            if (applicationPropertiesBuilder == null) {
-                applicationPropertiesBuilder = ApplicationProperties.builder()
+            if (configurationBuilder == null) {
+                configurationBuilder = ApplicationConfiguration.builder()
                         .testDefaults();
             }
 
-            applicationPropertiesBuilder
-                    .property("server.port", Integer.toString(pickPort))
-                    .property("server.context-path", contextPath)
-                    .build();
-
-            ApplicationConfiguration configuration = ApplicationConfiguration.builder().testDefaults().build();
-            Application app = new Application(configuration, instanceFactory);
-            app.initBuiltinDefaults();
-
-            // instance registry (internal to builder) is used to initialize internal InstanceFactory
-            for (Map.Entry<String, Supplier<?>> entry : instanceRegistryMap.entrySet()) {
-                app.init(entry.getKey(),
-                        entry.getValue()); // todo Application must check that closable and runnable resources are closed
+            if (host != null) {
+                configurationBuilder.overrideProperty("services.jetty.server.config.host", host);
             }
 
-            // filters
-            for (Map.Entry<String, HttpFilter> entry : filtersMap.entrySet()) {
-                app.initAndAddServletFilter(entry.getValue().getFilterName(), entry::getValue,
-                        entry.getKey(), EnumSet.allOf(DispatcherType.class));
+            int pickPort = (port <= 0) ? findFreePort(new SecureRandom(), 9000, 9499) : port;
+            configurationBuilder.overrideProperty("services.jetty.server.config.port", Integer.toString(pickPort));
+
+            if (contextPath != null) {
+                configurationBuilder.overrideProperty("services.jetty.server.config.context-path", contextPath);
             }
 
-            // servlets
-            int n = 0;
-            for (Map.Entry<String, HttpServlet> entry : servletsMap.entrySet()) {
-                String servletName = "Servlet" + n++; // todo should be a user provided name
-                app.init(servletName, entry::getValue);
-                ServletContextHandler servletContextHandler = app.instanceFactory()
-                        .getOrNull(ServletContextHandler.class);
-                servletContextHandler.addServlet(new ServletHolder(entry.getValue()), entry.getKey());
-            }
-
-            // jaxrs resources
-            for (Map.Entry<String, Supplier<?>> entry : jaxRsWsComponentMap.entrySet()) {
-                Supplier<?> supplier = entry.getValue();
-                app.initAndRegisterJaxRsWsComponent(entry.getKey(), supplier);
-            }
-
+            ApplicationConfiguration configuration = configurationBuilder.build();
+            StrideApplication app = StrideApplication.create(configuration);
             return new TestApplication(app);
         }
     }
