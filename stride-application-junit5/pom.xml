@@ -37,7 +37,14 @@
     <dependencies>
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
-            <artifactId>stride-application</artifactId>
+            <artifactId>stride-application-config</artifactId>
+            <version>0.0.24-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.descoped.stride.application</groupId>
+            <artifactId>stride-application-api</artifactId>
             <version>0.0.24-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
