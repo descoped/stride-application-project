@@ -20,6 +20,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+
+      - name: Prepare Maven settings.xml
+        run: |
+          cat "${{ github.workspace }}/.github/settings.xml" > ~/.m2/settings.xml
 
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
