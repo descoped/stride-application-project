@@ -1,4 +1,4 @@
-package io.descoped.stride.application.test;
+package io.descoped.stride.application.test.server;
 
 import io.descoped.stride.application.api.Logging;
 import io.descoped.stride.application.api.StrideApplication;
