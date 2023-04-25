@@ -1,4 +1,4 @@
-package io.descoped.stride.application.test.server.utils;
+package io.descoped.stride.application.test.tuple;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -10,30 +10,50 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ByteArrayRepresentation implements AutoCloseable {
+public class Tuple {
 
     private static final CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
     private final DirectByteBufferPool byteBufferPool;
-    private final ByteBuffer byteBuffer;
 
-    public ByteArrayRepresentation(DirectByteBufferPool byteBufferPool, ByteBuffer representation) {
+    public Tuple(DirectByteBufferPool byteBufferPool) {
         this.byteBufferPool = byteBufferPool;
-        this.byteBuffer = representation;
     }
 
-    public ByteArrayRepresentation(DirectByteBufferPool byteBufferPool, byte[] representation) {
-        this.byteBufferPool = byteBufferPool;
-        byteBuffer = byteBufferPool.acquire();
-        byteBuffer.put(representation, 0, representation.length);
-        byteBuffer.flip();
+    public static byte[] from(DirectByteBufferPool byteBufferPool, String representation, String delimiter, PrimitiveType... typeMapping) {
+        String[] elements = representation.replaceFirst("^" + delimiter, "").split(delimiter);
+        TupleBuilder tupleBuilder = new TupleBuilder(byteBufferPool);
+        for (int i = 0; i < elements.length; i++) {
+            String element = elements[i];
+            PrimitiveType type = typeMapping.length == 0 ? null : typeMapping[i];
+            if (type == null) {
+                tupleBuilder.add(element);
+            } else {
+                switch (type) {
+                    case BYTE -> tupleBuilder.add(Byte.parseByte(element));
+                    case BOOLEAN -> tupleBuilder.add(Boolean.TRUE.equals(Boolean.parseBoolean(element)));
+                    case STRING -> tupleBuilder.add(element);
+                    case SHORT -> tupleBuilder.add(Short.parseShort(element));
+                    case INTEGER -> tupleBuilder.add(Integer.parseInt(element));
+                    case LONG -> tupleBuilder.add(Long.parseLong(element));
+                    case FLOAT -> tupleBuilder.add(Float.parseFloat(element));
+                    case DOUBLE -> tupleBuilder.add(Double.parseDouble(element));
+                    default -> throw new IllegalStateException();
+                }
+            }
+        }
+        return tupleBuilder.build();
     }
 
-    public List<Object> toElements() {
+    public List<Object> asList(byte[] representation) {
         List<Object> elements = new ArrayList<>();
+        ByteBuffer byteBuffer = byteBufferPool.acquire();
+        byteBuffer.clear();
         try {
-            int offset;
+            byteBuffer.put(representation, 0, representation.length);
+            byteBuffer.flip();
+
             while (byteBuffer.position() < byteBuffer.limit()) {
-                offset = byteBuffer.getInt();
+                int offset = byteBuffer.getInt();
                 PrimitiveType type = PrimitiveType.values()[byteBuffer.get()];
 
                 switch (type) {
@@ -46,6 +66,10 @@ public class ByteArrayRepresentation implements AutoCloseable {
                         elements.add(b == 1 ? Boolean.TRUE : Boolean.FALSE);
                     }
                     case STRING -> {
+                        // nothing to read
+                        if (offset == 0) {
+                            break;
+                        }
                         ByteBuffer bb = ByteBuffer.allocateDirect(offset);
                         int numberOfBytesToRead = offset;
                         do {
@@ -91,20 +115,14 @@ public class ByteArrayRepresentation implements AutoCloseable {
         } catch (CharacterCodingException e) {
             throw new RuntimeException(e);
         } finally {
-            byteBuffer.flip();
+            byteBufferPool.release(byteBuffer);
         }
     }
 
-    public String toString(CharSequence delimiter) {
-        return delimiter + toElements().stream().map(Object::toString).collect(Collectors.joining(delimiter));
-    }
-
-    public String toString() {
-        return toString("_");
-    }
-
-    @Override
-    public void close() {
-        byteBufferPool.release(byteBuffer);
+    public String toString(byte[] representation, CharSequence delimiter) {
+        return delimiter + asList(representation)
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(delimiter));
     }
 }

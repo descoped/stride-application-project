@@ -1,4 +1,4 @@
-package io.descoped.stride.application.test.server.utils;
+package io.descoped.stride.application.test.tuple;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;

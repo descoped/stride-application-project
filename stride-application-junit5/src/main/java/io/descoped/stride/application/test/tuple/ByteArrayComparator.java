@@ -1,8 +1,12 @@
-package io.descoped.stride.application.test.server.utils;
+package io.descoped.stride.application.test.tuple;
 
 import java.util.Comparator;
 
 public class ByteArrayComparator implements Comparator<byte[]> {
+
+    public static void comparator(Comparator<Tuple> target) {
+
+    }
 
     /**
      * Comparator<byte[]> implementation to sort keys that are byte arrays in ascending order based on their byte values.
@@ -24,8 +28,6 @@ public class ByteArrayComparator implements Comparator<byte[]> {
             int b = (right[j] & 0xff);
             if (a != b) {
                 return a - b;
-            } else if (a == b) {
-                return 0;
             }
         }
         return left.length - right.length;

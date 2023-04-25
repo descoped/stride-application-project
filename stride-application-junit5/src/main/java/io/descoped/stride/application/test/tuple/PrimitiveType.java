@@ -1,4 +1,4 @@
-package io.descoped.stride.application.test.server.utils;
+package io.descoped.stride.application.test.tuple;
 
 public enum PrimitiveType {
     BYTE,
