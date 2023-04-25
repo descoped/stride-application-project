@@ -6,12 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CoderResult;
-import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 class SortedSequenceKeyTest {
 
@@ -29,33 +24,18 @@ class SortedSequenceKeyTest {
     }
 
     @Test
-    void testBuffers() throws CharacterCodingException {
-        String s = "foo";
-        ByteBuffer bb = ByteBuffer.allocateDirect(s.length());
-        bb.put(s.getBytes(StandardCharsets.UTF_8));
-        bb.flip();
-
-        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
-        CharBuffer cb = CharBuffer.allocate(bb.capacity());
-        CoderResult cr = decoder.decode(bb, cb, true);
-        if (cr.isError()) {
-            cr.throwException();
-        }
-        log.trace("=> {}", cb.flip().toString());
-
-//        byte[] bytes = new byte[bb.remaining()];
-//        bb.get(bytes);
-//        log.trace("{}", new String(bytes));
-    }
-
-    @Test
     void testSortedKeys() {
-        ByteArrayBuilder builder = new ByteArrayBuilder(keyBufferPool);
-        builder.add("path");
-        builder.add("1");
+        ByteArrayBuilder builder = new ByteArrayBuilder(keyBufferPool)
+                .add("path")
+                .add((byte) 8)
+                .add(false)
+                .add(1);
         byte[] pathElements = builder.build();
+
+        ByteArrayRepresentation representation = new ByteArrayRepresentation(keyBufferPool, pathElements);
+
         log.trace("{}", pathElements);
-        log.trace("{}", new String(pathElements));
-        log.trace("{}", ByteArrayBuilder.toElements(keyBufferPool, pathElements));
+        log.trace("{}", representation.toElements().stream().map(v -> v.toString() + " (" + v.getClass() + ")").collect(Collectors.toList()));
+        log.trace("{}", representation.toString("/"));
     }
 }
