@@ -32,4 +32,11 @@ public class TupleHelper {
         }
         return tupleBuilder.pack();
     }
+
+    public static StringBuilder printGroups(byte[] bytes) {
+        StringBuilder builder = new StringBuilder();
+        // TODO iterate over elements and print each group
+        return builder;
+    }
+
 }

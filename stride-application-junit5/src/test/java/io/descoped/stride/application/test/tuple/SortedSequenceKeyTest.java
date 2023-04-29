@@ -78,5 +78,10 @@ class SortedSequenceKeyTest {
         log.trace("---> {}", builder.elements.stream().map(e -> e.value()).collect(Collectors.toList()));
         assertArrayEquals(t.getBytes(), builder.pack().getBytes());
 
+        Range range = t.range(Tuple.of("path", "2"), Tuple.of("path", "3"));
+        // TODO info: 'range' represent inner/relative-path with elements
+        for (Tuple tuple : range.iterator()) {
+            // TODO traverse-tree
+        }
     }
 }

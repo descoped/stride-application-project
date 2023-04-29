@@ -169,6 +169,10 @@ public class Tuple {
         return elementPosition;
     }
 
+    public Range range(Tuple fromInclusive, Tuple toInclusive) {
+        return Range.newRange(this.getBytes(), fromInclusive, toInclusive);
+    }
+
     public String toString(CharSequence delimiter) {
         return delimiter + asList()
                 .stream()
