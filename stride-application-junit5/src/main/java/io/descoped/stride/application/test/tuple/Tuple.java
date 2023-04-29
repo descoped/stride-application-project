@@ -229,6 +229,7 @@ public class Tuple {
             for (int n = 0; n < offset; n++) {
                 payload[n] = buffer.get();
             }
+            // TODO ugly code. Obviously needs refactoring.
             TupleBuilder.ElementHolder<?> element = switch (type) {
                 case BOOLEAN -> new TupleBuilder.ObjectHolder(type, new BooleanElement(payload).value);
                 case BYTE -> new TupleBuilder.ObjectHolder(type, new ByteElement(payload).value);
