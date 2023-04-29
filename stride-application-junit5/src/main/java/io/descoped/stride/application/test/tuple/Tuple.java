@@ -112,7 +112,7 @@ public class Tuple {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
     public <R> Element<R> get(int index) {
         if (bytes.length == 0 || index >= bytes.length) {
             return null;
@@ -159,7 +159,7 @@ public class Tuple {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int elementPosition = 0;
         while (buffer.position() < buffer.limit()) {
-            PrimitiveType type = PrimitiveType.values()[buffer.get()]; // skip type byte
+            buffer.get(); // skip type byte
             int offset = buffer.getInt(); // offset size
             int nextPosition = buffer.position() + offset;
             buffer.position(nextPosition);
@@ -192,6 +192,7 @@ public class Tuple {
 
     // ---------------------------------------------------------------------------------------------------------------
 
+    @SuppressWarnings("unchecked")
     public static <T> Tuple of(T... t) {
         TupleBuilder builder = new TupleBuilder();
         for (T e : t) {

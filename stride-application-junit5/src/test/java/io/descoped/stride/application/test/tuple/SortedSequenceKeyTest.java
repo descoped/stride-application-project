@@ -42,11 +42,11 @@ class SortedSequenceKeyTest {
 
     @Test
     void sorted() {
-        Tuple e1 = TupleBuilder.from("/path/2/foo", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
-        Tuple e2 = TupleBuilder.from("/path/3/bar", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
-        Tuple e4 = TupleBuilder.from("/pat/1", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
-        Tuple e3 = TupleBuilder.from("/path/1001", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
-        Tuple e5 = TupleBuilder.from("/path/3/b0r", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
+        Tuple e1 = TupleHelper.from("/path/2/foo", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
+        Tuple e2 = TupleHelper.from("/path/3/bar", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
+        Tuple e4 = TupleHelper.from("/pat/1", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
+        Tuple e3 = TupleHelper.from("/path/1001", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
+        Tuple e5 = TupleHelper.from("/path/3/b0r", "/", PrimitiveType.STRING, PrimitiveType.INTEGER, PrimitiveType.STRING);
 
         SortedSet<Tuple> sortedSet = new TreeSet<>(new TupleComparator());
         sortedSet.add(e1);
