@@ -10,8 +10,18 @@ public interface Range {
 
     Tuple toInclusive();
 
-    default Tuple seek() {
-
+    default Tuple seek(Tuple tuple) {
+        // TODO locate relative-path with elements. Find tuple as context.
+        //  recurse how you
+        /*
+            How recursive func to createe iterator? :) This is the way (in this context)
+            func(self) {
+                // use Label, e.g `loop:`
+                loop: loop() {
+                    do stuff
+                }
+            }
+         */
         return null;
     }
 
@@ -20,6 +30,7 @@ public interface Range {
         Iterable<Tuple> it = new Iterable<Tuple>() {
             @Override
             public Iterator<Tuple> iterator() {
+
                 return null;
             }
         };
