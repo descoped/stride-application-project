@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-class SortedSequenceKeyTest {
+class TupleTest {
 
-    private static final Logger log = LoggerFactory.getLogger(SortedSequenceKeyTest.class);
+    private static final Logger log = LoggerFactory.getLogger(TupleTest.class);
 
     @Test
     void representationAndBuilder() {
@@ -71,17 +71,18 @@ class SortedSequenceKeyTest {
         sortedSet.forEach(t -> log.trace("{}", t.toString("/")));
 
         Iterator<Tuple> iterator = sortedSet.iterator();
-        iterator.next();
+//        iterator.next();
         iterator.next();
         Tuple t = iterator.next();
         TupleBuilder builder = Tuple.unpack(t.getBytes());
         log.trace("---> {}", builder.elements.stream().map(e -> e.value()).collect(Collectors.toList()));
+        log.trace("printable: \n{}", TupleHelper.printable(t));
         assertArrayEquals(t.getBytes(), builder.pack().getBytes());
 
         Range range = t.range(Tuple.of("path", "2"), Tuple.of("path", "3"));
         // TODO info: 'range' represent inner/relative-path with elements
-        for (Tuple tuple : range.iterator()) {
-            // TODO traverse-tree
-        }
+//        for (Tuple tuple : range.iterator()) {
+//            // TODO traverse-tree
+//        }
     }
 }

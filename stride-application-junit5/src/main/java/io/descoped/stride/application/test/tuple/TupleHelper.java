@@ -1,6 +1,9 @@
 package io.descoped.stride.application.test.tuple;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class TupleHelper {
 
@@ -33,10 +36,58 @@ public class TupleHelper {
         return tupleBuilder.pack();
     }
 
-    public static StringBuilder printGroups(byte[] bytes) {
+    public static String printable(Tuple tuple) {
         StringBuilder builder = new StringBuilder();
         // TODO iterate over elements and print each group
-        return builder;
+        ByteBuffer buffer = ByteBuffer.wrap(tuple.getBytes());
+        int elementPosition = 0;
+        while (buffer.position() < buffer.limit()) {
+            byte typeByte = buffer.get();
+            PrimitiveType type = PrimitiveType.values()[typeByte]; // type
+
+            int offset = buffer.getInt(); // offset
+
+            byte[] payload = new byte[offset]; // element
+            for (int n = 0; n < offset; n++) {
+                payload[n] = buffer.get();
+            }
+            Tuple.Element<?> element = switch (type) {
+                case BOOLEAN -> new Tuple.BooleanElement(payload);
+                case BYTE -> new Tuple.ByteElement(payload);
+                case BYTE_ARRAY -> new Tuple.ByteArrayElement(payload);
+                case STRING -> new Tuple.StringElement(payload);
+                case SHORT -> new Tuple.ShortElement(payload);
+                case INTEGER -> new Tuple.IntegerElement(payload);
+                case LONG -> new Tuple.LongElement(payload);
+                case FLOAT -> new Tuple.FloatElement(payload);
+                case DOUBLE -> new Tuple.DoubleElement(payload);
+            };
+
+            ByteBuffer intBytesBuffer = ByteBuffer.allocate(Integer.SIZE / 8);
+            intBytesBuffer.putInt(offset);
+            intBytesBuffer.flip();
+            List<Integer> intOffsetList = Stream.generate(intBytesBuffer::get).limit(intBytesBuffer.limit()).map(Byte::intValue).toList();
+
+            ByteBuffer payloadBytesBuffer = ByteBuffer.wrap(payload);
+            List<Integer> intPayloadList = Stream.generate(payloadBytesBuffer::get).limit(payloadBytesBuffer.limit()).map(Byte::intValue).toList();
+
+            builder.append(elementPosition).append(": ")
+                    .append("[").append(type).append("][")
+                    .append(offset).append("][")
+                    .append(element.value())
+                    .append("]")
+                    .append(" -> {[")
+                    .append(typeByte)
+                    .append("], ")
+                    .append(intOffsetList)
+                    .append(", ")
+                    .append(intPayloadList)
+                    .append("}")
+                    .append("\n");
+            elementPosition++;
+        }
+
+        return builder.toString();
     }
 
 }
