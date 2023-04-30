@@ -1,0 +1,4 @@
+TODO
+--
+
+* TupleComparator -> should we compare serialized elements or use byte comparison
