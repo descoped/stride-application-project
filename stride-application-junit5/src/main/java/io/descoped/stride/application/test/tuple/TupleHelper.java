@@ -38,7 +38,7 @@ public class TupleHelper {
 
     public static String printable(Tuple tuple) {
         StringBuilder builder = new StringBuilder();
-        // TODO iterate over elements and print each group
+        builder.append("Format: [type:byte][elementSize:int][elementPayload:byte[]]").append("\n");
         ByteBuffer buffer = ByteBuffer.wrap(tuple.getBytes());
         int elementPosition = 0;
         while (buffer.position() < buffer.limit()) {

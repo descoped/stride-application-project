@@ -21,23 +21,14 @@ class TupleTest {
                 .add("path")
                 .add((byte) 8)
                 .add(false)
-                .add(100L)
+                .add(100_000_000_000L)
                 .add(true)
                 .add(1)
                 .pack();
 
-        log.trace("bytes: {}", tuple.getBytes());
-        log.trace("rawBytes: {}", tuple.getRawBytes());
         log.trace("size: {}", tuple.size());
-        log.trace("get 1: {}", tuple.<String>get(0).value());
-        log.trace("get 2: {}", tuple.get(1).value());
-        log.trace("get 2: {}", tuple.get(2).value());
-        log.trace("get 3: {}", tuple.get(3).value());
-        log.trace("get 4: {}", tuple.get(4).value());
-        log.trace("get 5: {}", tuple.get(5).value());
-
-        log.trace("{}", tuple.asList().stream().map(v -> v.value().toString() + " (" + v.value().getClass() + ")").collect(Collectors.toList()));
         log.trace("{}", tuple.toString("/"));
+        log.trace("tuple:\n{}", TupleHelper.printable(tuple));
     }
 
     @Test
@@ -71,11 +62,12 @@ class TupleTest {
         sortedSet.forEach(t -> log.trace("{}", t.toString("/")));
 
         Iterator<Tuple> iterator = sortedSet.iterator();
+
 //        iterator.next();
         iterator.next();
         Tuple t = iterator.next();
         TupleBuilder builder = Tuple.unpack(t.getBytes());
-        log.trace("---> {}", builder.elements.stream().map(e -> e.value()).collect(Collectors.toList()));
+        log.trace("---> {}", builder.elements.stream().map(TupleBuilder.ElementHolder::value).collect(Collectors.toList()));
         log.trace("printable: \n{}", TupleHelper.printable(t));
         assertArrayEquals(t.getBytes(), builder.pack().getBytes());
 
@@ -84,5 +76,13 @@ class TupleTest {
 //        for (Tuple tuple : range.iterator()) {
 //            // TODO traverse-tree
 //        }
+    }
+
+    @Test
+    void compare() {
+        Tuple t1 = Tuple.of("a", "b");
+        Tuple t2 = Tuple.of("a", "b");
+        int cmp = t1.compareTo(t2);
+        log.trace("cmp: {}", cmp);
     }
 }

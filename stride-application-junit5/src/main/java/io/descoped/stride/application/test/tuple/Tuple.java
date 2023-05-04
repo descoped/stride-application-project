@@ -11,13 +11,15 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class Tuple {
+public class Tuple implements Comparable<Tuple>, Iterable<byte[]> {
 
     private static final Logger log = LoggerFactory.getLogger(Tuple.class);
+    private static final TupleIterableComparator comparator = new TupleIterableComparator();
 
     private final byte[] bytes;
 
@@ -174,12 +176,13 @@ public class Tuple {
     }
 
     public String toString(CharSequence delimiter) {
-        return delimiter + asList()
+        return asList()
                 .stream()
                 .map(Element::value)
                 .map(Object::toString)
                 .collect(Collectors.joining(delimiter));
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -250,6 +253,19 @@ public class Tuple {
         }
 
         return builder;
+    }
+
+    @Override
+    public int compareTo(Tuple that) {
+        List<byte[]> self = this.asList().stream().map(Element::toBytes).toList();
+        List<byte[]> other = that.asList().stream().map(Element::toBytes).toList();
+
+        return comparator.compare(self, other);
+    }
+
+    @Override
+    public Iterator<byte[]> iterator() {
+        return this.asList().stream().map(Element::toBytes).toList().iterator();
     }
 
     // ---------------------------------------------------------------------------------------------------------------

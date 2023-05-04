@@ -4,10 +4,6 @@ import java.util.Comparator;
 
 public class ByteArrayComparator implements Comparator<byte[]> {
 
-    public static void comparator(Comparator<Tuple> target) {
-
-    }
-
     /**
      * Comparator<byte[]> implementation to sort keys that are byte arrays in ascending order based on their byte values.
      * The compare method of the Comparator implementation compares the byte values of corresponding bytes in the input
