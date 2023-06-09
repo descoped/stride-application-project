@@ -35,7 +35,7 @@
         <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
         <jetty.jakarta.servlet-api.version>5.0.2</jetty.jakarta.servlet-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
-        <jakarta.jaxb.version>4.0.2</jakarta.jaxb.version>
+        <jakarta.jaxb.version>4.0.3</jakarta.jaxb.version>
 
         <!-- Jackson -->
         <jackson.version>2.15.2</jackson.version>
