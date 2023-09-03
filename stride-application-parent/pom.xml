@@ -41,7 +41,7 @@
         <jackson.version>2.15.2</jackson.version>
 
         <!-- Logging libs -->
-        <slf4j-api.version>2.0.7</slf4j-api.version>
+        <slf4j-api.version>2.0.9</slf4j-api.version>
         <logback.version>1.4.11</logback.version>
         <logstash-encoder.version>7.4</logstash-encoder.version>
 
