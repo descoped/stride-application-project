@@ -42,7 +42,7 @@
 
         <!-- Logging libs -->
         <slf4j-api.version>2.0.9</slf4j-api.version>
-        <logback.version>1.4.12</logback.version>
+        <logback.version>1.4.13</logback.version>
         <logstash-encoder.version>7.4</logstash-encoder.version>
 
         <!-- Other libs -->
