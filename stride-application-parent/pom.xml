@@ -25,7 +25,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Eclipse Jetty -->
-        <jetty.version>11.0.18</jetty.version>
+        <jetty.version>11.0.19</jetty.version>
         <jakarta.version>3.1.0</jakarta.version>
         <jersey.version>3.1.5</jersey.version>
         <hk2.version>3.0.5</hk2.version>
