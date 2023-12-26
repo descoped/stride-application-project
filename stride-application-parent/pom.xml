@@ -38,7 +38,7 @@
         <jakarta.jaxb.version>4.0.4</jakarta.jaxb.version>
 
         <!-- Jackson -->
-        <jackson.version>2.16.0</jackson.version>
+        <jackson.version>2.16.1</jackson.version>
 
         <!-- Logging libs -->
         <slf4j-api.version>2.0.9</slf4j-api.version>
