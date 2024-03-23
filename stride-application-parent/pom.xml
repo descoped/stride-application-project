@@ -29,7 +29,7 @@
         <jakarta.version>3.1.0</jakarta.version>
         <jersey.version>3.1.5</jersey.version>
         <hk2.version>3.1.0</hk2.version>
-        <asm.version>9.6</asm.version>
+        <asm.version>9.7</asm.version>
         <swagger.version>2.2.21</swagger.version>
         <metrics.version>4.2.25</metrics.version>
         <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
