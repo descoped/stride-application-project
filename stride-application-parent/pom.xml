@@ -31,7 +31,7 @@
         <hk2.version>3.1.0</hk2.version>
         <asm.version>9.7</asm.version>
         <swagger.version>2.2.22</swagger.version>
-        <metrics.version>4.2.25</metrics.version>
+        <metrics.version>4.2.26</metrics.version>
         <jakarta.validation-api.version>3.1.0</jakarta.validation-api.version>
         <jetty.jakarta.servlet-api.version>5.0.2</jetty.jakarta.servlet-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
