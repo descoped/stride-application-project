@@ -28,7 +28,7 @@
         <jetty.version>11.0.22</jetty.version>
         <jakarta.version>3.1.0</jakarta.version>
         <jersey.version>3.1.7</jersey.version>
-        <hk2.version>3.1.0</hk2.version>
+        <hk2.version>3.1.1</hk2.version>
         <asm.version>9.7</asm.version>
         <swagger.version>2.2.22</swagger.version>
         <metrics.version>4.2.26</metrics.version>
