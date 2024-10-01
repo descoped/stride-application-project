@@ -57,7 +57,7 @@
         <mockito.version>5.14.1</mockito.version>
 
         <!-- Sonar -->
-        <sonar.version>3.11.0.3922</sonar.version>
+        <sonar.version>4.0.0.4121</sonar.version>
         <jacoco.version>0.8.12</jacoco.version>
         <code.coverage.exclusions>
         </code.coverage.exclusions>
