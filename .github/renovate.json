@@ -2,15 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:base",
-    ":dependencyDashboard"
+    ":dependencyDashboard",
+    "github>whitesource/merge-confidence:beta"
   ],
-  "prHourlyLimit": 0,
   "packageRules": [
     {
       "matchManagers": [
         "maven"
       ],
-      "updateTypes": [
+      "matchUpdateTypes": [
         "minor",
         "patch",
         "pin",
@@ -19,7 +19,7 @@
       "automerge": true
     },
     {
-      "depTypeList": [
+      "matchDepTypes": [
         "devDependencies"
       ],
       "automerge": true
@@ -45,6 +45,20 @@
       "automerge": true
     }
   ],
-  "separateMajorMinor": true,
-  "separateMinorPatch": true
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ],
+    "automerge": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
+  "rangeStrategy": "auto",
+  "dependencyDashboard": true,
+  "github-actions": {
+    "enabled": true,
+    "automerge": true
+  }
 }
