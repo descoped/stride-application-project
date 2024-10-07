@@ -47,7 +47,7 @@
 
         <!-- Other libs -->
         <property-config.version>0.8.38</property-config.version>
-        <property-config-json.version>0.0.33</property-config-json.version>
+        <property-config-json.version>0.0.34</property-config-json.version>
 
         <!-- Test libs -->
         <junit-jupiter-engine.version>5.11.2</junit-jupiter-engine.version>
