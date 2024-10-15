@@ -27,5 +27,27 @@
                 </repository>
             </repositories>
         </profile>
+
+        <profile>
+            <id>ossrh-snapshots</id>
+            <repositories>
+                <repository>
+                    <id>sonatype-oss-snapshot</id>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
     </profiles>
+
+    <!-- allow build to read snapshots -->
+    <activeProfiles>
+        <activeProfile>ossrh-snapshots</activeProfile>
+    </activeProfiles>
+
 </settings>
