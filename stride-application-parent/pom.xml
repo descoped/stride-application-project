@@ -27,7 +27,7 @@
         <!-- Eclipse Jetty -->
         <jetty.version>11.0.24</jetty.version>
         <jakarta.version>3.1.0</jakarta.version>
-        <jersey.version>3.1.9</jersey.version>
+        <jersey.version>3.1.10</jersey.version>
         <hk2.version>3.1.1</hk2.version>
         <asm.version>9.7.1</asm.version>
         <swagger.version>2.2.27</swagger.version>
