@@ -43,7 +43,7 @@
         <!-- Logging libs -->
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <logback.version>1.5.18</logback.version>
-        <logstash-encoder.version>8.0</logstash-encoder.version>
+        <logstash-encoder.version>8.1</logstash-encoder.version>
 
         <!-- Other libs -->
         <property-config.version>0.9.11</property-config.version>
