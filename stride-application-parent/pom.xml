@@ -30,7 +30,7 @@
         <jersey.version>3.1.10</jersey.version>
         <hk2.version>3.1.1</hk2.version>
         <asm.version>9.8</asm.version>
-        <swagger.version>2.2.34</swagger.version>
+        <swagger.version>2.2.35</swagger.version>
         <metrics.version>4.2.33</metrics.version>
         <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
         <jetty.jakarta.servlet-api.version>5.0.2</jetty.jakarta.servlet-api.version>
