@@ -46,7 +46,7 @@
         <logstash-encoder.version>8.1</logstash-encoder.version>
 
         <!-- Other libs -->
-        <property-config.version>0.9.16</property-config.version>
+        <property-config.version>0.9.17</property-config.version>
         <property-config-json.version>0.9.9</property-config-json.version>
 
         <!-- Test libs -->
