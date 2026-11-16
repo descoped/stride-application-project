@@ -45,7 +45,7 @@ public final class JwtTokenVerifier implements AutoCloseable {
     }
 
     static JwtTokenVerifier discover(SecurityConfiguration settings, ResourceRetriever retriever) throws IOException {
-        var jwks = OidcDiscovery.discover(settings.issuer(), retriever);
+        var jwks = IssuerMetadata.jwksUri(settings.issuer(), retriever);
         JWKSource<SecurityContext> keys = JWKSourceBuilder.<SecurityContext>create(jwks.toURL(), retriever)
                 .cache(300_000, 5_000).refreshAheadCache(false).rateLimited(30_000).retrying(false).build();
         try {
@@ -65,10 +65,18 @@ public final class JwtTokenVerifier implements AutoCloseable {
         this.settings = settings;
         this.keys = keys;
         Set<JWSAlgorithm> algorithms = settings.algorithms().stream().map(JWSAlgorithm::parse).collect(Collectors.toUnmodifiableSet());
-        processor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType(settings.tokenType())));
+        // RFC 9068 section 4: "typ" is "at+jwt" or "application/at+jwt", and any other value is rejected. That is
+        // also what keeps an OpenID Connect ID token from being accepted as an access token (section 5).
+        boolean profile = SecurityConfiguration.ACCESS_TOKEN_TYPE.equals(settings.tokenType());
+        processor.setJWSTypeVerifier(profile
+                ? new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("at+jwt"), new JOSEObjectType("application/at+jwt"))
+                : new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType(settings.tokenType())));
         processor.setJWSKeySelector(new JWSVerificationKeySelector<>(algorithms, keys));
         var claims = new DefaultJWTClaimsVerifier<SecurityContext>(settings.audiences(),
-                new JWTClaimsSet.Builder().issuer(settings.issuer()).build(), Set.of("iss", "aud", "sub", "exp", "iat"), Set.of());
+                new JWTClaimsSet.Builder().issuer(settings.issuer()).build(),
+                // RFC 9068 section 2.2 lists the claims an access token of the profile must carry
+                profile ? Set.of("iss", "exp", "aud", "sub", "client_id", "iat", "jti") : Set.of("iss", "exp", "aud", "sub", "iat"),
+                Set.of());
         claims.setMaxClockSkew(settings.clockSkewSeconds());
         processor.setJWTClaimsSetVerifier(claims);
     }
@@ -78,15 +86,14 @@ public final class JwtTokenVerifier implements AutoCloseable {
         JWTClaimsSet claims = processor.process(token, null);
         if (claims.getSubject().isBlank() || claims.getIssueTime().toInstant().isAfter(Instant.now().plusSeconds(settings.clockSkewSeconds())))
             throw new BadJWTException("Invalid subject or issue time");
-        Set<String> scopes = strings(claims.getClaim("scope"));
-        if (scopes.isEmpty()) scopes = strings(claims.getClaim("scp"));
-        return new TokenPrincipal(claims.getSubject(), scopes, strings(claims.getClaim(settings.rolesClaim())));
+        return new TokenPrincipal(claims.getSubject(), strings(claims.getClaim(settings.scopeClaim())),
+                strings(claims.getClaim(settings.rolesClaim())));
     }
 
     private static Set<String> strings(Object claim) throws BadJWTException {
         if (claim == null) return Set.of();
-        if (claim instanceof String value)
-            return Arrays.stream(value.split("\\s+")).filter(s -> !s.isBlank()).collect(Collectors.toUnmodifiableSet());
+        if (claim instanceof String value) // a space-delimited list, as "scope" is defined (RFC 8693 section 4.2)
+            return Arrays.stream(value.split(" ")).filter(s -> !s.isBlank()).collect(Collectors.toUnmodifiableSet());
         if (claim instanceof Collection<?> values && values.stream().allMatch(String.class::isInstance))
             return values.stream().map(String.class::cast).collect(Collectors.toUnmodifiableSet());
         throw new BadJWTException("Invalid authorization claim");

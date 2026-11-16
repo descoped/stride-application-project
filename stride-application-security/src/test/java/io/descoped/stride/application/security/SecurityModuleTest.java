@@ -115,7 +115,7 @@ class SecurityModuleTest {
 
             var missing = client.get("/whoami").response();
             assertEquals(401, missing.statusCode());
-            assertEquals("Bearer", missing.headers().firstValue("WWW-Authenticate").orElseThrow());
+            assertEquals("Bearer realm=\"stride\"", missing.headers().firstValue("WWW-Authenticate").orElseThrow());
             assertEquals(0, counter.requests.get(), "a rejected request does not reach application filters");
 
             var rejectedWithOrigin = client.get("/whoami", "Origin", "https://app.example.test").response();
