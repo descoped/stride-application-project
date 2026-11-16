@@ -47,8 +47,9 @@ public record ResourceImpl(String name, ObjectNode json) implements Resource {
 
     public record ResourceBuilder(String name, ObjectNode builder) implements Resource.Builder {
 
+        // a component declared in code is enabled unless it says otherwise
         public ResourceBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode());
+            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
         }
 
         @Override

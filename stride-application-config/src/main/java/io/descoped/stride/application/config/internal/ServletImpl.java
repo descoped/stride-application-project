@@ -59,8 +59,9 @@ public record ServletImpl(String name, ObjectNode json) implements Servlet {
 
     public record ServletBuilder(String name, ObjectNode builder) implements Servlet.Builder {
 
+        // a component declared in code is enabled unless it says otherwise
         public ServletBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode());
+            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
         }
 
         @Override

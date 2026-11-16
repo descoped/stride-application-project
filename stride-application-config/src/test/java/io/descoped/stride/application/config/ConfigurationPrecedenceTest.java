@@ -107,6 +107,28 @@ class ConfigurationPrecedenceTest {
         Filter cors = configuration.filters().filter("cors").orElseThrow();
         assertEquals(EnumSet.of(DispatcherType.ASYNC, DispatcherType.ERROR), cors.dispatches());
         assertEquals("/*", cors.pathSpec(), "values the code did not set keep Stride's default");
+        assertEquals(100, cors.order(), "declaring a filter in code does not reset what the defaults say");
+    }
+
+    @Test
+    void everySettingOfAFilterDeclaredInCodeCanBeOverriddenFromOutside() {
+        ApplicationConfiguration.Builder builder = ApplicationConfiguration.builder()
+                .defaults()
+                .filters(Filters.builder().filter(Filter.builder("audit")));
+
+        Filter declared = builder.build().filters().filter("audit").orElseThrow();
+        assertEquals("/*", declared.pathSpec());
+        assertEquals(Filter.DEFAULT_ORDER, declared.order());
+        assertEquals(EnumSet.of(DispatcherType.REQUEST), declared.dispatches());
+
+        Filter overridden = withSystemProperties(Map.of(
+                        "filters.audit.config.order", "7",
+                        "filters.audit.config.pathSpec", "/api/*",
+                        "filters.audit.enabled", "false"), builder)
+                .filters().filter("audit").orElseThrow();
+        assertEquals(7, overridden.order());
+        assertEquals("/api/*", overridden.pathSpec());
+        assertFalse(overridden.isEnabled());
     }
 
     @Test

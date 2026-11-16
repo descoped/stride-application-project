@@ -12,6 +12,12 @@ public interface Filter {
         return new FilterImpl.FilterBuilder(name);
     }
 
+    /** Where a filter without {@code config.order} runs: after Stride's own filters. */
+    int DEFAULT_ORDER = 1000;
+
+    /** The path of a filter without {@code config.pathSpec}: every request. */
+    String DEFAULT_PATH_SPEC = "/*";
+
     String name();
 
     ObjectNode json();
@@ -24,7 +30,16 @@ public interface Filter {
 
     String pathSpec();
 
+    /**
+     * The dispatcher types the filter applies to; {@code REQUEST} when none are configured.
+     */
     EnumSet<DispatcherType> dispatches();
+
+    /**
+     * The filter's position in the chain: lower runs first, and filters with the same order run by name. This is the
+     * only ordering rule. Stride's CORS filter is at 100 and authentication at 200.
+     */
+    int order();
 
     ServletContextBinding context();
 
@@ -41,6 +56,8 @@ public interface Filter {
         Builder pathSpec(String pathSpec);
 
         Builder dispatches(EnumSet<DispatcherType> dispatches);
+
+        Builder order(int order);
 
         Builder context(ServletContextValidation.Builder contextBuilder);
 

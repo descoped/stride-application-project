@@ -8,13 +8,11 @@ import io.descoped.stride.application.config.ServletContextBinding;
 import io.descoped.stride.application.config.ServletContextInitialization;
 import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.core.ServletContextInitializer;
+import io.descoped.stride.application.api.Components;
 import jakarta.inject.Inject;
-import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
-import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.validation.ValidationException;
-import org.eclipse.jetty.ee11.servlet.FilterHolder;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
 import org.glassfish.hk2.api.Injectee;
@@ -34,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,6 +50,7 @@ public class JerseyServerService implements PreDestroy {
     @SuppressWarnings("JavacQuirks")
     @Inject
     public JerseyServerService(ApplicationConfiguration configuration,
+                               Components components,
                                ServiceLocator serviceLocator,
                                ServletContextHandler servletContextHandler) throws ClassNotFoundException {
 
@@ -104,23 +104,26 @@ public class JerseyServerService implements PreDestroy {
             }
         }
 
-        // register filters
-        for (io.descoped.stride.application.config.Filter filter : configuration.filters().iterator()) {
-            if (!filter.isEnabled() || ApplicationCORSServletFilter.class.getName().equals(filter.className())) continue;
-            Class<? extends Filter> filterClass = filter.clazz();
-            Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
-
-            servletContextHandler.addFilter(new FilterHolder(filterInstance), filter.pathSpec(), filter.dispatches());
-        }
-
         // register servlets
         List<ServletSpec> servletSpecList = new ArrayList<>();
 
         Services services = configuration.services();
+        Set<String> servletsWithPath = new HashSet<>();
         for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
-            if (!servlet.isEnabled()) continue;
-            Class<? extends Servlet> servletClass = servlet.clazz();
-            Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
+            if (servlet.pathSpec() != null) servletsWithPath.add(servlet.name());
+        }
+        for (String name : components.servlets().keySet()) {
+            if (!servletsWithPath.contains(name)) {
+                throw new IllegalStateException("Servlet '" + name + "' has no path: set servlets." + name + ".config.pathSpec");
+            }
+        }
+        for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
+            Servlet servletInstance = components.servlets().get(servlet.name());
+            if (servletInstance == null && !servlet.isEnabled()) continue;
+            if (servletInstance == null) {
+                Class<? extends Servlet> servletClass = servlet.clazz();
+                servletInstance = serviceLocator.createAndInitialize(servletClass);
+            }
 
             // bind service to servlet binding
             ServletContextBinding binding = servlet.binding();
@@ -157,7 +160,8 @@ public class JerseyServerService implements PreDestroy {
             servletContextHandler.addServlet(servletSpec.holder, servletSpec.pathSpec());
         }
 
-        // register resources
+        // register resources: instances the application wired itself, then classes named in the configuration
+        components.resources().forEach(resourceConfig::register);
         for (Resource resource : configuration.resources().iterator()) {
             if (!resource.isEnabled()) continue;
             String resourceClass = resource.className();
@@ -212,6 +216,7 @@ public class JerseyServerService implements PreDestroy {
 
     record ServletSpec(ServletHolder holder, String pathSpec) {
     }
+
 
     //    @Provider
     static class ResourceInjectionBinder extends AbstractBinder {

@@ -45,7 +45,14 @@ public interface StrideApplication extends AutoCloseable {
     }
 
     static StrideApplication create(ApplicationConfiguration configuration) {
+        return create(configuration, Components.none());
+    }
+
+    /**
+     * Creates an application from a configuration and the ready-made objects the application has wired itself.
+     */
+    static StrideApplication create(ApplicationConfiguration configuration, Components components) {
         ApplicationConfigurator configurator = new ApplicationConfigurator();
-        return configurator.configure(configuration);
+        return configurator.configure(configuration, components);
     }
 }

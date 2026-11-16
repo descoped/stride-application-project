@@ -53,8 +53,9 @@ public record ServiceImpl(String name, ObjectNode json) implements Service {
 
     public record ServiceBuilder(String name, ObjectNode builder) implements Service.Builder {
 
+        // a component declared in code is enabled unless it says otherwise
         public ServiceBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode());
+            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
         }
 
         @Override

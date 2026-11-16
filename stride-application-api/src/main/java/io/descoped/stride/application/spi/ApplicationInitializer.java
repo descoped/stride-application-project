@@ -1,10 +1,11 @@
 package io.descoped.stride.application.spi;
 
+import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 
 public interface ApplicationInitializer {
 
-    StrideApplication initialize(ApplicationConfiguration configuration);
+    StrideApplication initialize(ApplicationConfiguration configuration, Components components);
 
 }

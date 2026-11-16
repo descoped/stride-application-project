@@ -1,14 +1,9 @@
 package io.descoped.stride.application.server;
 
+import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
-import jakarta.inject.Inject;
-import jakarta.servlet.DispatcherType;
 import org.eclipse.jetty.ee11.servlet.FilterHolder;
-import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
-import io.descoped.stride.application.config.SecurityConfiguration;
-import io.descoped.stride.application.security.JwtTokenVerifier;
-import io.descoped.stride.application.security.BearerAuthenticationFilter;
-import java.util.EnumSet;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.servlet.http.HttpServlet;
@@ -49,6 +44,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
 
     @Inject
     public JettyServerService(ApplicationConfiguration configuration,
+                              Components components,
                               ServiceLocator serviceLocator,
                               IterableProvider<SecurityHandler> securityHandlerProvider) throws Exception {
 
@@ -95,17 +91,11 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         servletContextHandler.setAttribute(ServletProperties.SERVICE_LOCATOR, serviceLocator);
         servletContextHandler.setContextPath(jettyConfig.contextPath());
 
-        // CORS must run before authentication, including rejected requests and preflight.
-        for (var filter : configuration.filters().iterator()) {
-            if (filter.isEnabled() && ApplicationCORSServletFilter.class.getName().equals(filter.className())) {
-                servletContextHandler.addFilter(new FilterHolder(new ApplicationCORSServletFilter(configuration)),
-                        filter.pathSpec(), filter.dispatches());
-            }
-        }
-        var security = configuration.security();
-        if (security.enabled()) {
-            servletContextHandler.addFilter(new FilterHolder(new BearerAuthenticationFilter(security, JwtTokenVerifier.discover(security))),
-                    "/*", EnumSet.allOf(DispatcherType.class));
+        // Filters belong to the server, not to Jersey: they apply to every servlet, and to /ping, whether or not
+        // the Jersey service is enabled.
+        for (FilterRegistrations.Registration registration : FilterRegistrations.collect(configuration, components, serviceLocator)) {
+            servletContextHandler.addFilter(new FilterHolder(registration.filter()), registration.pathSpec(), registration.dispatches());
+            log.debug("Filter {} (order {}) on {}", registration.name(), registration.order(), registration.pathSpec());
         }
 
         // ping servlet

@@ -229,10 +229,27 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         public ApplicationConfiguration build() {
+            DynamicConfiguration.Builder builder = DynamicConfiguration.builder();
+
+            // 0. the settings of filters declared in code, at their defaults. Lowest of all, so everything else
+            //    wins, but declared, so each can be overridden by environment variable or system property.
+            if (filtersBuilder != null) {
+                Map<String, String> implied = new LinkedHashMap<>();
+                for (Filter filter : filtersBuilder.build().iterator()) {
+                    String prefix = "filters." + filter.name() + ".config.";
+                    implied.put(prefix + "pathSpec", Filter.DEFAULT_PATH_SPEC);
+                    implied.put(prefix + "order", Integer.toString(Filter.DEFAULT_ORDER));
+                    implied.put(prefix + "dispatches.0", "REQUEST");
+                }
+                if (!implied.isEmpty()) {
+                    builder.values(implied);
+                }
+            }
+
             // 1. Stride's defaults: they declare every key Stride reads
             URL defaults = Objects.requireNonNull(ApplicationConfiguration.class.getResource("/" + DEFAULTS),
                     DEFAULTS + " is missing from stride-application-config");
-            DynamicConfiguration.Builder builder = DynamicConfiguration.builder().resource(defaults);
+            builder.resource(defaults);
 
             // 2. what the application declares in code: it decides which components exist, and its values are
             //    defaults that every later source can override

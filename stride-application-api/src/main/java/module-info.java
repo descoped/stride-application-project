@@ -1,6 +1,7 @@
 module stride.application.api {
 
-    requires stride.application.config;
+    requires transitive stride.application.config;
+    requires transitive jakarta.servlet;
 
     requires org.slf4j;
     requires jul.to.slf4j;
