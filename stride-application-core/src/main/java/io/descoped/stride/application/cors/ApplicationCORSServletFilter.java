@@ -21,11 +21,11 @@ public class ApplicationCORSServletFilter extends HttpFilter {
 
     @Inject
     public ApplicationCORSServletFilter(ApplicationConfiguration configuration) {
-        this(configuration.asString("filters.cors.config.origin", "*"),
-                configuration.asString("filters.cors.config.credentials", "false"),
-                configuration.asString("filters.cors.config.headers", "origin, content-type, accept, authorization"),
-                configuration.asString("filters.cors.config.methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"),
-                configuration.asString("filters.cors.config.max-age", "86400"));
+        this(configuration.requireString("filters.cors.config.origin"),
+                configuration.requireString("filters.cors.config.credentials"),
+                configuration.requireString("filters.cors.config.headers"),
+                configuration.requireString("filters.cors.config.methods"),
+                configuration.requireString("filters.cors.config.max-age"));
     }
 
     @Override

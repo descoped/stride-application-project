@@ -31,11 +31,11 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
     }
 
     public static SecurityConfiguration from(ApplicationConfiguration config) {
-        return new SecurityConfiguration(config.asBoolean("security.enabled", false),
-                config.asString("security.issuer", ""), csv(config.asString("security.audiences", "")),
-                csv(config.asString("security.algorithms", "RS256")), config.asString("security.token-type", "at+jwt"),
-                csv(config.asString("security.public-paths", "")), csv(config.asString("security.required-scopes", "")),
-                config.asString("security.roles-claim", "roles"), config.asInt("security.clock-skew-seconds", 30));
+        return new SecurityConfiguration(config.requireBoolean("security.enabled"),
+                config.requireString("security.issuer"), csv(config.requireString("security.audiences")),
+                csv(config.requireString("security.algorithms")), config.requireString("security.token-type"),
+                csv(config.requireString("security.public-paths")), csv(config.requireString("security.required-scopes")),
+                config.requireString("security.roles-claim"), config.requireInt("security.clock-skew-seconds"));
     }
 
     static Set<String> csv(String value) {

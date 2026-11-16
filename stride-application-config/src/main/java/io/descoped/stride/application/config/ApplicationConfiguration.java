@@ -1,19 +1,20 @@
 package io.descoped.stride.application.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.descoped.config.DynamicConfiguration;
 import io.descoped.stride.application.config.internal.ApplicationConfigurationJson;
 import io.descoped.stride.application.config.internal.FiltersImpl;
+import io.descoped.stride.application.config.internal.PropertyFlattener;
 import io.descoped.stride.application.config.internal.ResourcesImpl;
 import io.descoped.stride.application.config.internal.ServicesImpl;
 import io.descoped.stride.application.config.internal.ServletContextInitializationImpl;
 import io.descoped.stride.application.config.internal.ServletsImpl;
 import io.descoped.stride.application.jackson.JsonCreationStrategy;
 import io.descoped.stride.application.jackson.JsonElement;
-import io.descoped.stride.application.jackson.internal.JsonMerger;
-import no.cantara.config.ApplicationProperties;
 
+import java.net.URL;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static java.util.Optional.ofNullable;
 
@@ -135,13 +137,27 @@ public final class ApplicationConfiguration implements JsonElement {
 
     // ---------------------------------------------------------------------------------------------------------------
 
+    /**
+     * Starts a configuration. Sources are layered, later wins:
+     * <ol>
+     *     <li>Stride's {@code application-defaults.properties}, which declares every key Stride reads;</li>
+     *     <li>services, filters, servlets, resources and initializers declared in code with the builders;</li>
+     *     <li>the application's sources: {@link Builder#defaults()}, {@link Builder#testDefaults()} or
+     *     {@link Builder#configuration}; with the presets these are files, then environment variables, then system
+     *     properties;</li>
+     *     <li>{@link Builder#overrideProperty} values.</li>
+     * </ol>
+     * Code decides which components exist; whoever deploys the application can still change their values.
+     */
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
 
-        private ApplicationProperties.Builder applicationPropertiesBuilder;
+        private static final String DEFAULTS = "application-defaults.properties";
+
+        private Consumer<DynamicConfiguration.Builder> sources;
         private Map<String, String> overrideProperties = new LinkedHashMap<>();
         private Services.Builder servicesBuilder;
         private Filters.Builder filtersBuilder;
@@ -151,11 +167,20 @@ public final class ApplicationConfiguration implements JsonElement {
         private boolean enableDefault;
         private boolean enableTestDefault;
 
+        /**
+         * On top of Stride's defaults: reads {@code application.properties} from the class path and
+         * {@code local_override.properties} from the working directory, then lets environment variables and system
+         * properties override any declared key. Ignored when {@link #configuration} supplies the sources.
+         */
         public Builder defaults() {
             this.enableDefault = true;
             return this;
         }
 
+        /**
+         * As {@link #defaults()}, with {@code test_override.properties} from the class path in place of
+         * {@code local_override.properties}.
+         */
         public Builder testDefaults() {
             this.enableTestDefault = true;
             return this;
@@ -166,8 +191,14 @@ public final class ApplicationConfiguration implements JsonElement {
             return this;
         }
 
-        public Builder configuration(ApplicationProperties.Builder applicationPropertiesBuilder) {
-            this.applicationPropertiesBuilder = applicationPropertiesBuilder;
+        /**
+         * Supplies the application's configuration sources, in place of {@link #defaults()} or
+         * {@link #testDefaults()}. Stride's own defaults are always the first source, so every key Stride reads is
+         * declared and can be overridden by {@code environment()} or {@code systemProperties()} when the application
+         * adds them. Values given with {@link #overrideProperty} are added last and win.
+         */
+        public Builder configuration(Consumer<DynamicConfiguration.Builder> sources) {
+            this.sources = Objects.requireNonNull(sources, "sources");
             return this;
         }
 
@@ -197,70 +228,60 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         public ApplicationConfiguration build() {
-            if (enableDefault && applicationPropertiesBuilder == null) {
-                applicationPropertiesBuilder = ApplicationProperties.builder()
-                        .classpathPropertiesFile("application-defaults.properties")
-                        .defaults();
-            } else if (enableTestDefault && applicationPropertiesBuilder == null) {
-                applicationPropertiesBuilder = ApplicationProperties.builder()
-                        .classpathPropertiesFile("application-defaults.properties")
-                        .testDefaults();
-            } else if (applicationPropertiesBuilder == null) {
-                applicationPropertiesBuilder = ApplicationProperties.builder();
-            }
+            // 1. Stride's defaults: they declare every key Stride reads
+            URL defaults = Objects.requireNonNull(ApplicationConfiguration.class.getResource("/" + DEFAULTS),
+                    DEFAULTS + " is missing from stride-application-config");
+            DynamicConfiguration.Builder builder = DynamicConfiguration.builder().resource(defaults);
 
-            // apply override properties
-            overrideProperties.forEach((k, v) -> applicationPropertiesBuilder.property(k, v));
-
-            ApplicationProperties applicationProperties = enableDefault ?
-                    applicationPropertiesBuilder.buildAndSetStaticSingleton() :
-                    applicationPropertiesBuilder.build();
-
-            ApplicationConfigurationJson applicationConfigurationJson = new ApplicationConfigurationJson(applicationProperties);
-            ObjectNode jsonConfiguration = (ObjectNode) applicationConfigurationJson.json();
-
-            // merge deployment builders
-            JsonMerger merger = new JsonMerger();
+            // 2. what the application declares in code: it decides which components exist, and its values are
+            //    defaults that every later source can override
+            Map<String, String> declared = new LinkedHashMap<>();
             if (servicesBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "services", servicesBuilder.build().json());
+                PropertyFlattener.flatten("services", servicesBuilder.build().json(), declared);
             }
-
             if (filtersBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "filters", filtersBuilder.build().json());
+                PropertyFlattener.flatten("filters", filtersBuilder.build().json(), declared);
             }
-
             if (servletsBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "servlets", servletsBuilder.build().json());
+                PropertyFlattener.flatten("servlets", servletsBuilder.build().json(), declared);
             }
-
             if (resourcesBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "resources", resourcesBuilder.build().json());
+                PropertyFlattener.flatten("resources", resourcesBuilder.build().json(), declared);
             }
-
             if (servletContextInitializationBuilder != null) {
-                mergeBuilder(jsonConfiguration, merger, "initializers", servletContextInitializationBuilder.build().json());
+                PropertyFlattener.flatten("initializers", servletContextInitializationBuilder.build().json(), declared);
+            }
+            if (!declared.isEmpty()) {
+                builder.values(declared);
             }
 
-            //System.out.printf("config:\n%s\n", jsonConfiguration.toPrettyString());
+            // 3. the application's sources: files, then environment variables, then system properties
+            if (sources != null) {
+                sources.accept(builder);
+            } else if (enableDefault || enableTestDefault) {
+                builder.classpath("application.properties");
+                if (enableDefault) {
+                    builder.file(Path.of("local_override.properties"));
+                } else {
+                    builder.classpath("test_override.properties");
+                }
+                builder.environment().systemProperties();
+            }
 
+            // 4. override properties are added last, so they win over every source
+            if (!overrideProperties.isEmpty()) {
+                builder.values(overrideProperties);
+            }
+
+            ObjectNode jsonConfiguration = (ObjectNode) new ApplicationConfigurationJson(builder.build().asMap()).json();
             return new ApplicationConfiguration(jsonConfiguration, JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
-        }
-
-        private void mergeBuilder(ObjectNode jsonConfiguration, JsonMerger merger, String fieldName, ObjectNode jsonBuilder) {
-            if (jsonConfiguration.has(fieldName)) {
-                ObjectNode parentNode = JsonNodeFactory.instance.objectNode();
-                ObjectNode jsonNode = parentNode.set(fieldName, jsonBuilder);
-                merger.merge(jsonConfiguration, jsonNode);
-            } else {
-                jsonConfiguration.set(fieldName, jsonBuilder);
-            }
         }
     }
 
     // ---------------------------------------------------------------------------------------------------------------
 
     public boolean isVerboseLogging() {
-        return element().asBoolean("logging.verbose", false);
+        return element().requireBoolean("logging.verbose");
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -276,39 +297,39 @@ public final class ApplicationConfiguration implements JsonElement {
     public record Server(JsonElement element) {
 
         public String host() {
-            return element.asString("host", "localhost");
+            return element.requireString("host");
         }
 
         public int port() {
-            return element.asInt("port", 9090);
+            return element.requireInt("port");
         }
 
         public String contextPath() {
-            return element.asString("context-path", "/");
+            return element.requireString("context-path");
         }
 
         public int minThreads() {
-            return element.asInt("minThreads", 10);
+            return element.requireInt("minThreads");
         }
 
         public int maxThreads() {
-            return element.asInt("maxThreads", 150);
+            return element.requireInt("maxThreads");
         }
 
         public int outputBufferSize() {
-            return element.asInt("outputBufferSize", 32768);
+            return element.requireInt("outputBufferSize");
         }
 
         public int requestHeaderSize() {
-            return element.asInt("requestHeaderSize", 16384);
+            return element.requireInt("requestHeaderSize");
         }
 
         public boolean isHttp2Enabled() {
-            return element.asBoolean("http2.enabled", false);
+            return element.requireBoolean("http2.enabled");
         }
 
         public long idleTimeout() {
-            return Duration.parse(element.asString("idleTimeout", "PT30s")).toMillis();
+            return Duration.parse(element.requireString("idleTimeout")).toMillis();
         }
     }
 
@@ -337,28 +358,16 @@ public final class ApplicationConfiguration implements JsonElement {
 
     public record Application(JsonElement element, Server server) {
         public String alias() {
-            return element.with("alias").asString("default");
+            return element.requireString("alias");
         }
 
         public String version() {
-            return element.with("version").asString("unknown");
+            return element.requireString("version");
         }
 
         public String url() {
             return element.with("url").asString(String.format("http://%s:%s%s",
                     server.host(), server.port(), server.contextPath()));
-        }
-
-        // ---------------------------------------------------------------------------------------------------------------
-
-        public Cors cors() {
-            return new Cors(element.with("cors"));
-        }
-
-        public record Cors(JsonElement element) {
-            public String headers() {
-                return element.asString("headers", "origin, content-type, accept, authorization");
-            }
         }
     }
 }

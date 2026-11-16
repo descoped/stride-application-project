@@ -1,8 +1,6 @@
 package io.descoped.stride.application.config.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import no.cantara.config.ApplicationProperties;
-import no.cantara.config.json.PropertyMapToJsonConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,26 +24,18 @@ public final class ApplicationConfigurationJson {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurationJson.class);
 
-    private final ApplicationProperties properties;
     private final JsonNode json;
 
     public ApplicationConfigurationJson(String properties) {
-        this(mapToApplicationProperties(propertiesToMap(properties)));
+        this(propertiesToMap(properties));
     }
 
-    public ApplicationConfigurationJson(ApplicationProperties properties) {
-        this.properties = properties;
-        PropertyMapToJsonConverter converter = new PropertyMapToJsonConverter(properties.map());
-        json = converter.json();
+    public ApplicationConfigurationJson(Map<String, String> properties) {
+        this.json = PropertyTree.toJson(properties);
     }
 
     public ApplicationConfigurationJson(JsonNode json) {
-        this.properties = null;
         this.json = json;
-    }
-
-    public ApplicationProperties properties() {
-        return properties;
     }
 
     public JsonNode json() {
@@ -66,12 +56,6 @@ public final class ApplicationConfigurationJson {
                         (prev, next) -> next, LinkedHashMap::new
                 ));
         return map;
-    }
-
-    static ApplicationProperties mapToApplicationProperties(Map<String, String> map) {
-        return ApplicationProperties.builder()
-                .map(map)
-                .build();
     }
 
     static final List<String> fieldMatcher = List.of("enabled", "config", "metadata");

@@ -19,7 +19,6 @@ import io.descoped.stride.application.server.JettyServerService;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.MetricsServlet;
 import jakarta.servlet.DispatcherType;
-import no.cantara.config.ApplicationProperties;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -177,7 +176,6 @@ class DeploymentTest {
     @Test
     void configurationBuilder() throws JsonProcessingException {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-                .configuration(ApplicationProperties.builder())
                 .services(Services.builder()
                         .service(Service.builder("jetty.server")
                                 .clazz(JettyServerService.class))
@@ -210,11 +208,7 @@ class DeploymentTest {
         log.trace("\n{}", propsMapper.writeValueAsString(configuration.json()));
         log.trace("\n{}", mapper.writeValueAsString(configuration.json()));
 
-        ApplicationProperties.Builder applicationPropertiesBuilder = ApplicationProperties.builder()
-                .classpathPropertiesFile("application-defaults.properties")
-                .testDefaults();
-
-        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.builder().configuration(applicationPropertiesBuilder).build();
+        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.builder().testDefaults().build();
         log.trace("\n{}", mapper.writeValueAsString(applicationConfiguration.json()));
     }
 
@@ -242,9 +236,8 @@ class DeploymentTest {
                 """;
 
 
-//        ApplicationProperties applicationProperties = ApplicationProperties.builder().map(ApplicationJson.propertiesToMap(props)).build();
-
-//        ApplicationConfiguration configuration = ApplicationConfiguration.builder().configuration(applicationProperties).build(); // ((ObjectNode) applicationJson.json());
+//        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+//                .configuration(sources -> sources.values(propertiesToMap(props))).build();
 
 //        log.debug("\n{}", configuration.json().toPrettyString());
     }

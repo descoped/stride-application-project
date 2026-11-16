@@ -68,7 +68,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         httpConfig.setRequestHeaderSize(jettyConfig.requestHeaderSize());
 
         // Added for X-Forwarded-For support, from ALB
-        if (configuration.asBoolean("services.jetty.server.config.forwarded.enabled", false)) {
+        if (configuration.requireBoolean("services.jetty.server.config.forwarded.enabled")) {
             httpConfig.addCustomizer(new ForwardedRequestCustomizer());
         }
 

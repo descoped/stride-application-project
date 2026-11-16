@@ -1,7 +1,6 @@
 module stride.application.config {
 
-    requires property.config;
-    requires property.config.json;
+    requires transitive io.descoped.dynamic.config;
 
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.core;

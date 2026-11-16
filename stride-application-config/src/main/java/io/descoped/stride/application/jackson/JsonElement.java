@@ -166,6 +166,29 @@ public interface JsonElement {
         return with(with).asString(defaultValue);
     }
 
+    /**
+     * Returns a text value that must be present. Every key Stride reads is declared in
+     * {@code application-defaults.properties}, so a missing key is a programming error, not a configuration choice.
+     */
+    default String requireString(String with) {
+        return with(with).asString().orElseThrow(() -> missing(with));
+    }
+
+    /** Returns an {@code int} value that must be present and numeric. */
+    default int requireInt(String with) {
+        return with(with).asInt().orElseThrow(() -> missing(with));
+    }
+
+    /** Returns a {@code boolean} value that must be present. */
+    default boolean requireBoolean(String with) {
+        return with(with).asBoolean().orElseThrow(() -> missing(with));
+    }
+
+    private static IllegalStateException missing(String key) {
+        return new IllegalStateException("Configuration key '" + key + "' is missing or malformed; "
+                + "every key Stride reads must be declared in application-defaults.properties");
+    }
+
     default Optional<Integer> asInt() {
         return optionalNode().flatMap(value -> {
             if (value instanceof NumericNode number) {
