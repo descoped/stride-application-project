@@ -317,7 +317,7 @@
 
     <profiles>
         <!-- Publishing to Maven Central through the Central Portal. Run from the root of the repository.
-             Snapshot (no signing needed): mvn deploy -P central,secrets
+             Snapshot (no signing needed): mvn deploy -P central,secrets -pl '!:stride-application-sample'
              Release (by hand, never from CI): mvn release:prepare release:perform -P central,sign,secrets
              A release is uploaded with autoPublish=false and published by hand in the Portal.
              Dry run without uploading: add -DskipUpload=true -->
@@ -359,10 +359,6 @@
                             <publishingServerId>central</publishingServerId>
                             <autoPublish>false</autoPublish>
                             <waitUntil>validated</waitUntil>
-                            <!-- the sample application is an example, never an artifact -->
-                            <excludeArtifacts>
-                                <excludeArtifact>stride-application-sample</excludeArtifact>
-                            </excludeArtifacts>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -560,6 +556,10 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <releaseProfiles>central,sign</releaseProfiles>
                         <goals>deploy</goals>
+                        <!-- The sample application is an example, never an artifact: it is left out of the builds
+                             the release runs, as it is left out of the SNAPSHOT build in CI. That includes the
+                             verify before the tag; pull request and master builds test the sample. -->
+                        <arguments>-pl !:stride-application-sample</arguments>
                     </configuration>
                 </plugin>
 
