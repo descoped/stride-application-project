@@ -65,11 +65,12 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
     public record FilterBuilder(String name, ObjectNode builder) implements Filter.Builder {
 
         public FilterBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode());
+            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
         }
 
         @Override
         public Builder enabled(boolean enabled) {
+        // a component declared in code is enabled unless it says otherwise
             builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
             return this;
         }
