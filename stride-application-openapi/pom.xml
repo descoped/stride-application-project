@@ -85,25 +85,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <!-- The test client's API uses java.net.http types, which this module itself does not require -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-testCompile</id>
-                        <configuration>
-                            <compilerArgs>
-                                <arg>--add-modules</arg>
-                                <arg>java.net.http</arg>
-                            </compilerArgs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>
