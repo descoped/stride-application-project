@@ -1,6 +1,5 @@
 package io.descoped.stride.sample;
 
-import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.test.server.StrideExtension;
 import io.descoped.stride.application.test.server.TestClient;
 import org.junit.jupiter.api.Test;
@@ -13,14 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class GreetingApplicationTest {
 
-    static ApplicationConfiguration.Builder configuration() {
-        return GreetingApplication.configuration().overrideProperty("greeting.salutation", "Hei");
-    }
-
+    // The application's own wiring gets the configuration the server is started with, override included.
     @RegisterExtension
     static final StrideExtension stride = StrideExtension.builder()
-            .configuration(GreetingApplicationTest::configuration)
-            .components(() -> GreetingApplication.components(configuration().build()))
+            .configuration(() -> GreetingApplication.configuration().overrideProperty("greeting.salutation", "Hei"))
+            .components(GreetingApplication::components)
             .build();
 
     @Test

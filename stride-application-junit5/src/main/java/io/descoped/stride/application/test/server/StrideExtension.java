@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -54,7 +55,7 @@ import java.util.function.Supplier;
 public final class StrideExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
     private final Supplier<ApplicationConfiguration.Builder> configuration;
-    private final Supplier<Components> components;
+    private final Function<ApplicationConfiguration, Components> components;
     private final Duration timeout;
     // one namespace for each extension, so that a running application belongs to the extension that started it
     private final Namespace namespace = Namespace.create(StrideExtension.class, this);
@@ -89,7 +90,7 @@ public final class StrideExtension implements BeforeAllCallback, BeforeEachCallb
     private Running start() {
         TestApplication application = new TestApplication.Builder()
                 .configuration(configuration.get())
-                .components(components.get())
+                .components(components)
                 .build();
         try {
             application.start();
@@ -153,7 +154,7 @@ public final class StrideExtension implements BeforeAllCallback, BeforeEachCallb
     public static final class Builder {
 
         private Supplier<ApplicationConfiguration.Builder> configuration = () -> ApplicationConfiguration.builder().testDefaults();
-        private Supplier<Components> components = Components::none;
+        private Function<ApplicationConfiguration, Components> components = _ -> Components.none();
         private Duration timeout = TestClient.DEFAULT_TIMEOUT;
 
         private Builder() {
@@ -173,6 +174,17 @@ public final class StrideExtension implements BeforeAllCallback, BeforeEachCallb
          * The supplier is called for every start, so an application for each test gets fresh objects.
          */
         public Builder components(Supplier<Components> components) {
+            Objects.requireNonNull(components, "components");
+            this.components = _ -> components.get();
+            return this;
+        }
+
+        /**
+         * Ready-made objects wired from the configuration the application is started with: the way to run the
+         * application's own wiring in a test, for example {@code .components(MyApplication::components)}. Called
+         * for every start.
+         */
+        public Builder components(Function<ApplicationConfiguration, Components> components) {
             this.components = Objects.requireNonNull(components, "components");
             return this;
         }
