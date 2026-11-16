@@ -140,7 +140,7 @@ public class StrideApplicationImpl implements StrideApplication {
 
     Filter getEnabledServicesFilter() {
         return descriptor -> {
-            boolean defaultValue = configuration.asBoolean("services.hk2.defaults.enabled", false);
+            boolean defaultValue = configuration.requireBoolean("services.hk2.defaults.enabled");
             String name = descriptor.getName();
             boolean enabled = ofNullable(name)
                     .map(configuration.with("services")::find)

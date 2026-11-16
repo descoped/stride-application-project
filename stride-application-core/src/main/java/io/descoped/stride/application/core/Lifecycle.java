@@ -23,11 +23,12 @@ class Lifecycle {
     }
 
     void configure() {
-        if (configured.compareAndSet(false, true)) {
+        if (!configured.get()) {
             RunLevelController runLevelController = ofNullable(serviceLocator.getService(RunLevelController.class)).orElseThrow(() -> new IllegalStateException("RunLevelController is yet not available!"));
 
-            runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.asString("services.hk2.threadpolicy", RunLevelController.ThreadingPolicy.FULLY_THREADED.name())));
-            runLevelController.setMaximumUseableThreads(configuration.asInt("services.hk2.threadcount", 20));
+            runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.requireString("services.hk2.threadpolicy")));
+            runLevelController.setMaximumUseableThreads(configuration.requireInt("services.hk2.threadcount"));
+            configured.set(true);
         }
     }
 
@@ -41,7 +42,7 @@ class Lifecycle {
 
     synchronized int getCurrentRunLevel() {
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-        return runLevelController.getCurrentRunLevel();
+        return runLevelController == null ? 0 : runLevelController.getCurrentRunLevel();
     }
 
     int getServiceRunLevel() {
@@ -49,11 +50,11 @@ class Lifecycle {
     }
 
     int getMaxRunLevel() {
-        RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-        if (runLevelController == null) {
-            return configuration.asInt("services.hk2.threadcount", 20);
-        }
-        return runLevelController.getMaximumUseableThreads();
+        beanDiscovery.discover();
+        return serviceLocator.getDescriptors(d -> true).stream()
+                .map(d -> d.getMetadata().get(org.glassfish.hk2.runlevel.RunLevel.RUNLEVEL_VAL_META_TAG))
+                .filter(java.util.Objects::nonNull).flatMap(java.util.Collection::stream)
+                .mapToInt(Integer::parseInt).max().orElse(RunLevelConstants.WEB_SERVER_RUN_LEVEL + 1);
     }
 
     synchronized void proceedTo(int runLevel) {
@@ -66,9 +67,7 @@ class Lifecycle {
         configure();
 
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-        if (runLevelController.getMaximumUseableThreads() >= runLevel) {
-            runLevelController.proceedTo(runLevel);
-        }
+        runLevelController.proceedTo(runLevel);
 
         completed.set(runLevel == 0);
     }
@@ -78,9 +77,8 @@ class Lifecycle {
     }
 
     void stop() {
-        proceedTo(0); // stop all run levels
-        if (!serviceLocator.isShutdown()) {
-            serviceLocator.shutdown();
-        }
+        if (serviceLocator.isShutdown()) return;
+        try { proceedTo(0); }
+        finally { serviceLocator.shutdown(); completed.set(true); }
     }
 }

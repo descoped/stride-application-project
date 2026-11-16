@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.config.utils.ClassPathResourceUtils;
-import no.cantara.config.ApplicationProperties;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,18 +19,17 @@ class ApplicationConfigurationTest {
     @Test
     void testApplicationConfiguration() {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-                .configuration(ApplicationProperties.builder()
-                        .testDefaults())
+                .testDefaults()
                 .build();
         log.trace("{}", configuration.toPrettyString());
 
         assertEquals("localhost", configuration.server().host());
-        assertEquals(9090, configuration.server().port());
+        assertEquals(0, configuration.server().port());
+        assertEquals("/", configuration.server().contextPath());
 
         assertEquals("default", configuration.application().alias());
         assertEquals("unknown", configuration.application().version());
-        assertEquals("localhost", configuration.server().host());
-        assertEquals(9090, configuration.server().port());
+        assertEquals("http://localhost:0/", configuration.application().url());
 
         log.trace("server.host: {}", configuration.server().host());
         log.trace("server.port: {}", configuration.server().port());
@@ -40,7 +38,6 @@ class ApplicationConfigurationTest {
         log.trace("application.alias: {}", configuration.application().alias());
         log.trace("application.version: {}", configuration.application().version());
         log.trace("application.url: {}", configuration.application().url());
-        log.trace("application.cors.headers: {}", configuration.application().cors().headers());
     }
 
     @Test

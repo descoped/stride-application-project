@@ -2,6 +2,13 @@ package io.descoped.stride.application.server;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import jakarta.inject.Inject;
+import jakarta.servlet.DispatcherType;
+import org.eclipse.jetty.ee11.servlet.FilterHolder;
+import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
+import io.descoped.stride.application.config.SecurityConfiguration;
+import io.descoped.stride.application.security.JwtTokenVerifier;
+import io.descoped.stride.application.security.BearerAuthenticationFilter;
+import java.util.EnumSet;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.servlet.http.HttpServlet;
@@ -17,9 +24,9 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
+import org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PreDestroy;
@@ -61,7 +68,9 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         httpConfig.setRequestHeaderSize(jettyConfig.requestHeaderSize());
 
         // Added for X-Forwarded-For support, from ALB
-        httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+        if (configuration.requireBoolean("services.jetty.server.config.forwarded.enabled")) {
+            httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+        }
 
         HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
         ServerConnector httpConnector;
@@ -76,6 +85,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
             httpConnector = new ServerConnector(server, http11);
         }
         httpConnector.setIdleTimeout(jettyConfig.idleTimeout());
+        httpConnector.setHost(jettyConfig.host());
         httpConnector.setPort(jettyConfig.port());
         server.addConnector(httpConnector);
 
@@ -85,7 +95,20 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
 
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute(ServletProperties.SERVICE_LOCATOR, serviceLocator);
-        servletContextHandler.setContextPath("/");
+        servletContextHandler.setContextPath(jettyConfig.contextPath());
+
+        // CORS must run before authentication, including rejected requests and preflight.
+        for (var filter : configuration.filters().iterator()) {
+            if (filter.isEnabled() && ApplicationCORSServletFilter.class.getName().equals(filter.className())) {
+                servletContextHandler.addFilter(new FilterHolder(new ApplicationCORSServletFilter(configuration)),
+                        filter.pathSpec(), filter.dispatches());
+            }
+        }
+        var security = configuration.security();
+        if (security.enabled()) {
+            servletContextHandler.addFilter(new FilterHolder(new BearerAuthenticationFilter(security, JwtTokenVerifier.discover(security))),
+                    "/*", EnumSet.allOf(DispatcherType.class));
+        }
 
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
@@ -106,9 +129,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         }
 
         server.setHandler(handler);
-        server.start();
-
-        log.info("Jetty Server started");
+        // The listener starts at the next run level, after Jersey and filters are assembled.
 
         ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
     }

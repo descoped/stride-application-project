@@ -41,7 +41,7 @@ public interface StrideApplication extends AutoCloseable {
     int getPort();
 
     static StrideApplication create() {
-        return StrideApplication.create(ApplicationConfiguration.builder().build());
+        return StrideApplication.create(ApplicationConfiguration.builder().defaults().build());
     }
 
     static StrideApplication create(ApplicationConfiguration configuration) {

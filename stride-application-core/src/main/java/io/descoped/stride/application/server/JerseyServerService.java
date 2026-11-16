@@ -9,12 +9,14 @@ import io.descoped.stride.application.config.ServletContextInitialization;
 import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.core.ServletContextInitializer;
 import jakarta.inject.Inject;
+import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.validation.ValidationException;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee11.servlet.FilterHolder;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.JustInTimeInjectionResolver;
 import org.glassfish.hk2.api.PreDestroy;
@@ -44,6 +46,7 @@ public class JerseyServerService implements PreDestroy {
     private static final Logger log = LoggerFactory.getLogger(JerseyServerService.class);
 
     private final JerseyServletContainer servletContainer;
+    private final ServiceLocator jerseyServiceLocator;
 
     @SuppressWarnings("JavacQuirks")
     @Inject
@@ -56,6 +59,7 @@ public class JerseyServerService implements PreDestroy {
         // create rest resource config
         ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
+        resourceConfig.register(RolesAllowedDynamicFeature.class);
         resourceConfig.property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 
         // register supported mediaTypes
@@ -63,7 +67,7 @@ public class JerseyServerService implements PreDestroy {
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
         // initialize initializers
-        ServiceLocator jerseyServiceLocator = ServiceLocatorFactory.getInstance().create("servletContextInit", serviceLocator);
+        jerseyServiceLocator = ServiceLocatorFactory.getInstance().create(null, serviceLocator);
         ServletContextInitialization initialization = configuration.initialization();
         for (Class<?> initializerClass : initialization.classes()) {
             ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
@@ -102,6 +106,7 @@ public class JerseyServerService implements PreDestroy {
 
         // register filters
         for (io.descoped.stride.application.config.Filter filter : configuration.filters().iterator()) {
+            if (!filter.isEnabled() || ApplicationCORSServletFilter.class.getName().equals(filter.className())) continue;
             Class<? extends Filter> filterClass = filter.clazz();
             Filter filterInstance = serviceLocator.createAndInitialize(filterClass);
 
@@ -113,6 +118,7 @@ public class JerseyServerService implements PreDestroy {
 
         Services services = configuration.services();
         for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
+            if (!servlet.isEnabled()) continue;
             Class<? extends Servlet> servletClass = servlet.clazz();
             Servlet servletInstance = serviceLocator.createAndInitialize(servletClass);
 
@@ -153,6 +159,7 @@ public class JerseyServerService implements PreDestroy {
 
         // register resources
         for (Resource resource : configuration.resources().iterator()) {
+            if (!resource.isEnabled()) continue;
             String resourceClass = resource.className();
             try {
                 List<Arg> args = resource.args();
@@ -200,6 +207,7 @@ public class JerseyServerService implements PreDestroy {
     @Override
     public void preDestroy() {
         servletContainer.stop();
+        if (!jerseyServiceLocator.isShutdown()) jerseyServiceLocator.shutdown();
     }
 
     record ServletSpec(ServletHolder holder, String pathSpec) {

@@ -3,7 +3,7 @@ package io.descoped.stride.application.core;
 import com.codahale.metrics.DefaultSettableGauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.codahale.metrics.jersey3.MetricsFeature;
+import io.dropwizard.metrics.jersey40.MetricsFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.api.StrideApplication;
@@ -25,7 +25,7 @@ import io.dropwizard.metrics.servlets.HealthCheckServlet;
 import io.dropwizard.metrics.servlets.MetricsServlet;
 import jakarta.inject.Inject;
 import jakarta.servlet.DispatcherType;
-import org.eclipse.jetty.server.handler.ContextHandler;
+import jakarta.servlet.ServletContext;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevelController;
@@ -57,7 +57,7 @@ class StrideApplicationTest {
         private ApplicationConfiguration configuration;
 
         @Override
-        public void initialize(ServiceLocator locator, ContextHandler.Context context) {
+        public void initialize(ServiceLocator locator, ServletContext context) {
             MetricRegistry baseRegistry = new MetricRegistry();
 
             MetricRegistry appRegistry = new MetricRegistry();

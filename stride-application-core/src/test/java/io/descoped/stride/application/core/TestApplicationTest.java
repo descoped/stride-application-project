@@ -3,7 +3,7 @@ package io.descoped.stride.application.core;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Resources;
-import io.descoped.stride.application.test.TestApplication;
+import io.descoped.stride.application.test.server.TestApplication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +22,7 @@ public class TestApplicationTest {
                         )
                 );
 
-        application = new TestApplication.Builder()
-                .configuration(configuration)
-                .build();
+        application = new TestApplication.Builder().configuration(configuration).build();
         application.start();
     }
 

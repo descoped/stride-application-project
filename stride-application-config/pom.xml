@@ -38,13 +38,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>no.cantara.config</groupId>
-            <artifactId>property-config</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>no.cantara.config</groupId>
-            <artifactId>property-config-json</artifactId>
+            <groupId>io.descoped.config</groupId>
+            <artifactId>dynamic-configuration</artifactId>
         </dependency>
 
         <dependency>
@@ -58,8 +53,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty.toolchain</groupId>
-            <artifactId>jetty-jakarta-servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
 
         <dependency>

@@ -1,16 +1,12 @@
-package io.descoped.stride.application.test;
+package io.descoped.stride.application.test.server;
 
 import io.descoped.stride.application.api.Logging;
 import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.ServerSocket;
 import java.net.URL;
-import java.security.SecureRandom;
-import java.util.Random;
 
 public class TestApplication implements TestUriResolver, StrideApplication {
 
@@ -119,33 +115,6 @@ public class TestApplication implements TestUriResolver, StrideApplication {
             return this;
         }
 
-        @SuppressWarnings("SameParameterValue")
-        static int findFreePort(Random random, int from, int to) {
-            int port = pick(random, from, to);
-            for (int i = 0; i < 2 * ((to + 1) - from); i++) {
-                if (isLocalPortFree(port)) {
-                    return port;
-                }
-                port = pick(random, from, to);
-            }
-            throw new IllegalStateException(
-                    "Unable to find any available ports in range: [" + from + ", " + (to + 1) + ")");
-        }
-
-        private static int pick(Random random, int from, int to) {
-            return from + random.nextInt((to + 1) - from);
-        }
-
-        private static boolean isLocalPortFree(int port) {
-            try {
-                try (ServerSocket ignore = new ServerSocket(port)) {
-                    return true;
-                }
-            } catch (IOException e) {
-                return false;
-            }
-        }
-
         public TestApplication build() {
             if (configurationBuilder == null) {
                 configurationBuilder = ApplicationConfiguration.builder()
@@ -156,7 +125,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
                 configurationBuilder.overrideProperty("services.jetty.server.config.host", host);
             }
 
-            int pickPort = (port <= 0) ? findFreePort(new SecureRandom(), 9000, 9499) : port;
+            int pickPort = Math.max(port, 0);
             configurationBuilder.overrideProperty("services.jetty.server.config.port", Integer.toString(pickPort));
 
             if (contextPath != null) {

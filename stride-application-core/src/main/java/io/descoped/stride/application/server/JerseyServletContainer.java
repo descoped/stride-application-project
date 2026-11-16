@@ -14,11 +14,12 @@ public class JerseyServletContainer extends ServletContainer {
     }
 
     public void stop() {
-        getApplicationHandler().onShutdown(this);
+        // Jetty owns ServletContainer.destroy() and invokes it when the context stops.
     }
 
     @Override
     public void destroy() {
-        log.warn("Destroy Jersey servlet container");
+        super.destroy();
+        log.debug("Destroyed Jersey servlet container");
     }
 }

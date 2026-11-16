@@ -1,50 +1,33 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     ":dependencyDashboard"
   ],
-  "prHourlyLimit": 0,
   "packageRules": [
     {
+      "description": "Always the latest stable version; CI is the gate",
       "matchManagers": [
-        "maven"
-      ],
-      "updateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest"
+        "maven",
+        "github-actions"
       ],
       "automerge": true
     },
     {
-      "depTypeList": [
-        "devDependencies"
+      "description": "JDK versions in the workflows are deliberate: CI and `respond` build on the Java 25 baseline. They are changed by hand, never bumped.",
+      "matchManagers": [
+        "github-actions"
       ],
-      "automerge": true
-    },
-    {
-      "excludePackageNames": [
-        "javax.xml.bind:jaxb-api"
+      "matchDepNames": [
+        "java-jdk"
       ],
-      "exclude": true
-    },
-    {
-      "excludePackageNames": [
-        "com.sun.xml.bind:jaxb-core",
-        "com.sun.xml.bind:jaxb-impl"
-      ],
-      "exclude": true
-    },
-    {
-      "matchSourceUrlPrefixes": [
-        "https://github.com/junit-team/junit5"
-      ],
-      "groupName": "junit5 monorepo",
-      "automerge": true
+      "enabled": false
     }
   ],
-  "separateMajorMinor": true,
-  "separateMinorPatch": true
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ],
+    "automerge": true
+  }
 }
