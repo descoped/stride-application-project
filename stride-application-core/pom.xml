@@ -40,10 +40,6 @@
             <artifactId>jakarta.annotation-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-config</artifactId>
             <version>0.0.24-SNAPSHOT</version>

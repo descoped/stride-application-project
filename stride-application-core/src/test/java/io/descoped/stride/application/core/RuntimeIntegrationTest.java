@@ -48,12 +48,4 @@ class RuntimeIntegrationTest {
             assertTrue(application.isCompleted());
         }
     }
-
-    @Test void invalidSecurityConfigurationFailsBeforeListenerStarts() {
-        var config = ApplicationConfiguration.builder().testDefaults().overrideProperty("security.enabled", "true").build();
-        try (var application = StrideApplication.create(config)) {
-            assertThrows(RuntimeException.class, application::start);
-            assertEquals(-1, application.getLocalPort());
-        }
-    }
 }

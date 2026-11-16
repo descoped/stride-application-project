@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.config.DynamicConfiguration;
 import io.descoped.stride.application.config.internal.ApplicationConfigurationJson;
 import io.descoped.stride.application.config.internal.FiltersImpl;
+import io.descoped.stride.application.config.internal.ModuleDefaults;
 import io.descoped.stride.application.config.internal.PropertyFlattener;
 import io.descoped.stride.application.config.internal.ResourcesImpl;
 import io.descoped.stride.application.config.internal.ServicesImpl;
@@ -13,7 +14,6 @@ import io.descoped.stride.application.config.internal.ServletsImpl;
 import io.descoped.stride.application.jackson.JsonCreationStrategy;
 import io.descoped.stride.application.jackson.JsonElement;
 
-import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -140,7 +140,9 @@ public final class ApplicationConfiguration implements JsonElement {
     /**
      * Starts a configuration. Sources are layered, later wins:
      * <ol>
-     *     <li>Stride's {@code application-defaults.properties}, which declares every key Stride reads;</li>
+     *     <li>the {@code META-INF/stride/defaults.properties} of every module on the class path: Stride's own, those
+     *     of optional Stride modules, and any a library or the application ships. They declare every key that is
+     *     read; two modules declaring the same key is an error;</li>
      *     <li>services, filters, servlets, resources and initializers declared in code with the builders;</li>
      *     <li>the application's sources: {@link Builder#defaults()}, {@link Builder#testDefaults()} or
      *     {@link Builder#configuration}; with the presets these are files, then environment variables, then system
@@ -154,8 +156,6 @@ public final class ApplicationConfiguration implements JsonElement {
     }
 
     public static class Builder {
-
-        private static final String DEFAULTS = "application-defaults.properties";
 
         private Consumer<DynamicConfiguration.Builder> sources;
         private Map<String, String> overrideProperties = new LinkedHashMap<>();
@@ -193,7 +193,7 @@ public final class ApplicationConfiguration implements JsonElement {
 
         /**
          * Supplies the application's configuration sources, in place of {@link #defaults()} or
-         * {@link #testDefaults()}. Stride's own defaults are always the first source, so every key Stride reads is
+         * {@link #testDefaults()}. The module defaults are always the first source, so every key Stride reads is
          * declared and can be overridden by {@code environment()} or {@code systemProperties()} when the application
          * adds them. Values given with {@link #overrideProperty} are added last and win.
          */
@@ -228,10 +228,9 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         public ApplicationConfiguration build() {
-            // 1. Stride's defaults: they declare every key Stride reads
-            URL defaults = Objects.requireNonNull(ApplicationConfiguration.class.getResource("/" + DEFAULTS),
-                    DEFAULTS + " is missing from stride-application-config");
-            DynamicConfiguration.Builder builder = DynamicConfiguration.builder().resource(defaults);
+            // 1. the defaults of every module on the class path: they declare every key that is read
+            DynamicConfiguration.Builder builder = DynamicConfiguration.builder();
+            ModuleDefaults.find(ApplicationConfiguration.class.getClassLoader()).forEach(builder::resource);
 
             // 2. what the application declares in code: it decides which components exist, and its values are
             //    defaults that every later source can override
@@ -285,10 +284,6 @@ public final class ApplicationConfiguration implements JsonElement {
     }
 
     // ---------------------------------------------------------------------------------------------------------------
-
-    public SecurityConfiguration security() {
-        return SecurityConfiguration.from(this);
-    }
 
     public Server server() {
         return new Server(element().with("services.jetty.server.config"));

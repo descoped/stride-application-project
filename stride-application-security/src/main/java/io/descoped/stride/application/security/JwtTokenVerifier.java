@@ -1,6 +1,5 @@
 package io.descoped.stride.application.security;
 
-import io.descoped.stride.application.config.SecurityConfiguration;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.jwk.JWKMatcher;

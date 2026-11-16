@@ -40,9 +40,6 @@ class ConfigurationPrecedenceTest {
         assertEquals(30_000, configuration.server().idleTimeout());
         assertTrue(configuration.server().isHttp2Enabled());
         assertFalse(configuration.isVerboseLogging());
-        assertFalse(configuration.security().enabled());
-        assertEquals("at+jwt", configuration.security().tokenType());
-        assertEquals(30, configuration.security().clockSkewSeconds());
         assertEquals(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST),
                 configuration.filters().filter("cors").orElseThrow().dispatches());
     }
@@ -50,12 +47,12 @@ class ConfigurationPrecedenceTest {
     @Test
     void systemPropertyOverridesAKeyThatOnlyStridesDefaultsDeclare() {
         ApplicationConfiguration configuration = withSystemProperties(Map.of(
-                        "security.clock-skew-seconds", "5",
+                        "services.hk2.threadcount", "5",
                         "services.jetty.server.config.maxThreads", "64",
                         "filters.cors.config.origin", "https://app.example.test"),
                 ApplicationConfiguration.builder().defaults());
 
-        assertEquals(5, configuration.security().clockSkewSeconds());
+        assertEquals(5, configuration.requireInt("services.hk2.threadcount"));
         assertEquals(64, configuration.server().maxThreads());
         assertEquals("https://app.example.test", configuration.requireString("filters.cors.config.origin"));
     }

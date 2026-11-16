@@ -9,9 +9,6 @@ import io.descoped.stride.application.config.ServletContextInitialization;
 import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.core.ServletContextInitializer;
 import io.descoped.stride.application.api.Components;
-import io.descoped.stride.application.config.SecurityConfiguration;
-import io.descoped.stride.application.security.BearerAuthenticationFilter;
-import io.descoped.stride.application.security.JwtTokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
 import jakarta.servlet.DispatcherType;
@@ -36,8 +33,6 @@ import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -237,12 +232,9 @@ public class JerseyServerService implements PreDestroy {
     record FilterRegistration(String name, int order, Filter filter, String pathSpec, EnumSet<DispatcherType> dispatches) {
     }
 
-    /** Authentication runs after CORS (100), so preflight and rejected requests still get CORS headers. */
-    static final int AUTHENTICATION_ORDER = 200;
-
     /**
      * Collects every filter: those in the configuration, created from their class unless the application handed in
-     * an instance of that name; instances without a configuration entry; and authentication when enabled.
+     * an instance of that name; and instances without a configuration entry.
      */
     static List<FilterRegistration> filterRegistrations(ApplicationConfiguration configuration, Components components,
                                                         ServiceLocator serviceLocator) {
@@ -268,19 +260,6 @@ public class JerseyServerService implements PreDestroy {
                         io.descoped.stride.application.config.Filter.DEFAULT_PATH_SPEC, EnumSet.of(DispatcherType.REQUEST)));
             }
         });
-
-        SecurityConfiguration security = configuration.security();
-        if (security.enabled()) {
-            JwtTokenVerifier verifier;
-            try {
-                verifier = JwtTokenVerifier.discover(security);
-            } catch (IOException e) {
-                throw new UncheckedIOException("Could not read the issuer's metadata or keys", e);
-            }
-            registrations.add(new FilterRegistration("security", AUTHENTICATION_ORDER,
-                    new BearerAuthenticationFilter(security, verifier),
-                    io.descoped.stride.application.config.Filter.DEFAULT_PATH_SPEC, EnumSet.allOf(DispatcherType.class)));
-        }
 
         registrations.sort(Comparator.comparingInt(FilterRegistration::order).thenComparing(FilterRegistration::name));
         return registrations;

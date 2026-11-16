@@ -59,7 +59,8 @@ public class ApplicationOpenApiResource extends BaseOpenApiResource {
         configuration.with("application.url").asString()
                 .ifPresent(url -> openAPI.addServersItem(new Server().url(url)));
 
-        if (configuration.security().enabled()) {
+        // security.enabled is declared by stride-application-security; without that module there is no key
+        if (configuration.with("security.enabled").asBoolean(false)) {
             openAPI.components(new Components().addSecuritySchemes(BEARER_SCHEME, new SecurityScheme()
                     .type(SecurityScheme.Type.HTTP)
                     .scheme("bearer")

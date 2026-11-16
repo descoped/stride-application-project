@@ -1,6 +1,5 @@
 package io.descoped.stride.application.security;
 
-import io.descoped.stride.application.config.SecurityConfiguration;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

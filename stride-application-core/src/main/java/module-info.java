@@ -3,8 +3,6 @@ module stride.application.core {
     requires stride.application.config;
     requires stride.application.api;
 
-    requires java.net.http;
-    requires com.nimbusds.jose.jwt;
 
     requires org.slf4j;
     requires jul.to.slf4j;
@@ -38,5 +36,4 @@ module stride.application.core {
     exports io.descoped.stride.application.core;
     exports io.descoped.stride.application.server;
     exports io.descoped.stride.application.cors;
-    exports io.descoped.stride.application.security;
 }

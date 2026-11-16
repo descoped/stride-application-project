@@ -1,4 +1,6 @@
-package io.descoped.stride.application.config;
+package io.descoped.stride.application.security;
+
+import io.descoped.stride.application.config.ApplicationConfiguration;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,15 +14,14 @@ class SecurityConfigurationTest {
                 .overrideProperty("security.public-paths", "/ping, /health")
                 .overrideProperty("security.required-scopes", "read, write")
                 .build();
-        var security = config.security();
+        var security = SecurityConfiguration.from(config);
         assertTrue(security.enabled());
         assertEquals(java.util.Set.of("api", "another-api"), security.audiences());
         assertEquals(java.util.Set.of("/ping", "/health"), security.publicPaths());
         assertEquals(java.util.Set.of("read", "write"), security.requiredScopes());
         assertEquals("at+jwt", security.tokenType());
-        assertEquals(30_000, config.server().idleTimeout());
     }
     @Test void authenticationIsExplicitlyOptIn() {
-        assertFalse(ApplicationConfiguration.builder().build().security().enabled());
+        assertFalse(SecurityConfiguration.from(ApplicationConfiguration.builder().build()).enabled());
     }
 }

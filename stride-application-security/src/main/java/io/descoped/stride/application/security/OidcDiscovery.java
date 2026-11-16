@@ -1,6 +1,5 @@
 package io.descoped.stride.application.security;
 
-import io.descoped.stride.application.config.SecurityConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.ResourceRetriever;

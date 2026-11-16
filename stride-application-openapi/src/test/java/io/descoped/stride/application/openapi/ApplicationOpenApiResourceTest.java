@@ -63,8 +63,6 @@ class ApplicationOpenApiResourceTest {
     void declaresTheBearerSchemeWhenSecurityIsEnabled() {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()
                 .overrideProperty("security.enabled", "true")
-                .overrideProperty("security.issuer", "https://issuer.example.test")
-                .overrideProperty("security.audiences", "https://api.example.test")
                 .build();
 
         var document = ApplicationOpenApiResource.describe(configuration);
