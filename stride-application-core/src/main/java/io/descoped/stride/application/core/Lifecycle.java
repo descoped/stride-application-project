@@ -2,6 +2,7 @@ package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.server.RunLevelConstants;
+import io.descoped.stride.application.server.VirtualThreads;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevelController;
 
@@ -28,6 +29,8 @@ class Lifecycle {
 
             runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.requireString("services.hk2.threadpolicy")));
             runLevelController.setMaximumUseableThreads(configuration.requireInt("services.hk2.threadcount"));
+            // services start on virtual threads; threadcount bounds how many start at the same time
+            runLevelController.setExecutor(VirtualThreads.perTaskExecutor("stride-runlevel-"));
             configured.set(true);
         }
     }

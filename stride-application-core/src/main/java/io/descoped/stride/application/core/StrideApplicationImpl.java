@@ -209,7 +209,7 @@ public class StrideApplicationImpl implements StrideApplication {
                 Thread.currentThread().join();
 
                 log.warn("Application shutdown after {}", elapsedTime(startedAt));
-            } catch (InterruptedException e) {
+            } catch (InterruptedException _) {
                 // ignore
             }
         }

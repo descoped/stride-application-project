@@ -26,6 +26,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PreDestroy;
@@ -36,9 +37,6 @@ import org.glassfish.jersey.servlet.ServletProperties;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 @Service(name = "jetty.server")
 @RunLevel(RunLevelConstants.WEB_SERVER_RUN_LEVEL)
@@ -55,12 +53,12 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
 
         ApplicationConfiguration.Server jettyConfig = configuration.server();
 
-        JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
-        jettyConnectorThreadPool.setName("jetty-http-server");
-        jettyConnectorThreadPool.setMinThreads(jettyConfig.minThreads());
-        jettyConnectorThreadPool.setMaxThreads(jettyConfig.maxThreads());
+        // Platform threads accept and select; every request is handled on a new virtual thread.
+        QueuedThreadPool threadPool = new QueuedThreadPool(jettyConfig.maxThreads(), jettyConfig.minThreads());
+        threadPool.setName("stride-jetty");
+        threadPool.setVirtualThreadsExecutor(VirtualThreads.perTaskExecutor("stride-http-"));
 
-        server = new Server(jettyConnectorThreadPool);
+        server = new Server(threadPool);
 
         final HttpConfiguration httpConfig = new HttpConfiguration();
         httpConfig.setOutputBufferSize(jettyConfig.outputBufferSize());
@@ -148,15 +146,8 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         log.info("Stopping Jetty server");
         try {
             server.stop();
-        } catch (Throwable e) {
-            log.error("{}", captureStackTrace(e));
+        } catch (Exception e) {
+            log.error("Could not stop Jetty server", e);
         }
-    }
-
-    static String captureStackTrace(Throwable t) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        t.printStackTrace(pw);
-        return sw.toString();
     }
 }
