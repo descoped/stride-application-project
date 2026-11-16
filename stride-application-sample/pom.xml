@@ -12,13 +12,12 @@
         <relativePath>../stride-application-parent</relativePath>
     </parent>
 
-    <!-- A small application built on Stride, kept working by the build. It is an example, not a library: it is
-         never published. -->
+    <!-- A small application built on Stride, kept working by the build. It is an example, not a library: the
+         builds that publish leave this module out (see the CI workflow and the release plugin in the parent). -->
     <artifactId>stride-application-sample</artifactId>
     <packaging>jar</packaging>
 
     <properties>
-        <maven.deploy.skip>true</maven.deploy.skip>
         <sonar.skip>true</sonar.skip>
     </properties>
 
