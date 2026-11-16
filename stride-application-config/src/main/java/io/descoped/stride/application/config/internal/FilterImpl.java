@@ -52,9 +52,12 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
 
     @Override
     public int order() {
-        return JsonElement.ofEphemeral(json)
-                .with("config.order")
-                .asInt(DEFAULT_ORDER);
+        JsonElement order = JsonElement.ofEphemeral(json).with("config.order");
+        if (order.asString().isEmpty()) {
+            return DEFAULT_ORDER; // an entry written in a file without an order
+        }
+        return order.asInt().orElseThrow(() -> new IllegalArgumentException(
+                "filters." + name + ".config.order must be a whole number, but is '" + order.asString().get() + "'"));
     }
 
     @Override
