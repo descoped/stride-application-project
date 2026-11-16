@@ -7,16 +7,20 @@ import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Finds the defaults every module contributes. A module declares the keys it reads, with their defaults, in
  * {@value #RESOURCE}. Stride's own modules do, and a library or an application may do the same for its keys, which
  * makes them overridable by environment variable and system property like any other.
+ * <p>
+ * Several jars carry a file of this name. A build that merges jars into one (Shade, Assembly) must append these
+ * files, not keep one of them: with the Maven Shade plugin, an {@code AppendingTransformer} for {@value #RESOURCE}.
  */
 public final class ModuleDefaults {
 
@@ -41,7 +45,10 @@ public final class ModuleDefaults {
         if (resources.isEmpty()) {
             throw new IllegalStateException(RESOURCE + " of stride-application-config is not on the class path");
         }
-        resources.sort(Comparator.comparing(URL::toString));
+        // a class loader may list one file twice; that is one module, not two
+        resources = resources.stream()
+                .collect(Collectors.toMap(URL::toString, url -> url, (first, _) -> first, TreeMap::new))
+                .values().stream().toList();
 
         Map<String, URL> owners = new HashMap<>();
         for (URL resource : resources) {

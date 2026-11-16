@@ -1,10 +1,11 @@
 package io.descoped.stride.application.openapi;
 
+import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.config.Filter;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -30,14 +31,15 @@ import jakarta.ws.rs.core.UriInfo;
  * Resources.builder().resource(Resource.builder("openapi").enabled(true).clazz(ApplicationOpenApiResource.class))
  * }</pre>
  * The title and version come from {@code application.alias} and {@code application.version}; a server entry is
- * added only when {@code application.url} is set; and the bearer scheme is declared when {@code security.enabled}
- * is true.
+ * added only when {@code application.url} is set; and the bearer scheme is declared when a filter named
+ * {@code security} authenticates requests.
  */
 @Path("/openapi")
 @Singleton // the description is built once, not for every request
 public class ApplicationOpenApiResource extends BaseOpenApiResource {
 
     static final String BEARER_SCHEME = "bearerAuth";
+    static final String SECURITY_FILTER = "security";
 
     @Context
     ServletConfig config;
@@ -46,23 +48,32 @@ public class ApplicationOpenApiResource extends BaseOpenApiResource {
     Application app;
 
     @Inject
-    public ApplicationOpenApiResource(ApplicationConfiguration configuration) {
+    public ApplicationOpenApiResource(ApplicationConfiguration configuration, Components components) {
         openApiConfiguration(new SwaggerConfiguration()
-                .openAPI(describe(configuration))
+                .openAPI(describe(configuration, authenticates(configuration, components)))
                 .filterClass(ApplicationOpenApiSpecFilter.class.getName())
                 .prettyPrint(true));
     }
 
-    static OpenAPI describe(ApplicationConfiguration configuration) {
+    /**
+     * Whether requests are authenticated: a filter named {@code security}, the name the security module uses, is
+     * enabled in the configuration or was handed in as an instance. This describes what is enforced, not what a
+     * setting asks for.
+     */
+    static boolean authenticates(ApplicationConfiguration configuration, Components components) {
+        return components.filters().containsKey(SECURITY_FILTER)
+                || configuration.filters().filter(SECURITY_FILTER).map(Filter::isEnabled).orElse(false);
+    }
+
+    static OpenAPI describe(ApplicationConfiguration configuration, boolean authenticates) {
         ApplicationConfiguration.Application application = configuration.application();
         OpenAPI openAPI = new OpenAPI()
                 .info(new Info().title(application.alias() + " API").version(application.version()));
 
         application.url().ifPresent(url -> openAPI.addServersItem(new Server().url(url)));
 
-        // security.enabled is declared by stride-application-security; without that module there is no key
-        if (configuration.with("security.enabled").asBoolean(false)) {
-            openAPI.components(new Components().addSecuritySchemes(BEARER_SCHEME, new SecurityScheme()
+        if (authenticates) {
+            openAPI.components(new io.swagger.v3.oas.models.Components().addSecuritySchemes(BEARER_SCHEME, new SecurityScheme()
                     .type(SecurityScheme.Type.HTTP)
                     .scheme("bearer")
                     .bearerFormat("JWT")));

@@ -133,4 +133,32 @@ class SecurityModuleTest {
             assertEquals(1, counter.requests.get());
         }
     }
+
+    // An application that wires the filter itself must never start without authentication because a switch it
+    // did not know about is off.
+    @Test
+    void aHandedInFilterAuthenticatesWithoutTheSwitch() throws Exception {
+        Components components = Components.builder()
+                .filter("security", new BearerAuthenticationFilter(JwtTokenVerifierTest.settings(), JwtTokenVerifierTest.verifier()))
+                .build();
+
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(configuration()).components(components).build()) {
+            application.start();
+            TestClient client = TestClient.create(application);
+
+            assertEquals(401, client.get("/whoami").response().statusCode());
+            String token = JwtTokenVerifierTest.token(JwtTokenVerifierTest.claims().build());
+            assertEquals("alice", client.get("/whoami", "Authorization", "Bearer " + token).expect200Ok().body());
+        }
+    }
+
+    @Test
+    void moduleDefaultsAreFoundThroughAClassLoaderGivenToTheBuilder() {
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
+                .classLoader(SecurityModuleTest.class.getClassLoader())
+                .build();
+
+        assertEquals(30, SecurityConfiguration.from(configuration).clockSkewSeconds());
+    }
 }
