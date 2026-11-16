@@ -196,7 +196,7 @@ public interface JsonElement {
             }
             try {
                 return Optional.of(Integer.parseInt(value.asText()));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 return Optional.empty();
             }
         });
@@ -217,7 +217,7 @@ public interface JsonElement {
             }
             try {
                 return Optional.of(Long.parseLong(value.asText()));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 return Optional.empty();
             }
         });
@@ -238,7 +238,7 @@ public interface JsonElement {
             }
             try {
                 return Optional.of(Float.parseFloat(value.asText()));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 return Optional.empty();
             }
         });
@@ -259,7 +259,7 @@ public interface JsonElement {
             }
             try {
                 return Optional.of(Double.parseDouble(value.asText()));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 return Optional.empty();
             }
         });
@@ -280,7 +280,7 @@ public interface JsonElement {
             }
             try {
                 return Optional.of(Boolean.parseBoolean(value.asText()));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
                 return Optional.empty();
             }
         });

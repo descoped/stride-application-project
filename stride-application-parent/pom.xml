@@ -32,7 +32,7 @@
         <metrics.version>4.2.40</metrics.version>
         <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
         <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
-        <jakarta.jaxb.version>4.0.9</jakarta.jaxb.version>
+        <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
 
         <!-- Jackson -->
         <jackson.version>2.23.0</jackson.version>
@@ -40,7 +40,6 @@
         <!-- Logging libs -->
         <slf4j-api.version>2.0.20</slf4j-api.version>
         <logback.version>1.6.7</logback.version>
-        <logstash-encoder.version>9.0</logstash-encoder.version>
 
         <!-- Other libs -->
         <dynamic-configuration.version>3.0.0</dynamic-configuration.version>
@@ -97,11 +96,6 @@
             <dependency>
                 <groupId>org.eclipse.jetty.ee11</groupId>
                 <artifactId>jetty-ee11-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.ee11.websocket</groupId>
-                <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
@@ -195,6 +189,13 @@
                 <version>${asm.version}</version>
             </dependency>
 
+            <!-- the version Jersey brings -->
+            <dependency>
+                <groupId>jakarta.ws.rs</groupId>
+                <artifactId>jakarta.ws.rs-api</artifactId>
+                <version>${jakarta.ws.rs-api.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>jakarta.inject</groupId>
                 <artifactId>jakarta.inject-api</artifactId>
@@ -264,26 +265,6 @@
                 <version>4.0.5</version>
             </dependency>
 
-
-            <dependency>
-                <groupId>org.glassfish.jaxb</groupId>
-                <artifactId>jaxb-core</artifactId>
-                <version>${jakarta.jaxb.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.glassfish.jaxb</groupId>
-                <artifactId>jaxb-runtime</artifactId>
-                <version>${jakarta.jaxb.version}</version>
-                <scope>runtime</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.glassfish.jaxb</groupId>
-                <artifactId>txw2</artifactId>
-                <version>${jakarta.jaxb.version}</version>
-            </dependency>
-
             <!-- logging -->
 
             <dependency>
@@ -294,19 +275,7 @@
 
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>${slf4j-api.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.slf4j</groupId>
                 <artifactId>jul-to-slf4j</artifactId>
-                <version>${slf4j-api.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>log4j-over-slf4j</artifactId>
                 <version>${slf4j-api.version}</version>
             </dependency>
 
@@ -314,13 +283,6 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
-                <scope>compile</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>net.logstash.logback</groupId>
-                <artifactId>logstash-logback-encoder</artifactId>
-                <version>${logstash-encoder.version}</version>
             </dependency>
 
             <!-- test libs -->

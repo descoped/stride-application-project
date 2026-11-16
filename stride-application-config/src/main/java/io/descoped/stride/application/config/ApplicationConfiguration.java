@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static java.util.Optional.ofNullable;
@@ -331,6 +332,13 @@ public final class ApplicationConfiguration implements JsonElement {
         public long idleTimeout() {
             return Duration.parse(element.requireString("idleTimeout")).toMillis();
         }
+
+        /**
+         * How long, in milliseconds, requests that are running when the server stops get to finish.
+         */
+        public long stopTimeout() {
+            return Duration.parse(element.requireString("stopTimeout")).toMillis();
+        }
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -365,9 +373,12 @@ public final class ApplicationConfiguration implements JsonElement {
             return element.requireString("version");
         }
 
-        public String url() {
-            return element.with("url").asString(String.format("http://%s:%s%s",
-                    server.host(), server.port(), server.contextPath()));
+        /**
+         * The address clients reach the application at, when it has been configured. Stride cannot know it: the
+         * application may listen on a port picked by the operating system and sit behind a proxy.
+         */
+        public Optional<String> url() {
+            return Optional.of(element.requireString("url")).filter(url -> !url.isBlank());
         }
     }
 }

@@ -46,8 +46,9 @@ Dependency footprint: `mvn -o dependency:tree -Dscope=runtime -pl stride-applica
 | `stride-application-parent` | Shared parent POM: versions, plugins, publishing. Every version is a property here. |
 | `stride-application-config` | Configuration on `dynamic-configuration`, builders for services, filters, servlets, resources, and `application-defaults.properties`. |
 | `stride-application-api` | `StrideApplication` lifecycle contract and the `ApplicationInitializer` SPI (ServiceLoader). |
-| `stride-application-core` | Runtime: HK2 run levels, Jetty 12.1 (EE11), Jersey 4, CORS, OpenAPI, security. |
 | `stride-application-junit5` | Test support: `TestApplication`, `TestClient`, `ResponseHelper`. |
+| `stride-application-core` | Runtime: HK2 run levels, Jetty 12.1 (EE11) with HTTP/2, Jersey 4, CORS, security. No logging backend, metrics, WebSocket, XML or OpenAPI: applications add what they use. |
+| `stride-application-openapi` | Optional: serves the OpenAPI document (Swagger) at `/openapi.json` and `/openapi.yaml`. |
 
 The root `pom.xml` only aggregates; modules inherit from `stride-application-parent`.
 Run levels: services up to 9, web assembly at 10, listener start at 11 (`RunLevelConstants`).
