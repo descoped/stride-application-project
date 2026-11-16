@@ -9,6 +9,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.util.Resource;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -31,15 +32,22 @@ class JwtTokenVerifierTest {
         catch (Exception e) { throw new ExceptionInInitializerError(e); }
     }
     static SecurityConfiguration settings() {
-        return new SecurityConfiguration(true, ISSUER, Set.of("stride-api"), Set.of("RS256"), "at+jwt",
-                Set.of("/public"), Set.of("read"), "roles", 0);
+        return settings("at+jwt", "scope");
+    }
+    static SecurityConfiguration settings(String tokenType, String scopeClaim) {
+        return new SecurityConfiguration(true, ISSUER, Set.of("stride-api"), Set.of("RS256"), tokenType,
+                Set.of("/public"), Set.of("read"), scopeClaim, "roles", "stride", 0);
+    }
+    static JwtTokenVerifier verifier(SecurityConfiguration settings) {
+        return new JwtTokenVerifier(settings, new ImmutableJWKSet<>(new JWKSet(KEY.toPublicJWK())));
     }
     static JwtTokenVerifier verifier() {
-        return new JwtTokenVerifier(settings(), new ImmutableJWKSet<>(new JWKSet(KEY.toPublicJWK())));
+        return verifier(settings());
     }
     static JWTClaimsSet.Builder claims() {
         return new JWTClaimsSet.Builder().issuer(ISSUER).audience("stride-api").subject("alice")
                 .issueTime(Date.from(Instant.now().minusSeconds(5))).expirationTime(Date.from(Instant.now().plusSeconds(300)))
+                .claim("client_id", "web-client").jwtID(java.util.UUID.randomUUID().toString())
                 .claim("scope", "read write").claim("roles", java.util.List.of("reader"));
     }
     static String token(JWTClaimsSet claims) throws Exception { return token(KEY, claims, "at+jwt"); }
@@ -96,24 +104,59 @@ class JwtTokenVerifierTest {
             assertThrows(Exception.class, () -> verifier.verify(first));
         }
     }
-    @Test void validatesDiscoveryIssuerAndEndpointWithoutTrustingTokenInput() throws Exception {
-        var url = new AtomicReference<String>();
-        assertEquals(URI.create("https://identity.example.test/keys"), OidcDiscovery.discover(ISSUER, u -> {
-            url.set(u.toString());
-            return new Resource("{\"issuer\":\"" + ISSUER + "\",\"jwks_uri\":\"https://identity.example.test/keys\"}", "application/json");
+    static Resource metadata(String issuer, String jwksUri) {
+        return new Resource("{\"issuer\":\"" + issuer + "\",\"jwks_uri\":\"" + jwksUri + "\"}", "application/json");
+    }
+
+    @Test void rfc8414Section3_1InsertsTheWellKnownStringBetweenHostAndPath() {
+        assertEquals(java.util.List.of(
+                        URI.create("https://identity.example.test/.well-known/oauth-authorization-server/realm"),
+                        URI.create("https://identity.example.test/realm/.well-known/openid-configuration")),
+                IssuerMetadata.locations(ISSUER));
+        assertEquals(IssuerMetadata.locations(ISSUER), IssuerMetadata.locations(ISSUER + "/"), "a terminating slash is removed");
+        assertEquals(java.util.List.of(
+                        URI.create("https://identity.example.test:8443/.well-known/oauth-authorization-server"),
+                        URI.create("https://identity.example.test:8443/.well-known/openid-configuration")),
+                IssuerMetadata.locations("https://identity.example.test:8443"));
+    }
+
+    @Test void rfc8414Section5TriesTheOAuthLocationFirstAndFallsBackToOpenIdDiscovery() throws Exception {
+        var requested = new java.util.ArrayList<String>();
+        assertEquals(URI.create("https://identity.example.test/keys"), IssuerMetadata.jwksUri(ISSUER, url -> {
+            requested.add(url.getPath());
+            return metadata(ISSUER, "https://identity.example.test/keys");
         }));
-        assertEquals(ISSUER + "/.well-known/openid-configuration", url.get());
-        assertThrows(IOException.class, () -> OidcDiscovery.discover(ISSUER, u -> new Resource("{\"issuer\":\"other\"}", "application/json")));
-        assertThrows(IOException.class, () -> OidcDiscovery.discover(ISSUER, u -> new Resource("{\"issuer\":\"" + ISSUER + "\",\"jwks_uri\":\"http://insecure/keys\"}", "application/json")));
+        assertEquals(java.util.List.of("/.well-known/oauth-authorization-server/realm"), requested);
+
+        requested.clear();
+        assertEquals(URI.create("https://identity.example.test/oidc-keys"), IssuerMetadata.jwksUri(ISSUER, url -> {
+            requested.add(url.getPath());
+            if (url.getPath().contains("oauth-authorization-server")) throw new IOException("404");
+            return metadata(ISSUER, "https://identity.example.test/oidc-keys");
+        }));
+        assertEquals(java.util.List.of("/.well-known/oauth-authorization-server/realm", "/realm/.well-known/openid-configuration"), requested);
+    }
+
+    @Test void rfc8414Section3_3MetadataWithAnotherIssuerIsNotUsed() {
+        // the configured issuer has no trailing slash; "identical" means exactly that
+        for (String other : java.util.List.of("https://other.example.test", ISSUER + "/", ISSUER.toUpperCase()))
+            assertThrows(IOException.class, () -> IssuerMetadata.jwksUri(ISSUER, url -> metadata(other, "https://identity.example.test/keys")), other);
+        assertThrows(IOException.class, () -> IssuerMetadata.jwksUri(ISSUER, url -> new Resource("{\"jwks_uri\":\"https://identity.example.test/keys\"}", "application/json")));
+        assertThrows(IOException.class, () -> IssuerMetadata.jwksUri(ISSUER, url -> new Resource("<html>not found</html>", "text/html")));
+    }
+
+    @Test void theKeysEndpointMustBeHttpsAndTheIssuerToo() {
+        assertThrows(IOException.class, () -> IssuerMetadata.jwksUri(ISSUER, url -> metadata(ISSUER, "http://insecure/keys")));
         assertThrows(IllegalArgumentException.class, () -> SecurityConfiguration.requireHttps("http://insecure"));
         assertThrows(IllegalArgumentException.class, () -> SecurityConfiguration.requireHttps("https://user:password@example.test"));
+        assertThrows(IllegalArgumentException.class, () -> SecurityConfiguration.requireHttps("https://example.test?tenant=a"));
     }
+
     @Test void discoveryPreloadsKeysAndFailsClosedWhenProviderIsUnavailable() throws Exception {
         var requests = new AtomicInteger();
         try (var verifier = JwtTokenVerifier.discover(settings(), url -> {
             requests.incrementAndGet();
-            if (url.getPath().endsWith("openid-configuration"))
-                return new Resource("{\"issuer\":\"" + ISSUER + "\",\"jwks_uri\":\"https://identity.example.test/keys\"}", "application/json");
+            if (url.getPath().contains("/.well-known/")) return metadata(ISSUER, "https://identity.example.test/keys");
             return new Resource(new JWKSet(KEY.toPublicJWK()).toString(), "application/json");
         })) {
             assertEquals(2, requests.get());
@@ -122,15 +165,70 @@ class JwtTokenVerifierTest {
         }
         assertThrows(IOException.class, () -> JwtTokenVerifier.discover(settings(), url -> { throw new IOException("provider unavailable"); }));
         assertThrows(IOException.class, () -> JwtTokenVerifier.discover(settings(), url -> {
-            if (url.getPath().endsWith("openid-configuration"))
-                return new Resource("{\"issuer\":\"" + ISSUER + "\",\"jwks_uri\":\"https://identity.example.test/keys\"}", "application/json");
+            if (url.getPath().contains("/.well-known/")) return metadata(ISSUER, "https://identity.example.test/keys");
             return new Resource("{\"keys\":[]}", "application/json");
         }));
     }
 
+    @Test void rfc9068Section4AcceptsBothSpellingsOfTheAccessTokenTypeAndNoOther() throws Exception {
+        try (var verifier = verifier()) {
+            assertEquals("alice", verifier.verify(token(KEY, claims().build(), "at+jwt")).getName());
+            assertEquals("alice", verifier.verify(token(KEY, claims().build(), "application/at+jwt")).getName());
+            assertEquals("alice", verifier.verify(token(KEY, claims().build(), "AT+JWT")).getName(), "media type names are case-insensitive");
+            for (String type : java.util.List.of("JWT", "jwt", "id_token+jwt", "at+jwt+x"))
+                assertThrows(BadJOSEException.class, () -> verifier.verify(token(KEY, claims().build(), type)), type);
+        }
+    }
+
+    @Test void rfc9068Section2_2RequiresEveryClaimOfTheProfile() throws Exception {
+        try (var verifier = verifier()) {
+            for (String claim : java.util.List.of("iss", "exp", "aud", "sub", "client_id", "iat", "jti")) {
+                var incomplete = new JWTClaimsSet.Builder(claims().build()).claim(claim, null).build();
+                assertThrows(BadJOSEException.class, () -> verifier.verify(token(incomplete)), claim);
+            }
+        }
+    }
+
+    @Test void rfc9068Section4ExpiredTokensAreToldApartFromOtherwiseInvalidOnes() throws Exception {
+        try (var verifier = verifier()) {
+            var expired = claims().expirationTime(Date.from(Instant.now().minusSeconds(60))).build();
+            assertThrows(com.nimbusds.jwt.proc.ExpiredJWTException.class, () -> verifier.verify(token(expired)));
+        }
+    }
+
+    @Test void tokensOutsideTheProfileNeedTheJwtTokenTypeAndNoProfileClaims() throws Exception {
+        var plain = new JWTClaimsSet.Builder(claims().build()).claim("client_id", null).jwtID(null).build();
+        try (var verifier = verifier(settings("JWT", "scope"))) {
+            assertEquals("alice", verifier.verify(token(KEY, plain, "JWT")).getName());
+            assertThrows(BadJOSEException.class, () -> verifier.verify(token(KEY, plain, "at+jwt")));
+        }
+    }
+
+    @Test void scopesAreReadFromTheConfiguredClaimOnly() throws Exception {
+        var entra = new JWTClaimsSet.Builder(claims().build()).claim("scope", null).claim("scp", "read admin").build();
+        try (var verifier = verifier()) {
+            assertEquals(Set.of(), verifier.verify(token(entra)).scopes(), "no silent fallback to another claim");
+        }
+        try (var verifier = verifier(settings("at+jwt", "scp"))) {
+            assertEquals(Set.of("read", "admin"), verifier.verify(token(entra)).scopes());
+        }
+    }
+
+    static SecurityConfiguration settings(Set<String> audiences, Set<String> algorithms, Set<String> publicPaths,
+                                          Set<String> requiredScopes, String realm) {
+        return new SecurityConfiguration(true, ISSUER, audiences, algorithms, "at+jwt", publicPaths, requiredScopes, "scope", "roles", realm, 0);
+    }
+
     @Test void rejectsUnsafeSettings() {
-        assertThrows(IllegalArgumentException.class, () -> new SecurityConfiguration(true, ISSUER, Set.of(), Set.of("RS256"), "at+jwt", Set.of(), Set.of(), "roles", 0));
-        assertThrows(IllegalArgumentException.class, () -> new SecurityConfiguration(true, ISSUER, Set.of("api"), Set.of("HS256"), "at+jwt", Set.of(), Set.of(), "roles", 0));
-        assertThrows(IllegalArgumentException.class, () -> new SecurityConfiguration(true, ISSUER, Set.of("api"), Set.of("RS256"), "at+jwt", Set.of("/*"), Set.of(), "roles", 0));
+        assertDoesNotThrow(() -> settings(Set.of("api"), Set.of("RS256"), Set.of("/ping"), Set.of("urn:example:rating=G,PG-13"), "stride api"));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of(), Set.of("RS256"), Set.of(), Set.of(), "stride"));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("HS256"), Set.of(), Set.of(), "stride"));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("none"), Set.of(), Set.of(), "stride"));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of("/*"), Set.of(), "stride"));
+        // OAuth 2.1 section 5.3.1: what may appear in the challenge's scope and realm attributes
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read\"write"), "stride"));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read write"), "stride"));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "my \"realm\""));
+        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), ""));
     }
 }

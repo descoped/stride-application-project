@@ -12,7 +12,7 @@ class SecurityConfigurationTest {
                 .overrideProperty("security.issuer", "https://issuer.example/realm")
                 .overrideProperty("security.audiences", "api, another-api")
                 .overrideProperty("security.public-paths", "/ping, /health")
-                .overrideProperty("security.required-scopes", "read, write")
+                .overrideProperty("security.required-scopes", "read  write")
                 .build();
         var security = SecurityConfiguration.from(config);
         assertTrue(security.enabled());
@@ -20,6 +20,9 @@ class SecurityConfigurationTest {
         assertEquals(java.util.Set.of("/ping", "/health"), security.publicPaths());
         assertEquals(java.util.Set.of("read", "write"), security.requiredScopes());
         assertEquals("at+jwt", security.tokenType());
+        assertEquals("scope", security.scopeClaim());
+        assertEquals("roles", security.rolesClaim());
+        assertEquals("default", security.realm(), "the realm is the application's alias unless set");
     }
     @Test void authenticationIsExplicitlyOptIn() {
         assertFalse(SecurityConfiguration.from(ApplicationConfiguration.builder().build()).enabled());
