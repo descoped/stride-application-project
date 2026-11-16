@@ -72,7 +72,13 @@ public class TestApplication implements TestUriResolver, StrideApplication {
     @Override
     public String testURL(String uri) {
         String host = application.getHost();
-        return "http://" + (host.contains(":") ? "[" + host + "]" : host) + ":" + application.getLocalPort() + uri;
+        return testURL(host, application.getLocalPort(), uri);
+    }
+
+    // An IPv6 address goes in brackets unless it already is, as the URL constructor did.
+    static String testURL(String host, int port, String uri) {
+        boolean bareIpv6 = host.contains(":") && !host.startsWith("[");
+        return "http://" + (bareIpv6 ? "[" + host + "]" : host) + ":" + port + uri;
     }
 
     @Override
