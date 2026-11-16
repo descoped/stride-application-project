@@ -359,6 +359,10 @@
                             <publishingServerId>central</publishingServerId>
                             <autoPublish>false</autoPublish>
                             <waitUntil>validated</waitUntil>
+                            <!-- the sample application is an example, never an artifact -->
+                            <excludeArtifacts>
+                                <excludeArtifact>stride-application-sample</excludeArtifact>
+                            </excludeArtifacts>
                         </configuration>
                     </plugin>
                 </plugins>

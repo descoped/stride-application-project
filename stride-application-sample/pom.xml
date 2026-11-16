@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.descoped.stride.application</groupId>
+        <artifactId>stride-application-parent</artifactId>
+        <version>0.0.24-SNAPSHOT</version>
+        <relativePath>../stride-application-parent</relativePath>
+    </parent>
+
+    <!-- A small application built on Stride, kept working by the build. It is an example, not a library: it is
+         never published. -->
+    <artifactId>stride-application-sample</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <sonar.skip>true</sonar.skip>
+    </properties>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <dependencies>
+        <!-- The runtime: server, lifecycle, REST. It brings the configuration and API modules. -->
+        <dependency>
+            <groupId>io.descoped.stride.application</groupId>
+            <artifactId>stride-application-core</artifactId>
+            <version>0.0.24-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Stride logs through SLF4J and ships no backend: the application picks one. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.descoped.stride.application</groupId>
+            <artifactId>stride-application-junit5</artifactId>
+            <version>0.0.24-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

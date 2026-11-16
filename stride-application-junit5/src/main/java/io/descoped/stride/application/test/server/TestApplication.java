@@ -6,6 +6,9 @@ import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 
+import java.util.Objects;
+import java.util.function.Function;
+
 
 public class TestApplication implements TestUriResolver, StrideApplication {
 
@@ -92,7 +95,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
         private String host = "localhost";
         private int port = -1;
         private String contextPath = "";
-        private Components components = Components.none();
+        private Function<ApplicationConfiguration, Components> components = _ -> Components.none();
 
         public Builder() {
         }
@@ -106,7 +109,16 @@ public class TestApplication implements TestUriResolver, StrideApplication {
          * Ready-made objects for the application under test, for example a resource wired to a fake collaborator.
          */
         public Builder components(Components components) {
-            this.components = components;
+            this.components = _ -> components;
+            return this;
+        }
+
+        /**
+         * Ready-made objects wired from the configuration the application is started with, so the wiring reads the
+         * same values as the server, including what the test overrides.
+         */
+        public Builder components(Function<ApplicationConfiguration, Components> components) {
+            this.components = Objects.requireNonNull(components, "components");
             return this;
         }
 
@@ -143,7 +155,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
             }
 
             ApplicationConfiguration configuration = configurationBuilder.build();
-            StrideApplication app = StrideApplication.create(configuration, components);
+            StrideApplication app = StrideApplication.create(configuration, components.apply(configuration));
             return new TestApplication(app);
         }
     }
