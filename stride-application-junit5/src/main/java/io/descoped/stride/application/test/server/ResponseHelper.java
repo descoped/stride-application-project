@@ -37,27 +37,27 @@ public class ResponseHelper<T> {
     }
 
     public ResponseHelper<T> expect400BadRequest() {
-        assertEquals(response.statusCode(), HttpURLConnection.HTTP_BAD_REQUEST, String.valueOf(body));
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.statusCode(), String.valueOf(body));
         return this;
     }
 
     public ResponseHelper<T> expect404NotFound() {
-        assertEquals(response.statusCode(), HttpURLConnection.HTTP_NOT_FOUND, String.valueOf(body));
+        assertEquals(HttpURLConnection.HTTP_NOT_FOUND, response.statusCode(), String.valueOf(body));
         return this;
     }
 
     public ResponseHelper<T> expect200Ok() {
-        assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK, String.valueOf(body));
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode(), String.valueOf(body));
         return this;
     }
 
     public ResponseHelper<T> expect201Created() {
-        assertEquals(response.statusCode(), HttpURLConnection.HTTP_CREATED, String.valueOf(body));
+        assertEquals(HttpURLConnection.HTTP_CREATED, response.statusCode(), String.valueOf(body));
         return this;
     }
 
     public ResponseHelper<T> expect204NoContent() {
-        assertEquals(response.statusCode(), HttpURLConnection.HTTP_NO_CONTENT, String.valueOf(body));
+        assertEquals(HttpURLConnection.HTTP_NO_CONTENT, response.statusCode(), String.valueOf(body));
         return this;
     }
 
