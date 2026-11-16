@@ -183,22 +183,74 @@ class ForwardPassingTest {
     }
 
     @Test
-    void configurationCanDisableAnInstanceAndMoveItsPath() {
+    void anInstanceIsRegisteredEvenWhenTheConfigurationDisablesItsName() {
         Components components = Components.builder()
                 .resource(new PriceResource(PRICES))
-                .filter("off", new Marker("off"))
-                .filter("scoped", new Marker("scoped"))
+                .filter("guard", new Marker("guard"))
                 .build();
         ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder()
                 .testDefaults()
-                .overrideProperty("filters.off.enabled", "false")
-                .overrideProperty("filters.scoped.config.pathSpec", "/price/*");
+                .overrideProperty("filters.guard.enabled", "false");
 
+        try (TestApplication application = start(configuration, components)) {
+            assertEquals(List.of("guard"), TestClient.create(application).get("/price/tea").expect200Ok()
+                    .response().headers().allValues("X-Ran"));
+        }
+    }
+
+    @Test
+    void systemPropertiesTuneAnInstanceThatIsDeclaredWithItsBuilder() {
+        Components components = Components.builder()
+                .resource(new PriceResource(PRICES))
+                .filter("scoped", new Marker("scoped"))
+                .filter("early", new Marker("early"))
+                .filter("late", new Marker("late"))
+                .build();
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder()
+                .testDefaults()
+                .filters(Filters.builder()
+                        .filter(Filter.builder("scoped"))
+                        .filter(Filter.builder("early"))
+                        .filter(Filter.builder("late").order(5)));
+
+        System.setProperty("filters.scoped.config.pathSpec", "/price/*");
+        System.setProperty("filters.late.config.order", "2000");
         try (TestApplication application = start(configuration, components)) {
             TestClient client = TestClient.create(application);
 
-            assertEquals(List.of("scoped"), client.get("/price/tea").expect200Ok().response().headers().allValues("X-Ran"));
-            assertEquals(List.of(), client.get("/ping").expect200Ok().response().headers().allValues("X-Ran"));
+            assertEquals(List.of("early", "scoped", "late"),
+                    client.get("/price/tea").expect200Ok().response().headers().allValues("X-Ran"));
+            assertEquals(List.of("early", "late"), client.get("/ping").expect200Ok().response().headers().allValues("X-Ran"));
+        } finally {
+            System.clearProperty("filters.scoped.config.pathSpec");
+            System.clearProperty("filters.late.config.order");
+        }
+    }
+
+    @Test
+    void filtersApplyWhenTheJerseyServiceIsDisabled() {
+        Components components = Components.builder().filter("guard", new Marker("guard")).build();
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder()
+                .testDefaults()
+                .overrideProperty("services.jersey.server.enabled", "false");
+
+        try (TestApplication application = start(configuration, components)) {
+            var ping = TestClient.create(application).get("/ping").expect200Ok().response();
+
+            assertEquals(List.of("guard"), ping.headers().allValues("X-Ran"));
+        }
+    }
+
+    @Test
+    void anOrderThatIsNotANumberFailsAtStartupNamingTheKey() {
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder()
+                .testDefaults()
+                .overrideProperty("filters.cors.config.order", "first");
+        TestApplication application = new TestApplication.Builder().configuration(configuration).build();
+
+        try (application) {
+            RuntimeException failure = assertThrows(RuntimeException.class, application::start);
+            assertTrue(messages(failure).contains("filters.cors.config.order must be a whole number"), messages(failure));
         }
     }
 

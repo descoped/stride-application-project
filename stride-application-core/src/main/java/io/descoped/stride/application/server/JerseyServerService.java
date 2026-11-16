@@ -9,17 +9,10 @@ import io.descoped.stride.application.config.ServletContextInitialization;
 import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.core.ServletContextInitializer;
 import io.descoped.stride.application.api.Components;
-import io.descoped.stride.application.config.SecurityConfiguration;
-import io.descoped.stride.application.security.BearerAuthenticationFilter;
-import io.descoped.stride.application.security.JwtTokenVerifier;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
-import jakarta.servlet.DispatcherType;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
-import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.validation.ValidationException;
-import org.eclipse.jetty.ee11.servlet.FilterHolder;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
 import org.glassfish.hk2.api.Injectee;
@@ -36,13 +29,9 @@ import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -115,12 +104,6 @@ public class JerseyServerService implements PreDestroy {
             }
         }
 
-        // register filters: one rule, ascending order then name
-        for (FilterRegistration registration : filterRegistrations(configuration, components, serviceLocator)) {
-            servletContextHandler.addFilter(new FilterHolder(registration.filter()), registration.pathSpec(), registration.dispatches());
-            log.debug("Filter {} (order {}) on {}", registration.name(), registration.order(), registration.pathSpec());
-        }
-
         // register servlets
         List<ServletSpec> servletSpecList = new ArrayList<>();
 
@@ -136,7 +119,7 @@ public class JerseyServerService implements PreDestroy {
         }
         for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
             Servlet servletInstance = components.servlets().get(servlet.name());
-            if (!isEnabled(servlet.json(), servletInstance != null, servlet.isEnabled())) continue;
+            if (servletInstance == null && !servlet.isEnabled()) continue;
             if (servletInstance == null) {
                 Class<? extends Servlet> servletClass = servlet.clazz();
                 servletInstance = serviceLocator.createAndInitialize(servletClass);
@@ -234,62 +217,6 @@ public class JerseyServerService implements PreDestroy {
     record ServletSpec(ServletHolder holder, String pathSpec) {
     }
 
-    record FilterRegistration(String name, int order, Filter filter, String pathSpec, EnumSet<DispatcherType> dispatches) {
-    }
-
-    /** Authentication runs after CORS (100), so preflight and rejected requests still get CORS headers. */
-    static final int AUTHENTICATION_ORDER = 200;
-
-    /**
-     * Collects every filter: those in the configuration, created from their class unless the application handed in
-     * an instance of that name; instances without a configuration entry; and authentication when enabled.
-     */
-    static List<FilterRegistration> filterRegistrations(ApplicationConfiguration configuration, Components components,
-                                                        ServiceLocator serviceLocator) {
-        List<FilterRegistration> registrations = new ArrayList<>();
-        Set<String> configured = new HashSet<>();
-        for (io.descoped.stride.application.config.Filter filter : configuration.filters().iterator()) {
-            configured.add(filter.name());
-            Filter instance = components.filters().get(filter.name());
-            if (!isEnabled(filter.json(), instance != null, filter.isEnabled())) continue;
-            if (instance == null) {
-                if (filter.className() == null) {
-                    throw new IllegalStateException("Filter '" + filter.name() + "' is enabled but has neither "
-                            + "filters." + filter.name() + ".config.class nor an instance in Components");
-                }
-                Class<? extends Filter> filterClass = filter.clazz();
-                instance = serviceLocator.createAndInitialize(filterClass);
-            }
-            registrations.add(new FilterRegistration(filter.name(), filter.order(), instance, filter.pathSpec(), filter.dispatches()));
-        }
-        components.filters().forEach((name, instance) -> {
-            if (!configured.contains(name)) {
-                registrations.add(new FilterRegistration(name, io.descoped.stride.application.config.Filter.DEFAULT_ORDER, instance,
-                        io.descoped.stride.application.config.Filter.DEFAULT_PATH_SPEC, EnumSet.of(DispatcherType.REQUEST)));
-            }
-        });
-
-        SecurityConfiguration security = configuration.security();
-        if (security.enabled()) {
-            JwtTokenVerifier verifier;
-            try {
-                verifier = JwtTokenVerifier.discover(security);
-            } catch (IOException e) {
-                throw new UncheckedIOException("Could not read the issuer's metadata or keys", e);
-            }
-            registrations.add(new FilterRegistration("security", AUTHENTICATION_ORDER,
-                    new BearerAuthenticationFilter(security, verifier),
-                    io.descoped.stride.application.config.Filter.DEFAULT_PATH_SPEC, EnumSet.allOf(DispatcherType.class)));
-        }
-
-        registrations.sort(Comparator.comparingInt(FilterRegistration::order).thenComparing(FilterRegistration::name));
-        return registrations;
-    }
-
-    // A component the application handed in as an instance is enabled unless the configuration disables it.
-    private static boolean isEnabled(JsonNode json, boolean hasInstance, boolean configuredEnabled) {
-        return hasInstance && !json.has("enabled") || configuredEnabled;
-    }
 
     //    @Provider
     static class ResourceInjectionBinder extends AbstractBinder {
