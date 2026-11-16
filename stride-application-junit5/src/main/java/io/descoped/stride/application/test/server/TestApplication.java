@@ -6,8 +6,6 @@ import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class TestApplication implements TestUriResolver, StrideApplication {
 
@@ -73,12 +71,8 @@ public class TestApplication implements TestUriResolver, StrideApplication {
 
     @Override
     public String testURL(String uri) {
-        try {
-            URL url = new URL("http", application.getHost(), application.getLocalPort(), uri);
-            return url.toExternalForm();
-        } catch (MalformedURLException e) {
-            throw new TestServerException(e);
-        }
+        String host = application.getHost();
+        return "http://" + (host.contains(":") ? "[" + host + "]" : host) + ":" + application.getLocalPort() + uri;
     }
 
     @Override
