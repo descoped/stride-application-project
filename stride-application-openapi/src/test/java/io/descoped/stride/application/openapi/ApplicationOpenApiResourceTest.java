@@ -59,6 +59,8 @@ class ApplicationOpenApiResourceTest {
         }
     }
 
+    // Not over HTTP: an application with security enabled reads the issuer's metadata and keys over HTTPS before it
+    // starts, and there is no issuer here.
     @Test
     void declaresTheBearerSchemeWhenSecurityIsEnabled() {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder()

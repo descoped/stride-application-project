@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,6 +39,8 @@ class ConfigurationPrecedenceTest {
         assertEquals(10, configuration.server().minThreads());
         assertEquals(150, configuration.server().maxThreads());
         assertEquals(30_000, configuration.server().idleTimeout());
+        assertEquals(30_000, configuration.server().stopTimeout());
+        assertEquals(Optional.empty(), configuration.application().url());
         assertTrue(configuration.server().isHttp2Enabled());
         assertFalse(configuration.isVerboseLogging());
         assertFalse(configuration.security().enabled());

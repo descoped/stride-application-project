@@ -6,6 +6,8 @@ import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.config.utils.ClassPathResourceUtils;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,7 @@ class ApplicationConfigurationTest {
 
         assertEquals("default", configuration.application().alias());
         assertEquals("unknown", configuration.application().version());
-        assertEquals("http://localhost:0/", configuration.application().url());
+        assertEquals(Optional.empty(), configuration.application().url());
 
         log.trace("server.host: {}", configuration.server().host());
         log.trace("server.port: {}", configuration.server().port());

@@ -16,6 +16,7 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.GracefulHandler;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
@@ -103,7 +104,10 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
             handler = securityHandler;
         }
 
-        server.setHandler(handler);
+        // On stop, no new requests are accepted and those already running get the stop timeout to finish. Requests
+        // run on virtual threads that no pool joins, so without this they would be cut off mid-response.
+        server.setHandler(new GracefulHandler(handler));
+        server.setStopTimeout(jettyConfig.stopTimeout());
         // The listener starts at the next run level, after Jersey and filters are assembled.
 
         ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
