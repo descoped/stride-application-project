@@ -166,8 +166,8 @@ Two rules keep it predictable:
   file or a builder declares. A misspelled variable is ignored, not silently accepted.
 - **No defaults in code.** Read keys with `requireString`, `requireInt` or `requireBoolean`.
 
-An environment variable is the key in upper case with every other character replaced by `_`:
-`services.jetty.server.config.port` is `SERVICES_JETTY_SERVER_CONFIG_PORT`.
+An environment variable is the key in upper case, with each character that is not a letter or digit replaced by
+`_`: `services.jetty.server.config.context-path` is `SERVICES_JETTY_SERVER_CONFIG_CONTEXT_PATH`.
 
 Declare your application's own keys in your own `META-INF/stride/defaults.properties`:
 
@@ -203,14 +203,10 @@ cannot hang the build.
 ```java
 class GreetingApplicationTest {
 
-    static ApplicationConfiguration.Builder configuration() {
-        return GreetingApplication.configuration().overrideProperty("greeting.salutation", "Hei");
-    }
-
     @RegisterExtension
     static final StrideExtension stride = StrideExtension.builder()
-            .configuration(GreetingApplicationTest::configuration)
-            .components(() -> GreetingApplication.components(configuration().build()))
+            .configuration(() -> GreetingApplication.configuration().overrideProperty("greeting.salutation", "Hei"))
+            .components(GreetingApplication::components)
             .build();
 
     @Test
@@ -226,6 +222,8 @@ class GreetingApplicationTest {
 - `@ExtendWith(StrideExtension.class)` starts an application with the test defaults and nothing handed in.
 - `TestClient`, `TestApplication` and `StrideApplication` can be parameters of tests, constructors and lifecycle
   methods.
+- `components(MyApplication::components)` runs the application's own wiring with the configuration the test
+  started it with.
 - To replace a collaborator, hand in a resource wired to a fake. The application under test stays real.
 
 ## Authentication

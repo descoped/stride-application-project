@@ -67,8 +67,8 @@ jobs:
         run: mvn --batch-mode --no-transfer-progress verify -P coverage,sonar
 
       # Every change merged to master is published as a SNAPSHOT to the Central Portal snapshot repository
-      # (https://central.sonatype.com/repository/maven-snapshots/): the parent POM and the four jars with sources
-      # and Javadoc; the aggregator POM at the root is not published. Releases are never published from CI.
+      # (https://central.sonatype.com/repository/maven-snapshots/): the parent POM and the module jars with sources
+      # and Javadoc; the aggregator POM at the root and the sample application are not published. Releases are never published from CI.
       - name: Publish SNAPSHOT
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
