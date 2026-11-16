@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.servlet.ServletConfig;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -33,6 +34,7 @@ import jakarta.ws.rs.core.UriInfo;
  * is true.
  */
 @Path("/openapi")
+@Singleton // the description is built once, not for every request
 public class ApplicationOpenApiResource extends BaseOpenApiResource {
 
     static final String BEARER_SCHEME = "bearerAuth";
@@ -56,8 +58,7 @@ public class ApplicationOpenApiResource extends BaseOpenApiResource {
         OpenAPI openAPI = new OpenAPI()
                 .info(new Info().title(application.alias() + " API").version(application.version()));
 
-        configuration.with("application.url").asString()
-                .ifPresent(url -> openAPI.addServersItem(new Server().url(url)));
+        application.url().ifPresent(url -> openAPI.addServersItem(new Server().url(url)));
 
         // security.enabled is declared by stride-application-security; without that module there is no key
         if (configuration.with("security.enabled").asBoolean(false)) {

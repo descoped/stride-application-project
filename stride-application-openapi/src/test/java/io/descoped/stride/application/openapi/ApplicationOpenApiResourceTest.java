@@ -59,16 +59,19 @@ class ApplicationOpenApiResourceTest {
         }
     }
 
+    // The key is declared by stride-application-security, which is not on this module's class path, so setting it
+    // here starts no authentication.
     @Test
-    void declaresTheBearerSchemeWhenSecurityIsEnabled() {
-        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-                .overrideProperty("security.enabled", "true")
-                .build();
+    void declaresTheBearerSchemeWhenSecurityIsEnabled() throws Exception {
+        ApplicationConfiguration.Builder configuration = configuration().overrideProperty("security.enabled", "true");
+        try (TestApplication application = new TestApplication.Builder().configuration(configuration).build()) {
+            application.start();
 
-        var document = ApplicationOpenApiResource.describe(configuration);
+            String body = TestClient.create(application).get("/openapi.json").expect200Ok().body();
+            JsonNode document = new ObjectMapper().readTree(body);
 
-        assertEquals("bearer", document.getComponents().getSecuritySchemes()
-                .get(ApplicationOpenApiResource.BEARER_SCHEME).getScheme());
-        assertTrue(document.getSecurity().get(0).containsKey(ApplicationOpenApiResource.BEARER_SCHEME));
+            assertEquals("bearer", document.at("/components/securitySchemes/bearerAuth/scheme").asText(), body);
+            assertTrue(document.at("/security/0").has("bearerAuth"), body);
+        }
     }
 }

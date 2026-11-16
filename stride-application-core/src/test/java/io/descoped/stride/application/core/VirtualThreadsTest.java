@@ -14,8 +14,11 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -27,8 +30,8 @@ class VirtualThreadsTest {
     @Path("/thread")
     public static class ThreadResource {
 
-        private static final Object LOCK = new Object();
         static volatile CountDownLatch allArrived;
+        static volatile CountDownLatch slowEntered;
 
         @GET
         @Produces(MediaType.TEXT_PLAIN)
@@ -37,17 +40,24 @@ class VirtualThreadsTest {
             return thread.isVirtual() + " " + thread.getName();
         }
 
-        // Holds every request inside a synchronized block until all of them have arrived. With more requests than
-        // the server has platform threads, this completes only if requests run on virtual threads.
+        // Holds every request until all of them have arrived. With more requests than the server has platform
+        // threads, this completes only if requests run on virtual threads.
+        // Announces that it is running, then takes a while to answer.
+        @GET
+        @Path("/slow")
+        @Produces(MediaType.TEXT_PLAIN)
+        public String slow() throws InterruptedException {
+            slowEntered.countDown();
+            Thread.sleep(500);
+            return "done";
+        }
+
         @GET
         @Path("/rendezvous")
         @Produces(MediaType.TEXT_PLAIN)
         public String rendezvous(@QueryParam("id") int id) throws InterruptedException {
             allArrived.countDown();
             boolean together = allArrived.await(10, TimeUnit.SECONDS);
-            synchronized (LOCK) {
-                Thread.sleep(1);
-            }
             return together + " " + Thread.currentThread().isVirtual();
         }
     }
@@ -110,16 +120,40 @@ class VirtualThreadsTest {
                     .mapToObj(id -> Thread.ofVirtual().unstarted(() ->
                             assertEquals("true true", client.get("/thread/rendezvous?id=" + id).expect200Ok().body())))
                     .toList();
-            List<Throwable> failures = new java.util.concurrent.CopyOnWriteArrayList<>();
+            List<Throwable> failures = new CopyOnWriteArrayList<>();
             callers.forEach(caller -> {
                 caller.setUncaughtExceptionHandler((_, e) -> failures.add(e));
                 caller.start();
             });
             for (Thread caller : callers) {
-                assertTrue(caller.join(java.time.Duration.ofSeconds(20)), "request did not complete");
+                assertTrue(caller.join(Duration.ofSeconds(20)), "request did not complete");
             }
 
             assertEquals(List.of(), failures);
         }
+    }
+
+    @Test
+    void stoppingWaitsForARequestThatIsStillRunning() throws Exception {
+        ThreadResource.slowEntered = new CountDownLatch(1);
+        TestApplication application = new TestApplication.Builder().configuration(configuration()).build();
+        application.start();
+        TestClient client = TestClient.create(application);
+
+        AtomicReference<Object> outcome = new AtomicReference<>();
+        Thread caller = Thread.ofVirtual().start(() -> {
+            try {
+                var response = client.get("/thread/slow").response();
+                outcome.set(response.statusCode() + " " + response.body());
+            } catch (RuntimeException | Error e) {
+                outcome.set(e);
+            }
+        });
+        assertTrue(ThreadResource.slowEntered.await(10, TimeUnit.SECONDS), "the request did not start");
+
+        application.stop();
+
+        assertTrue(caller.join(Duration.ofSeconds(10)), "the request did not complete");
+        assertEquals("200 done", String.valueOf(outcome.get()));
     }
 }
