@@ -67,7 +67,7 @@ jobs:
           fetch-depth: 1
 
       - name: Run Claude Code
-        uses: anthropics/claude-code-action@d1f58ad5e6f4d2b79547e63e37c2116064135896  # v1 (v1.0.277)
+        uses: anthropics/claude-code-action@cc98b3ae241b0fcfb6a42a2690751afffecb4452  # v1 (v1.0.277)
         with:
           # The model is named, not inherited. `Agent` is denied so the review
           # is one pass: a subagent still running when the main turn ends never
@@ -130,7 +130,7 @@ jobs:
           cache: maven
 
       - name: Run Claude Code
-        uses: anthropics/claude-code-action@d1f58ad5e6f4d2b79547e63e37c2116064135896  # v1 (v1.0.277)
+        uses: anthropics/claude-code-action@cc98b3ae241b0fcfb6a42a2690751afffecb4452  # v1 (v1.0.277)
         with:
           # No prompt: the action answers the mention. Besides the read-only
           # gh and git commands it may run the Maven build, so a fix is checked
