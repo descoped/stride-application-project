@@ -1,5 +1,6 @@
 package io.descoped.stride.application.test.server;
 
+import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.api.Logging;
 import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
@@ -91,12 +92,21 @@ public class TestApplication implements TestUriResolver, StrideApplication {
         private String host = "localhost";
         private int port = -1;
         private String contextPath = "";
+        private Components components = Components.none();
 
         public Builder() {
         }
 
         public Builder configuration(ApplicationConfiguration.Builder configurationBuilder) {
             this.configurationBuilder = configurationBuilder;
+            return this;
+        }
+
+        /**
+         * Ready-made objects for the application under test, for example a resource wired to a fake collaborator.
+         */
+        public Builder components(Components components) {
+            this.components = components;
             return this;
         }
 
@@ -133,7 +143,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
             }
 
             ApplicationConfiguration configuration = configurationBuilder.build();
-            StrideApplication app = StrideApplication.create(configuration);
+            StrideApplication app = StrideApplication.create(configuration, components);
             return new TestApplication(app);
         }
     }

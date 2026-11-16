@@ -7,11 +7,11 @@ import java.util.ServiceLoader;
 
 class ApplicationConfigurator {
 
-    StrideApplication configure(ApplicationConfiguration configuration) {
+    StrideApplication configure(ApplicationConfiguration configuration, Components components) {
         ServiceLoader<ApplicationInitializer> serviceLoader = ServiceLoader.load(ApplicationInitializer.class);
         ApplicationInitializer initializer = serviceLoader
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Missing SPI for " + ApplicationInitializer.class.getName()));
-        return initializer.initialize(configuration);
+        return initializer.initialize(configuration, components);
     }
 }
