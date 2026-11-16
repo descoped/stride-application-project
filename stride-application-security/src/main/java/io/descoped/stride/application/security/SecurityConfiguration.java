@@ -1,4 +1,6 @@
-package io.descoped.stride.application.config;
+package io.descoped.stride.application.security;
+
+import io.descoped.stride.application.config.ApplicationConfiguration;
 
 import java.net.URI;
 import java.util.Arrays;

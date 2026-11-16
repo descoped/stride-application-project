@@ -21,6 +21,7 @@
         <module>stride-application-junit5</module>
         <module>stride-application-core</module>
         <module>stride-application-openapi</module>
+        <module>stride-application-security</module>
     </modules>
 
     <build>

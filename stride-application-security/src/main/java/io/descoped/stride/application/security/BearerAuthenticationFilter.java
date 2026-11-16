@@ -1,6 +1,7 @@
 package io.descoped.stride.application.security;
 
-import io.descoped.stride.application.config.SecurityConfiguration;
+import io.descoped.stride.application.config.ApplicationConfiguration;
+import jakarta.inject.Inject;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpFilter;
@@ -19,6 +20,20 @@ public final class BearerAuthenticationFilter extends HttpFilter {
     private final SecurityConfiguration settings;
     private final JwtTokenVerifier verifier;
 
+    /**
+     * Used when Stride creates the filter from the configuration: reads {@code security.*} and fetches the issuer's
+     * metadata and keys, so a wrong or unreachable issuer stops the application before it accepts requests.
+     */
+    @Inject
+    public BearerAuthenticationFilter(ApplicationConfiguration configuration) throws IOException {
+        SecurityConfiguration settings = SecurityConfiguration.from(configuration);
+        this(settings, JwtTokenVerifier.discover(settings));
+    }
+
+    /**
+     * For an application that builds the verifier itself and hands the filter to Stride under the name
+     * {@code "security"}.
+     */
     public BearerAuthenticationFilter(SecurityConfiguration settings, JwtTokenVerifier verifier) {
         this.settings = settings;
         this.verifier = verifier;

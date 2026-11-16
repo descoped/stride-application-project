@@ -2,11 +2,13 @@ package io.descoped.stride.application.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Resources;
 import io.descoped.stride.application.test.server.TestApplication;
 import io.descoped.stride.application.test.server.TestClient;
+import jakarta.servlet.http.HttpFilter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,20 +61,32 @@ class ApplicationOpenApiResourceTest {
         }
     }
 
-    // Not over HTTP: an application with security enabled reads the issuer's metadata and keys over HTTPS before it
-    // starts, and there is no issuer here.
     @Test
-    void declaresTheBearerSchemeWhenSecurityIsEnabled() {
-        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-                .overrideProperty("security.enabled", "true")
-                .overrideProperty("security.issuer", "https://issuer.example.test")
-                .overrideProperty("security.audiences", "https://api.example.test")
-                .build();
+    void declaresTheBearerSchemeWhenAFilterNamedSecurityAuthenticates() throws Exception {
+        // stands in for the security module's filter, which is not on this module's class path
+        Components components = Components.builder().filter("security", new HttpFilter() {
+        }).build();
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(configuration()).components(components).build()) {
+            application.start();
 
-        var document = ApplicationOpenApiResource.describe(configuration);
+            String body = TestClient.create(application).get("/openapi.json").expect200Ok().body();
+            JsonNode document = new ObjectMapper().readTree(body);
 
-        assertEquals("bearer", document.getComponents().getSecuritySchemes()
-                .get(ApplicationOpenApiResource.BEARER_SCHEME).getScheme());
-        assertTrue(document.getSecurity().get(0).containsKey(ApplicationOpenApiResource.BEARER_SCHEME));
+            assertEquals("bearer", document.at("/components/securitySchemes/bearerAuth/scheme").asText(), body);
+            assertTrue(document.at("/security/0").has("bearerAuth"), body);
+        }
+    }
+
+    @Test
+    void aSecuritySettingThatNothingEnforcesIsNotAdvertised() throws Exception {
+        ApplicationConfiguration.Builder configuration = configuration().overrideProperty("security.enabled", "true");
+        try (TestApplication application = new TestApplication.Builder().configuration(configuration).build()) {
+            application.start();
+
+            String body = TestClient.create(application).get("/openapi.json").expect200Ok().body();
+
+            assertFalse(new ObjectMapper().readTree(body).has("security"), body);
+        }
     }
 }

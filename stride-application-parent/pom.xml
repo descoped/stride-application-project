@@ -454,6 +454,19 @@
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
+                    <executions>
+                        <!-- Tests are compiled into the module under test, which need not require java.net.http;
+                             the tests call the application over HTTP with the JDK client. -->
+                        <execution>
+                            <id>default-testCompile</id>
+                            <configuration>
+                                <compilerArgs>
+                                    <arg>--add-modules</arg>
+                                    <arg>java.net.http</arg>
+                                </compilerArgs>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
 
                 <plugin>

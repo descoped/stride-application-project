@@ -37,7 +37,7 @@ public interface Filter {
 
     /**
      * The filter's position in the chain: lower runs first, and filters with the same order run by name. This is the
-     * only ordering rule. Stride's CORS filter is at 100 and authentication at 200.
+     * only ordering rule. Stride's CORS filter is at 100 and the security module's authentication filter at 200.
      */
     int order();
 

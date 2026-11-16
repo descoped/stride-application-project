@@ -3,6 +3,7 @@
  */
 module stride.application.openapi {
 
+    requires stride.application.api;
     requires stride.application.config;
 
     requires jakarta.inject;

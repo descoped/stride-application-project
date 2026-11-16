@@ -167,8 +167,9 @@ public interface JsonElement {
     }
 
     /**
-     * Returns a text value that must be present. Every key Stride reads is declared in
-     * {@code application-defaults.properties}, so a missing key is a programming error, not a configuration choice.
+     * Returns a text value that must be present. Every key Stride reads is declared in a module's
+     * {@code META-INF/stride/defaults.properties}, so a missing key is a programming error or a missing module, not
+     * a configuration choice.
      */
     default String requireString(String with) {
         return with(with).asString().orElseThrow(() -> missing(with));
@@ -186,7 +187,7 @@ public interface JsonElement {
 
     private static IllegalStateException missing(String key) {
         return new IllegalStateException("Configuration key '" + key + "' is missing or malformed; "
-                + "every key Stride reads must be declared in application-defaults.properties");
+                + "it must be declared in the META-INF/stride/defaults.properties of the module that reads it");
     }
 
     default Optional<Integer> asInt() {

@@ -44,20 +44,23 @@ Dependency footprint: `mvn -o dependency:tree -Dscope=runtime -pl stride-applica
 | Module | Role |
 |---|---|
 | `stride-application-parent` | Shared parent POM: versions, plugins, publishing. Every version is a property here. |
-| `stride-application-config` | Configuration on `dynamic-configuration`, builders for services, filters, servlets, resources, and `application-defaults.properties`. |
+| `stride-application-config` | Configuration on `dynamic-configuration`, builders for services, filters, servlets, resources, and the module defaults mechanism. |
 | `stride-application-api` | `StrideApplication` lifecycle contract and the `ApplicationInitializer` SPI (ServiceLoader). |
 | `stride-application-junit5` | Test support: `TestApplication`, `TestClient`, `ResponseHelper`. |
-| `stride-application-core` | Runtime: HK2 run levels, Jetty 12.1 (EE11) with HTTP/2, Jersey 4, CORS, security. No logging backend, metrics, WebSocket, XML or OpenAPI: applications add what they use. |
+| `stride-application-core` | Runtime: HK2 run levels, Jetty 12.1 (EE11) with HTTP/2, Jersey 4, CORS. No security, logging backend, metrics, WebSocket, XML or OpenAPI: applications add what they use. |
 | `stride-application-openapi` | Optional: serves the OpenAPI document (Swagger) at `/openapi.json` and `/openapi.yaml`. |
+| `stride-application-security` | Optional: JWT bearer authentication for a resource server (Nimbus JOSE+JWT). |
 
 The root `pom.xml` only aggregates; modules inherit from `stride-application-parent`.
 Run levels: services up to 9, web assembly at 10, listener start at 11 (`RunLevelConstants`).
 
 ## Configuration
 
-Layers, lowest first: Stride's `application-defaults.properties`; components declared in code with the builders;
+Layers, lowest first: the `META-INF/stride/defaults.properties` of every module on the class path; components
+declared in code with the builders;
 the application's sources (files, then environment variables, then system properties); `overrideProperty`.
-Every key Stride reads must be declared in `application-defaults.properties` with its default. There are no
+Every key a module reads must be declared, with its default, in that module's own
+`META-INF/stride/defaults.properties`; a key declared by two modules is an error. There are no
 fallback values in code: read keys with `requireString`, `requireInt` or `requireBoolean`. Environment variables and
 system properties can only override declared keys, so an undeclared key cannot be configured from outside.
 
