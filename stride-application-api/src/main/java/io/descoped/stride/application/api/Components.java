@@ -22,11 +22,17 @@ import java.util.Objects;
  *         .build();
  * StrideApplication.create(configuration, components).start();
  * }</pre>
- * Stride never creates, injects into or closes these objects; their lifecycle belongs to the application.
+ * Stride never creates or closes these objects; their lifecycle belongs to the application. Jersey does inject
+ * {@code @Context} and {@code @Inject} members of a resource instance, as it does for any registered object.
  * <p>
- * A filter or servlet is known by its name. Its settings are read from the configuration under
- * {@code filters.<name>} or {@code servlets.<name>} when present (enabled, path, dispatcher types, order), so
- * deployment can still tune or disable it; without an entry a filter applies to every request.
+ * An instance handed in is always registered: code decides which components exist, and
+ * {@code filters.<name>.enabled=false} does not remove one (Stride logs a warning if the configuration says so). An
+ * application that wants a switch reads its own configuration and leaves the instance out.
+ * <p>
+ * A filter or servlet is known by its name, and its path, dispatcher types and order are read from the
+ * configuration under {@code filters.<name>} or {@code servlets.<name>}. Declare the entry with
+ * {@code Filter.builder(name)} or {@code Servlet.builder(name)} to make those settings overridable by environment
+ * variable and system property; without an entry a filter applies to every request at the default order.
  */
 public final class Components {
 

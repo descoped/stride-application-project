@@ -167,6 +167,7 @@ public final class ApplicationConfiguration implements JsonElement {
         private ServletContextInitialization.Builder servletContextInitializationBuilder;
         private boolean enableDefault;
         private boolean enableTestDefault;
+        private ClassLoader classLoader;
 
         /**
          * On top of Stride's defaults: reads {@code application.properties} from the class path and
@@ -185,6 +186,21 @@ public final class ApplicationConfiguration implements JsonElement {
         public Builder testDefaults() {
             this.enableTestDefault = true;
             return this;
+        }
+
+        /**
+         * The class loader that module defaults ({@code META-INF/stride/defaults.properties}) are looked up with.
+         * By default the thread's context class loader, or the one that loaded Stride when there is none. Set it
+         * when modules live in a class loader neither of those can see, such as a plugin's.
+         */
+        public Builder classLoader(ClassLoader classLoader) {
+            this.classLoader = Objects.requireNonNull(classLoader, "classLoader");
+            return this;
+        }
+
+        private static ClassLoader defaultClassLoader() {
+            ClassLoader context = Thread.currentThread().getContextClassLoader();
+            return context != null ? context : ApplicationConfiguration.class.getClassLoader();
         }
 
         public Builder overrideProperty(String name, String value) {
@@ -229,9 +245,25 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         public ApplicationConfiguration build() {
-            // 1. the defaults of every module on the class path: they declare every key that is read
             DynamicConfiguration.Builder builder = DynamicConfiguration.builder();
-            ModuleDefaults.find(ApplicationConfiguration.class.getClassLoader()).forEach(builder::resource);
+
+            // 0. the settings of filters declared in code, at their defaults. Lowest of all, so everything else
+            //    wins, but declared, so each can be overridden by environment variable or system property.
+            if (filtersBuilder != null) {
+                Map<String, String> implied = new LinkedHashMap<>();
+                for (Filter filter : filtersBuilder.build().iterator()) {
+                    String prefix = "filters." + filter.name() + ".config.";
+                    implied.put(prefix + "pathSpec", Filter.DEFAULT_PATH_SPEC);
+                    implied.put(prefix + "order", Integer.toString(Filter.DEFAULT_ORDER));
+                    implied.put(prefix + "dispatches.0", "REQUEST");
+                }
+                if (!implied.isEmpty()) {
+                    builder.values(implied);
+                }
+            }
+
+            // 1. the defaults of every module on the class path: they declare every key that is read
+            ModuleDefaults.find(classLoader != null ? classLoader : defaultClassLoader()).forEach(builder::resource);
 
             // 2. what the application declares in code: it decides which components exist, and its values are
             //    defaults that every later source can override

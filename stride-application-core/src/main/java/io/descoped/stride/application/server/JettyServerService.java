@@ -1,6 +1,8 @@
 package io.descoped.stride.application.server;
 
+import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
+import org.eclipse.jetty.ee11.servlet.FilterHolder;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -42,6 +44,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
 
     @Inject
     public JettyServerService(ApplicationConfiguration configuration,
+                              Components components,
                               ServiceLocator serviceLocator,
                               IterableProvider<SecurityHandler> securityHandlerProvider) throws Exception {
 
@@ -87,6 +90,13 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute(ServletProperties.SERVICE_LOCATOR, serviceLocator);
         servletContextHandler.setContextPath(jettyConfig.contextPath());
+
+        // Filters belong to the server, not to Jersey: they apply to every servlet, and to /ping, whether or not
+        // the Jersey service is enabled.
+        for (FilterRegistrations.Registration registration : FilterRegistrations.collect(configuration, components, serviceLocator)) {
+            servletContextHandler.addFilter(new FilterHolder(registration.filter()), registration.pathSpec(), registration.dispatches());
+            log.debug("Filter {} (order {}) on {}", registration.name(), registration.order(), registration.pathSpec());
+        }
 
         // ping servlet
         ServletHolder pingServletHolder = new ServletHolder(new HttpServlet() {
