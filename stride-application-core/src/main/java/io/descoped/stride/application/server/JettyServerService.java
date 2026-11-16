@@ -26,7 +26,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
-import org.eclipse.jetty.ee11.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PreDestroy;
@@ -109,8 +108,6 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
             servletContextHandler.addFilter(new FilterHolder(new BearerAuthenticationFilter(security, JwtTokenVerifier.discover(security))),
                     "/*", EnumSet.allOf(DispatcherType.class));
         }
-
-        JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
         // ping servlet
         ServletHolder pingServletHolder = new ServletHolder(new HttpServlet() {
