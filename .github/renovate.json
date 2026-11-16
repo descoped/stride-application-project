@@ -14,7 +14,7 @@
       "automerge": true
     },
     {
-      "description": "JDK versions in the workflows are deliberate: CI and `respond` build on the Java 21 baseline. They are changed by hand, never bumped.",
+      "description": "JDK versions in the workflows are deliberate: CI and `respond` build on the Java 25 baseline. They are changed by hand, never bumped.",
       "matchManagers": [
         "github-actions"
       ],

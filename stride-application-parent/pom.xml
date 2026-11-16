@@ -15,10 +15,9 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
-        <!-- Java Versions -->
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <maven.compiler.release>21</maven.compiler.release>
+        <!-- Java baseline. `release` alone sets the language level, the class file version and the JDK API that
+             the code is checked against; `source` and `target` would only repeat it. -->
+        <maven.compiler.release>25</maven.compiler.release>
 
         <!-- Encodings -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -499,8 +498,6 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.16.0</version>
                     <configuration>
-                        <source>${maven.compiler.source}</source>
-                        <target>${maven.compiler.target}</target>
                         <release>${maven.compiler.release}</release>
                         <annotationProcessorPaths>
                             <path>

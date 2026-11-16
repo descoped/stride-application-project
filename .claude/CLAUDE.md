@@ -30,10 +30,11 @@ Stride is not Spring or Micronaut, and not a Jakarta EE platform or compliance e
 
 ## Build
 
-The POM targets Java 21 (the baseline is under review; 25 is being considered). If the default JDK differs, set
-`JAVA_HOME` for every Maven and Java command:
+The baseline is Java 25: `maven.compiler.release` is 25 and nothing else specifies a Java version. Use what Java 25
+has finalized; preview features are not allowed in published code. If the default JDK differs, set `JAVA_HOME` for
+every Maven and Java command:
 
-    JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home" mvn -B -ntp clean verify
+    JAVA_HOME="$(brew --prefix openjdk@25)/libexec/openjdk.jdk/Contents/Home" mvn -B -ntp clean verify
 
 One module: add `-pl stride-application-core -am`. One test: add `-Dtest=ClassName -Dsurefire.failIfNoSpecifiedTests=false`.
 Dependency footprint: `mvn -o dependency:tree -Dscope=runtime -pl stride-application-core`.
