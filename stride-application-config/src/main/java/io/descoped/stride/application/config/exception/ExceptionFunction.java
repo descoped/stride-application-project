@@ -7,14 +7,16 @@ import java.util.function.Supplier;
  * Lambda to wrap hard exception.
  * <p>
  * Example:
+ * <pre>{@code
  * ExceptionFunction.call(() -> somethingThatThrowsAnException)
- * <p>
+ *
  * return (Class<R>) Optional.of("Foo.class").map((ExceptionFunction<String, Class<?>>) Class::forName)
  * return (Class<R>) Optional.of("Foo.class").map(ExceptionFunction.call(() -> Class::forName))
  * return Optional.of("Foo.class").map(ExceptionFunction.call(() -> s -> (Class<R>) Class.forName(s)))
+ * }</pre>
  *
- * @param <T>
- * @param <R>
+ * @param <T> the argument type
+ * @param <R> the result type
  */
 
 @FunctionalInterface

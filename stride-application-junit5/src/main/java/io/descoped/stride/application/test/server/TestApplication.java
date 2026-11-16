@@ -5,12 +5,8 @@ import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.ServerSocket;
 import java.net.URL;
-import java.security.SecureRandom;
-import java.util.Random;
 
 public class TestApplication implements TestUriResolver, StrideApplication {
 
@@ -117,33 +113,6 @@ public class TestApplication implements TestUriResolver, StrideApplication {
         public Builder contextPath(String contextPath) {
             this.contextPath = contextPath;
             return this;
-        }
-
-        @SuppressWarnings("SameParameterValue")
-        static int findFreePort(Random random, int from, int to) {
-            int port = pick(random, from, to);
-            for (int i = 0; i < 2 * ((to + 1) - from); i++) {
-                if (isLocalPortFree(port)) {
-                    return port;
-                }
-                port = pick(random, from, to);
-            }
-            throw new IllegalStateException(
-                    "Unable to find any available ports in range: [" + from + ", " + (to + 1) + ")");
-        }
-
-        private static int pick(Random random, int from, int to) {
-            return from + random.nextInt((to + 1) - from);
-        }
-
-        private static boolean isLocalPortFree(int port) {
-            try {
-                try (ServerSocket ignore = new ServerSocket(port)) {
-                    return true;
-                }
-            } catch (IOException e) {
-                return false;
-            }
         }
 
         public TestApplication build() {

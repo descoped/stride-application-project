@@ -5,7 +5,7 @@ import java.util.Comparator;
 public class TupleByteArrayComparator implements Comparator<Tuple> {
 
     /**
-     * Comparator<byte[]> implementation to sort keys that are byte arrays in ascending order based on their byte values.
+     * {@code Comparator<byte[]>} implementation to sort keys that are byte arrays in ascending order based on their byte values.
      * The compare method of the Comparator implementation compares the byte values of corresponding bytes in the input
      * byte arrays left and right using bitwise AND operation with 0xff to convert them to unsigned integers.
      * If the corresponding byte values are not equal, the method returns the difference between the byte values.
