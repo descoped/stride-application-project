@@ -163,7 +163,7 @@ public final class ApplicationConfiguration implements JsonElement {
 
         public Builder overrideProperty(String name, String value) {
             overrideProperties.put(name, value);
-            return null;
+            return this;
         }
 
         public Builder configuration(ApplicationProperties.Builder applicationPropertiesBuilder) {
@@ -265,6 +265,10 @@ public final class ApplicationConfiguration implements JsonElement {
 
     // ---------------------------------------------------------------------------------------------------------------
 
+    public SecurityConfiguration security() {
+        return SecurityConfiguration.from(this);
+    }
+
     public Server server() {
         return new Server(element().with("services.jetty.server.config"));
     }
@@ -304,7 +308,7 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         public long idleTimeout() {
-            return Duration.parse(element.asString("idleTimeout", "PT-1s")).toSeconds();
+            return Duration.parse(element.asString("idleTimeout", "PT30s")).toMillis();
         }
     }
 

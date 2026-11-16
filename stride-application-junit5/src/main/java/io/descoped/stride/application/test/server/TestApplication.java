@@ -156,7 +156,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
                 configurationBuilder.overrideProperty("services.jetty.server.config.host", host);
             }
 
-            int pickPort = (port <= 0) ? findFreePort(new SecureRandom(), 9000, 9499) : port;
+            int pickPort = Math.max(port, 0);
             configurationBuilder.overrideProperty("services.jetty.server.config.port", Integer.toString(pickPort));
 
             if (contextPath != null) {

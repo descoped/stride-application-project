@@ -36,6 +36,14 @@
 
     <dependencies>
         <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-config</artifactId>
             <version>0.0.24-SNAPSHOT</version>
@@ -54,22 +62,22 @@
 
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-server</artifactId>
+            <artifactId>jetty-http2-server</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-jetty-server</artifactId>
+            <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+            <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlet</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty.toolchain</groupId>
-            <artifactId>jetty-jakarta-servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
 
         <dependency>
@@ -115,7 +123,7 @@
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-jetty11</artifactId>
+            <artifactId>metrics-jetty12-ee11</artifactId>
         </dependency>
 
         <dependency>
@@ -130,7 +138,7 @@
 
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-jersey3</artifactId>
+            <artifactId>metrics-jersey40</artifactId>
         </dependency>
 
         <dependency>
@@ -236,31 +244,7 @@
     </dependencies>
 
     <profiles>
-        <profile>
-            <id>javax-jaxb</id>
-            <dependencies>
-                <!-- replace jakarta.xml.bind:jakarta.xml.bind-api:2.x (which uses javax namespace) with this allows javax and jakarta to coexist
-                     pls refer to the profile javax-jaxb and jakarta-jaxb for correct dependency graph
-                -->
-                <dependency>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                    <version>2.3.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-core</artifactId>
-                    <version>2.3.0.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-impl</artifactId>
-                    <version>2.3.1</version>
-                </dependency>
-            </dependencies>
-        </profile>
-
-        <profile>
+<profile>
             <id>jakarta-jaxb</id>
             <dependencies>
                 <dependency>

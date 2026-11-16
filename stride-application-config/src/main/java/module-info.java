@@ -7,7 +7,7 @@ module stride.application.config {
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.dataformat.yaml;
 
-    requires jetty.servlet.api;
+    requires jakarta.servlet;
 
     requires org.slf4j;
 

@@ -21,12 +21,11 @@ public class ApplicationCORSServletFilter extends HttpFilter {
 
     @Inject
     public ApplicationCORSServletFilter(ApplicationConfiguration configuration) {
-        ApplicationCORSServletFilter builder = new Builder().build();
-        this.origin = builder.origin;
-        this.credentials = builder.credentials;
-        this.headers = builder.headers;
-        this.methods = builder.methods;
-        this.maxAge = builder.maxAge;
+        this(configuration.asString("filters.cors.config.origin", "*"),
+                configuration.asString("filters.cors.config.credentials", "false"),
+                configuration.asString("filters.cors.config.headers", "origin, content-type, accept, authorization"),
+                configuration.asString("filters.cors.config.methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"),
+                configuration.asString("filters.cors.config.max-age", "86400"));
     }
 
     @Override
@@ -39,6 +38,8 @@ public class ApplicationCORSServletFilter extends HttpFilter {
                                          String headers,
                                          String methods,
                                          String maxAge) {
+        if ("*".equals(origin) && Boolean.parseBoolean(credentials))
+            throw new IllegalArgumentException("Credentialed CORS requires explicit allowed origins");
         this.origin = origin;
         this.credentials = credentials;
         this.headers = headers;
@@ -49,11 +50,34 @@ public class ApplicationCORSServletFilter extends HttpFilter {
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response,
                             FilterChain chain) throws IOException, ServletException {
-        response.addHeader("Access-Control-Allow-Origin", origin);
-        response.addHeader("Access-Control-Allow-Credentials", credentials);
-        response.addHeader("Access-Control-Allow-Headers", headers);
-        response.addHeader("Access-Control-Allow-Methods", methods);
-        response.addHeader("Access-Control-Max-Age", maxAge);
+        String requestOrigin = request.getHeader("Origin");
+        if (requestOrigin == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+        response.addHeader("Vary", "Origin");
+        boolean allowed = "*".equals(origin) || java.util.Arrays.stream(origin.split(","))
+                .map(String::trim).anyMatch(requestOrigin::equals);
+        if (!allowed) { response.setStatus(403); return; }
+        response.setHeader("Access-Control-Allow-Origin", "*".equals(origin) ? "*" : requestOrigin);
+        if (Boolean.parseBoolean(credentials)) response.setHeader("Access-Control-Allow-Credentials", "true");
+        if ("OPTIONS".equals(request.getMethod()) && request.getHeader("Access-Control-Request-Method") != null) {
+            response.addHeader("Vary", "Access-Control-Request-Method, Access-Control-Request-Headers");
+            var allowedMethods = java.util.Arrays.stream(methods.split(",")).map(String::trim).toList();
+            var allowedHeaders = java.util.Arrays.stream(headers.split(",")).map(String::trim)
+                    .map(v -> v.toLowerCase(java.util.Locale.ROOT)).toList();
+            String requestedHeaders = request.getHeader("Access-Control-Request-Headers");
+            boolean validHeaders = requestedHeaders == null || java.util.Arrays.stream(requestedHeaders.split(","))
+                    .map(String::trim).map(v -> v.toLowerCase(java.util.Locale.ROOT)).allMatch(allowedHeaders::contains);
+            if (!allowedMethods.contains(request.getHeader("Access-Control-Request-Method")) || !validHeaders) {
+                response.setStatus(403); return;
+            }
+            response.setHeader("Access-Control-Allow-Headers", headers);
+            response.setHeader("Access-Control-Allow-Methods", methods);
+            response.setHeader("Access-Control-Max-Age", maxAge);
+            response.setStatus(204);
+            return;
+        }
         chain.doFilter(request, response);
     }
 
@@ -64,7 +88,7 @@ public class ApplicationCORSServletFilter extends HttpFilter {
     public static class Builder {
 
         private String origin = "*";
-        private String credentials = "true";
+        private String credentials = "false";
         private String headers = "origin, content-type, accept, authorization";
         private String methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD";
         private String maxAge = "86400";
