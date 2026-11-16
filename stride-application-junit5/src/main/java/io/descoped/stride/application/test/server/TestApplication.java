@@ -6,8 +6,6 @@ import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class TestApplication implements TestUriResolver, StrideApplication {
 
@@ -73,12 +71,14 @@ public class TestApplication implements TestUriResolver, StrideApplication {
 
     @Override
     public String testURL(String uri) {
-        try {
-            URL url = new URL("http", application.getHost(), application.getLocalPort(), uri);
-            return url.toExternalForm();
-        } catch (MalformedURLException e) {
-            throw new TestServerException(e);
-        }
+        String host = application.getHost();
+        return testURL(host, application.getLocalPort(), uri);
+    }
+
+    // An IPv6 address goes in brackets unless it already is, as the URL constructor did.
+    static String testURL(String host, int port, String uri) {
+        boolean bareIpv6 = host.contains(":") && !host.startsWith("[");
+        return "http://" + (bareIpv6 ? "[" + host + "]" : host) + ":" + port + uri;
     }
 
     @Override
