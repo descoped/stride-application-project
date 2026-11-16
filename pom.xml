@@ -22,6 +22,7 @@
         <module>stride-application-core</module>
         <module>stride-application-openapi</module>
         <module>stride-application-security</module>
+        <module>stride-application-sample</module>
     </modules>
 
     <build>
