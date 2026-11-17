@@ -69,7 +69,7 @@ jobs:
       # Every change merged to master is published as a SNAPSHOT to the Central Portal snapshot repository
       # (https://central.sonatype.com/repository/maven-snapshots/): the parent POM and the module jars with sources
       # and Javadoc; the aggregator POM at the root is not published, and the sample application is left out of this
-      # build: with it in the reactor the upload was refused with 401. Releases are never published from CI.
+      # build because it is an example, not an artifact. Releases are never published from CI.
       - name: Publish SNAPSHOT
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
