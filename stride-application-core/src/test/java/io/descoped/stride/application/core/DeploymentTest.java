@@ -19,12 +19,10 @@ import io.descoped.stride.application.server.JettyServerService;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.MetricsServlet;
 import jakarta.servlet.DispatcherType;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Optional;
 
@@ -210,35 +208,5 @@ class DeploymentTest {
 
         ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.builder().testDefaults().build();
         log.trace("\n{}", mapper.writeValueAsString(applicationConfiguration.json()));
-    }
-
-    @Disabled
-    @Test
-    void propertiesToDeployment() throws IOException {
-        // TODO use a service namespace instead of
-        final String props = """
-                services.0.serviceName=jetty.server
-                services.0.serviceClass=io.descoped.stride.application.server.JettyServerService
-                services.1.serviceClass=io.descoped.stride.application.server.JerseyServerService
-                services.2.serviceName=dummy.service
-                services.2.serviceClass=org.jvnet.hk2.annotations.Service
-                services.2.metadata.foo=bar
-                filters.0.name=dummy
-                filters.0.filterClass=jakarta.servlet.Filter
-                filters.0.pathSpec=/dummy
-                filters.0.dispatches.0=FORWARD
-                filters.0.dispatches.1=REQUEST
-                servlets.0.servletClass=io.dropwizard.metrics.servlets.AdminServlet
-                servlets.0.pathSpec=/admin
-                servlets.1.servletName=metrics
-                servlets.1.servletClass=io.dropwizard.metrics.servlets.MetricsServlet
-                servlets.1.pathSpec=/metrics
-                """;
-
-
-//        ApplicationConfiguration configuration = ApplicationConfiguration.builder()
-//                .configuration(sources -> sources.values(propertiesToMap(props))).build();
-
-//        log.debug("\n{}", configuration.json().toPrettyString());
     }
 }

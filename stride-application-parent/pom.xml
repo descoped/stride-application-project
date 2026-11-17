@@ -557,7 +557,7 @@
                         <releaseProfiles>central,sign</releaseProfiles>
                         <goals>deploy</goals>
                         <!-- The sample application is an example, never an artifact: it is left out of the builds
-                             the release runs, as it is left out of the SNAPSHOT build in CI. That includes the
+                             the release runs, as it is left out of the snapshot command above. That includes the
                              verify before the tag; pull request and master builds test the sample. -->
                         <arguments>-pl !:stride-application-sample</arguments>
                     </configuration>

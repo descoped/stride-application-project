@@ -46,7 +46,7 @@ All modules have the group id `io.descoped.stride.application`.
 </dependency>
 ```
 
-There is no release yet. Snapshots are published from `master` to
+There is no release yet. Snapshots are published by hand, not on every merge, to
 `https://central.sonatype.com/repository/maven-snapshots/`.
 
 Stride logs through SLF4J and ships no backend. Add the one you use, for example `slf4j-simple` or Logback.
