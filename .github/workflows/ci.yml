@@ -2,7 +2,9 @@ name: CI
 
 # One job on JDK 25, the baseline: every build compiles with `release 25`, so the bytecode does not depend on the
 # JDK, and 25 is the oldest runtime users have. Pull requests: build and tests. Pushes to master and release tags add
-# coverage and the SonarCloud analysis; master then publishes a SNAPSHOT.
+# coverage and the SonarCloud analysis. Nothing is published from CI: snapshots and releases are published by hand
+# (see the `central` profile in stride-application-parent/pom.xml), because the Central Portal limits how often a
+# namespace may publish.
 on:
   push:
     branches: [master]
@@ -29,8 +31,8 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same pull request or branch ends the run it replaces, except on master, where a run may be
-# publishing a SNAPSHOT: there a newer merge waits instead of cancelling an upload half way.
+# A newer push to the same pull request or branch ends the run it replaces, except on master, where every merge
+# gets its own SonarCloud analysis.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
@@ -52,9 +54,6 @@ jobs:
           java-version: '25'
           distribution: temurin
           cache: maven
-          server-id: central
-          server-username: CENTRAL_TOKEN_USER
-          server-password: CENTRAL_TOKEN_PASSWORD
 
       - name: Build and test
         if: github.event_name != 'push'
@@ -65,20 +64,3 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
         run: mvn --batch-mode --no-transfer-progress verify -P coverage,sonar
-
-      # Every change merged to master is published as a SNAPSHOT to the Central Portal snapshot repository
-      # (https://central.sonatype.com/repository/maven-snapshots/): the parent POM and the module jars with sources
-      # and Javadoc; the aggregator POM at the root is not published, and the sample application is left out of this
-      # build because it is an example, not an artifact. Releases are never published from CI.
-      - name: Publish SNAPSHOT
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        env:
-          CENTRAL_TOKEN_USER: ${{ secrets.CENTRAL_TOKEN_USER }}
-          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
-        run: |
-          version=$(sed -n 's/^version=//p' stride-application-config/target/maven-archiver/pom.properties)
-          case "$version" in
-            *-SNAPSHOT) ;;
-            *) echo "::error::master is at $version, not a SNAPSHOT; releases are published by hand"; exit 1 ;;
-          esac
-          mvn --batch-mode --no-transfer-progress deploy -P central -DskipTests -pl '!:stride-application-sample'
