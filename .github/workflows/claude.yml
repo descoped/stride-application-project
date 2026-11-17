@@ -66,6 +66,10 @@ jobs:
         with:
           fetch-depth: 1
 
+      # Comments Claude creates or edits from here on belong to this review.
+      - name: Note when the review starts
+        run: echo "REVIEW_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
       - name: Run Claude Code
         uses: anthropics/claude-code-action@cc98b3ae241b0fcfb6a42a2690751afffecb4452  # v1 (v1.0.277)
         with:
@@ -82,17 +86,26 @@ jobs:
           track_progress: true
           allowed_bots: 'renovate[bot]'
 
-      # The job succeeds even when the review never posted: the action edits
-      # one placeholder comment in place, and a run that ends early leaves its
-      # checklist unticked. An unticked box in that comment fails the job.
+      # The action reports success even when no review was posted: when it
+      # skips itself (a pull request that changes this file; the file must
+      # match the default branch) or ends early. So the job fails unless
+      # Claude created or edited a comment during this run, and that comment
+      # has no unticked boxes (a run that ends early leaves them unticked).
       - name: Fail when the review did not post
         if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
+          # --jq runs once per page, so each matching body is printed as one
+          # JSON line and the last line over all pages is taken.
           body=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
-            --jq '[.[] | select(.user.login == "claude[bot]")] | last | .body // ""')
+            --jq '.[] | select(.user.login == "claude[bot]" and .updated_at >= env.REVIEW_STARTED) | .body | @json' \
+            | tail -n 1 | jq -r .)
+          if [ -z "$body" ]; then
+            echo "::error::Claude posted no review in this run; it was skipped or failed (a pull request that changes claude.yml is never reviewed)"
+            exit 1
+          fi
           if printf '%s' "$body" | grep -q -- '- \[ \]'; then
             echo "::error::the review comment still has unchecked boxes; the review did not post"
             exit 1
