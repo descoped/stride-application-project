@@ -74,6 +74,19 @@ Most applications are affected by these.
   declared key.
 - **There are no fallback values in code.** Keys are read with `requireString`, `requireInt` and
   `requireBoolean`.
+- **A value that is not what is asked for is not accepted.** `requireBoolean` fails for a key that is missing or
+  holds anything but `true` or `false` (in any letter case); it used to return `false`. `requireInt` fails for a
+  JSON number with a fraction or outside the range of an `int`; it used to cut the number to fit. The readers
+  that take a default (`asBoolean(default)`, `asInt(default)`, `asLong(default)`) give the default in these cases.
+- **`services.hk2.defaults.enabled` takes effect.** A named HK2 service found on the class path, with no
+  `services.<name>.enabled` key, is now enabled when this key is `true`, which is the default. It used to be left
+  out whatever the key said. To keep such a service off, set `services.<name>.enabled=false` in a
+  properties file or with `overrideProperty`. To set it from an environment variable or a system property, declare
+  the key in your own `META-INF/stride/defaults.properties` first, as for any key.
+- **A named service is switched by its own key only.** The key is `services.<name>.enabled`, with the whole name.
+  A service named `server` used to be switched by `services.jetty.server.enabled`.
+- `Services.service(name)`, `Filters.filter(name)`, `Servlets.servlet(name)` and `Resources.resource(name)` return
+  an empty `Optional` for a name that is not declared. They used to return an empty component.
 - Every Stride key can now be set by an environment variable or a system property. About 30 keys could not.
 - The environment variable for a key is the key in upper case with every character that is not a letter or a
   digit replaced by `_`: `services.jetty.server.config.port` is `SERVICES_JETTY_SERVER_CONFIG_PORT`.

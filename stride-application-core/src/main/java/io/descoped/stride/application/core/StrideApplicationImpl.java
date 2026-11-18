@@ -146,13 +146,8 @@ public class StrideApplicationImpl implements StrideApplication {
 
     Filter getEnabledServicesFilter() {
         return descriptor -> {
-            boolean defaultValue = configuration.requireBoolean("services.hk2.defaults.enabled");
             String name = descriptor.getName();
-            boolean enabled = ofNullable(name)
-                    .map(configuration.with("services")::find)
-                    .map(e -> e.with("enabled"))
-                    .map(e -> e.asBoolean(defaultValue))
-                    .orElse(true);
+            boolean enabled = name == null || DefaultConfigurationPostPopulatorProcessor.isEnabled(configuration, name);
             if (name != null && log.isDebugEnabled() && configuration.isVerboseLogging()) {
                 log.debug("Service: {}.enabled={}", name, enabled);
             }

@@ -53,7 +53,7 @@ public interface JsonElement {
     }
 
     default ObjectNode object() {
-        return toObjectNode().orElseThrow(() -> new ClassCastException("Expected type is " + ObjectNode.class.getName() + ", but was " + json().getClass().getName()));
+        return toObjectNode().orElseThrow(() -> new ClassCastException("Expected type is " + ObjectNode.class.getName() + ", but " + actualType()));
     }
 
     default Optional<ArrayNode> toArrayNode() {
@@ -61,7 +61,11 @@ public interface JsonElement {
     }
 
     default ArrayNode array() {
-        return toArrayNode().orElseThrow(() -> new ClassCastException("Expected type is " + ArrayNode.class.getName() + ", but was " + json().getClass().getName()));
+        return toArrayNode().orElseThrow(() -> new ClassCastException("Expected type is " + ArrayNode.class.getName() + ", but " + actualType()));
+    }
+
+    private String actualType() {
+        return json() == null ? "there is no value" : "was " + json().getClass().getName();
     }
 
     default boolean has(String name) {
@@ -180,7 +184,7 @@ public interface JsonElement {
         return with(with).asInt().orElseThrow(() -> missing(with));
     }
 
-    /** Returns a {@code boolean} value that must be present. */
+    /** Returns a {@code boolean} value that must be present and be {@code true} or {@code false}. */
     default boolean requireBoolean(String with) {
         return with(with).asBoolean().orElseThrow(() -> missing(with));
     }
@@ -193,7 +197,9 @@ public interface JsonElement {
     default Optional<Integer> asInt() {
         return optionalNode().flatMap(value -> {
             if (value instanceof NumericNode number) {
-                return Optional.of(number.intValue());
+                // a fraction or a number outside the range is not an int; it is not cut to fit
+                return number.isIntegralNumber() && number.canConvertToInt()
+                        ? Optional.of(number.intValue()) : Optional.empty();
             }
             try {
                 return Optional.of(Integer.parseInt(value.asText()));
@@ -214,7 +220,8 @@ public interface JsonElement {
     default Optional<Long> asLong() {
         return optionalNode().flatMap(value -> {
             if (value instanceof NumericNode number) {
-                return Optional.of(number.longValue());
+                return number.isIntegralNumber() && number.canConvertToLong()
+                        ? Optional.of(number.longValue()) : Optional.empty();
             }
             try {
                 return Optional.of(Long.parseLong(value.asText()));
@@ -276,14 +283,17 @@ public interface JsonElement {
 
     default Optional<Boolean> asBoolean() {
         return optionalNode().flatMap(value -> {
-            if (value instanceof BooleanNode number) {
-                return Optional.of(number.booleanValue());
+            if (value instanceof BooleanNode bool) {
+                return Optional.of(bool.booleanValue());
             }
-            try {
-                return Optional.of(Boolean.parseBoolean(value.asText()));
-            } catch (NumberFormatException _) {
-                return Optional.empty();
+            // text holds a boolean only when it says so: a missing key, an object or other text is not false
+            if (value.isTextual() && "true".equalsIgnoreCase(value.textValue())) {
+                return Optional.of(true);
             }
+            if (value.isTextual() && "false".equalsIgnoreCase(value.textValue())) {
+                return Optional.of(false);
+            }
+            return Optional.empty();
         });
     }
 

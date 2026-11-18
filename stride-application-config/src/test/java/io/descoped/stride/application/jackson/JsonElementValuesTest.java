@@ -68,15 +68,57 @@ class JsonElementValuesTest {
     }
 
     @Test
-    void booleansAreReadFromBooleansAndFromTextAndOnlyTrueIsTrue() {
+    void aNumberThatDoesNotFitIsNotCutToFit() {
+        JsonElement document = document();
+
+        assertEquals(-1, document.asInt("n.fraction", -1), "1.5 is not an int");
+        assertEquals(-1, document.asInt("n.big", -1), "9000000000 is outside the range of an int");
+        assertEquals(-1L, document.asLong("n.fraction", -1L), "1.5 is not a long");
+        assertThrows(IllegalStateException.class, () -> document.requireInt("n.fraction"));
+        assertThrows(IllegalStateException.class, () -> document.requireInt("n.big"));
+    }
+
+    @Test
+    void askingForAnObjectOrAnArrayWhereThereIsNoValueSaysSo() {
+        JsonElement nothing = document().with("absent");
+
+        assertEquals("Expected type is com.fasterxml.jackson.databind.node.ObjectNode, but there is no value",
+                assertThrows(ClassCastException.class, nothing::object).getMessage());
+        assertEquals("Expected type is com.fasterxml.jackson.databind.node.ArrayNode, but there is no value",
+                assertThrows(ClassCastException.class, nothing::array).getMessage());
+    }
+
+    @Test
+    void booleansAreReadFromBooleansAndFromText() {
         JsonElement document = document();
 
         assertTrue(document.asBoolean("b.yes", false));
         assertTrue(document.asBoolean("b.yesText", false));
         assertFalse(document.asBoolean("b.noText", true));
-        assertFalse(document.asBoolean("b.other", true), "text other than true is false, as Boolean.parseBoolean has it");
-        assertTrue(document.asBoolean("b.missing", true));
-        assertFalse(document.asBoolean("b.missing", false));
+    }
+
+    @Test
+    void aValueThatIsNotABooleanOrIsMissingGivesTheDefault() {
+        JsonElement document = document();
+
+        for (String key : new String[]{"b.other", "b.missing", "b", "n.whole"}) {
+            assertTrue(document.asBoolean(key, true), key);
+            assertFalse(document.asBoolean(key, false), key);
+        }
+    }
+
+    @Test
+    void aRequiredBooleanThatIsMissingOrMalformedFailsNamingTheKey() {
+        // as an application reads it: a missing key gives an empty node, not null
+        JsonElement document = JsonElement.ofEphemeral(document().json());
+
+        assertTrue(document.requireBoolean("b.yes"));
+        assertFalse(document.requireBoolean("b.noText"));
+        for (String key : new String[]{"b.other", "b.missing", "b"}) {
+            IllegalStateException failure = assertThrows(IllegalStateException.class, () -> document.requireBoolean(key));
+            assertTrue(failure.getMessage().startsWith("Configuration key '" + key + "' is missing or malformed"),
+                    failure.getMessage());
+        }
     }
 
     @Test
