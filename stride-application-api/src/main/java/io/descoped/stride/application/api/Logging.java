@@ -6,9 +6,6 @@ import java.util.logging.LogManager;
 
 public class Logging {
 
-    private Logging() {
-    }
-
     static {
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.removeHandlersForRootLogger();
