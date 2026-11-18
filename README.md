@@ -20,17 +20,17 @@ Stride is not Spring or Micronaut, and not a Jakarta EE platform.
 
 Java 25 or newer, and Maven.
 
-## Modules
+## Artifacts
 
-All modules have the group id `io.descoped.stride.application`.
+All artifacts have the group id `io.descoped.stride.application`.
 
-| Artifact | Use it for |
-|---|---|
-| `stride-application-core` | The runtime. Brings `stride-application-api` and `stride-application-config`. |
-| `stride-application-junit-jupiter` | Tests: the JUnit extension and HTTP test client. Test scope. |
-| `stride-application-security` | Optional. JWT bearer authentication for a resource server. |
-| `stride-application-openapi` | Optional. Serves the OpenAPI description of your resources. |
-| `stride-application-parent` | The parent POM of the modules above; you do not need it. |
+| Artifact | Use it for | Documentation |
+|---|---|---|
+| `stride-application-core` | The runtime. Brings `stride-application-api` and `stride-application-config`. | [Runtime](docs/core.md), [lifecycle and components](docs/api.md), [configuration](docs/config.md) |
+| `stride-application-junit-jupiter` | Tests: the JUnit extension and HTTP test client. Test scope. | [Testing](docs/testing.md) |
+| `stride-application-security` | Optional. JWT bearer authentication for a resource server. | [Authentication](docs/security.md) |
+| `stride-application-openapi` | Optional. Serves the OpenAPI description of your resources. | [OpenAPI](docs/openapi.md) |
+| `stride-application-parent` | The parent POM of the artifacts above; you do not need it. | |
 
 ```xml
 <dependency>
@@ -51,7 +51,7 @@ local repository with `mvn install`.
 
 Stride logs through SLF4J and ships no backend. Add the one you use, for example `slf4j-simple` or Logback.
 
-## A complete application
+## Getting started
 
 [`stride-application-sample`](stride-application-sample) is a working application that the build compiles and tests.
 The code below is condensed from it.
@@ -119,162 +119,36 @@ $ curl http://localhost:8080/greetings/world
 
 `GET /ping` answers 200 on every Stride application, for health checks.
 
-## Handing objects to Stride
+## Testing your application
 
-`Components` carries the objects the application built itself. Stride never creates or closes them.
-
-```java
-Components components = Components.builder()
-        .resource(new OrderResource(orders))            // a JAX-RS resource
-        .filter("audit", new AuditFilter(auditLog))     // a servlet filter, known by its name
-        .servlet("metrics", new MetricsServlet(meters)) // a servlet; needs servlets.metrics.config.pathSpec
-        .service(Orders.class, orders)                  // injectable by those who use injection
-        .build();
-```
-
-An object handed in is always registered; configuration cannot remove it. If you want a switch, read your own
-configuration and leave the object out.
-
-Classes can instead be named in the configuration and created by Stride, with HK2 injection:
+The test library starts the real application on a free port and sends real HTTP requests:
 
 ```java
-ApplicationConfiguration.builder()
-        .defaults()
-        .resources(Resources.builder().resource(Resource.builder("orders").clazz(OrderResource.class)))
-        .filters(Filters.builder().filter(Filter.builder("audit").clazz(AuditFilter.class).order(500)));
-```
-
-### Filter order
-
-Filters run in ascending `order`, then by name. CORS is 100, authentication is 200, and a filter without an order
-is 1000. Set `filters.<name>.config.order` to place yours.
-
-## Configuration
-
-Configuration is a flat set of keys. The layers, lowest first:
-
-1. `META-INF/stride/defaults.properties` of every module on the class path. These files declare every key and its
-   default.
-2. Components declared in code with the builders.
-3. The application's sources. `defaults()` reads `application.properties` from the class path, then
-   `local_override.properties` from the working directory, then environment variables, then system properties.
-4. `overrideProperty(key, value)`.
-
-Two rules keep it predictable:
-
-- **Every key is declared.** Environment variables and system properties can only override a key that a defaults
-  file or a builder declares. A misspelled variable is ignored, not silently accepted.
-- **No defaults in code.** Read keys with `requireString`, `requireInt` or `requireBoolean`.
-
-An environment variable is the key in upper case, with each character that is not a letter or digit replaced by
-`_`: `services.jetty.server.config.context-path` is `SERVICES_JETTY_SERVER_CONFIG_CONTEXT_PATH`.
-
-Declare your application's own keys in your own `META-INF/stride/defaults.properties`:
-
-```properties
-greeting.salutation=Hello
-```
-
-Now `GREETING_SALUTATION=Howdy` or `-Dgreeting.salutation=Howdy` overrides it. Two modules declaring the same key is
-an error at startup. If you build a single jar with the Maven Shade plugin, append these files with an
-`AppendingTransformer` for `META-INF/stride/defaults.properties`; do not let one replace the others.
-
-The keys you are most likely to set:
-
-| Key | Default | Meaning |
-|---|---|---|
-| `services.jetty.server.config.host` | `localhost` | The address to listen on. |
-| `services.jetty.server.config.port` | `0` | The port; 0 picks a free one. |
-| `services.jetty.server.config.context-path` | `/` | The path every route is under. |
-| `services.jetty.server.config.stopTimeout` | `PT30S` | How long running requests get to finish at shutdown. |
-| `services.jetty.server.config.acceptQueueSize` | `1024` | How many new connections may wait to be accepted. |
-| `services.jetty.server.config.http2.enabled` | `true` | HTTP/2 without TLS (h2c) next to HTTP/1.1. |
-| `services.jetty.server.config.forwarded.enabled` | `false` | Trust `Forwarded` and `X-Forwarded-*` from a proxy. |
-| `filters.cors.config.origin` | `*` | Allowed origins. |
-| `application.url` | empty | The public address, used in the OpenAPI description. |
-
-The full list, with comments, is in each module's
-[`defaults.properties`](stride-application-config/src/main/resources/META-INF/stride/defaults.properties).
-
-## Testing
-
-`StrideExtension` starts the application on a free port and gives the test a client. Requests time out, so a test
-cannot hang the build.
-
-```java
-class GreetingApplicationTest {
-
-    @RegisterExtension
-    static final StrideExtension stride = StrideExtension.builder()
-            .configuration(() -> GreetingApplication.configuration().overrideProperty("greeting.salutation", "Hei"))
-            .components(GreetingApplication::components)
-            .build();
+@ExtendWith(StrideExtension.class)
+class PingTest {
 
     @Test
-    void greetsByNameWithTheConfiguredSalutation(TestClient client) {
-        var response = client.get("/greetings/Ada").expect200Ok().response();
-
-        assertEquals("{\"message\":\"Hei, Ada!\"}", response.body());
+    void theApplicationAnswers(TestClient client) {
+        client.get("/ping").expect200Ok();
     }
 }
 ```
 
-- In a static field, one application serves the whole class. In an instance field, every test gets a new one.
-- `@ExtendWith(StrideExtension.class)` starts an application with the test defaults and nothing handed in.
-- `TestClient`, `TestApplication` and `StrideApplication` can be parameters of tests, constructors and lifecycle
-  methods.
-- `components(MyApplication::components)` runs the application's own wiring with the configuration the test
-  started it with.
-- To replace a collaborator, hand in a resource wired to a fake. The application under test stays real.
+[Testing](docs/testing.md) shows how to test your own configuration and components.
 
-## Authentication
+## Documentation
 
-Add `stride-application-security` to make the application an OAuth resource server that accepts JWT access tokens.
-It follows OAuth 2.1 and the JWT profile for access tokens (RFC 9068).
+The developer documentation is in [`docs/`](docs/README.md), one document for each module:
 
-```properties
-security.enabled=true
-security.issuer=https://identity.example.com/realms/shop
-security.audiences=https://api.example.com
-security.required-scopes=orders:read
-security.public-paths=/ping
-```
+- [The runtime](docs/core.md): services, REST resources, servlets, filters, run levels, threads, shutdown.
+- [Lifecycle and components](docs/api.md): starting and stopping, and handing Stride the objects you built.
+- [Configuration](docs/config.md): keys, layers, environment variables, declaring components in code.
+- [Testing](docs/testing.md): the JUnit extension and the test client.
+- [Authentication](docs/security.md): JWT bearer authentication.
+- [OpenAPI](docs/openapi.md): serving the OpenAPI description.
+- [The sample application](docs/sample.md): a complete application to copy from.
 
-- At startup the issuer's metadata and keys are fetched over HTTPS. If that fails, the application does not start.
-- A request without a valid token gets 401 with a `WWW-Authenticate: Bearer` challenge; one without a required
-  scope gets 403.
-- The caller is available as the request's principal, and its `roles` claim drives `@RolesAllowed`.
-- `security.required-scopes` is space separated. The other lists are comma separated.
-- For an authorization server that does not issue RFC 9068 tokens, set `security.token-type=JWT`, and
-  `security.scope-claim` if scopes are in another claim.
-- Set `security.resource` to the https URL clients reach the application at, and the application publishes its
-  protected resource metadata (RFC 9728). For `https://api.example.com/orders` the document is served without a
-  token at `/.well-known/oauth-protected-resource/orders`, and every challenge names it in `resource_metadata`. It
-  tells a client which authorization server and scopes to use. A token's audience is normally this same URL, so
-  it is usually also one of `security.audiences`. The path is inside the application's context path:
-  with a context path other than `/`, a proxy must route the well-known URL to it.
-
-All keys are in the module's
-[`defaults.properties`](stride-application-security/src/main/resources/META-INF/stride/defaults.properties).
-
-## OpenAPI
-
-Add `stride-application-openapi` and register its resource. The description of your resources is then served at
-`/openapi.json` and `/openapi.yaml`.
-
-```java
-.resources(Resources.builder()
-        .resource(Resource.builder("openapi").clazz(ApplicationOpenApiResource.class)))
-```
-
-## Runtime behaviour
-
-- **Threads.** Each request runs on a new virtual thread, so blocking code is fine. Nothing limits the number of
-  concurrent requests; add a filter with a low order if you need a ceiling.
-- **Shutdown.** `close()` stops accepting requests, lets running ones finish within the stop timeout, then stops the
-  services in reverse order.
-- **Lifecycle.** Services start by run level: application services up to 9, the web server at 10, the listener
-  at 11.
+What changes for an application between versions is in the [changelog](CHANGELOG.md).
 
 ## Building Stride
 
@@ -283,6 +157,24 @@ mvn clean verify
 ```
 
 The build needs JDK 25 or newer. If your default JDK is older, point `JAVA_HOME` at a newer one.
+
+- One module with what it depends on: `mvn verify -pl stride-application-core -am`
+- One test class: add `-Dtest=ClassName -Dsurefire.failIfNoSpecifiedTests=false`
+- Into your local repository, for use from another project: `mvn install`
+
+The tests run from an IDE as they are, with no extra setup.
+
+## Contributing
+
+Issues and pull requests are welcome at
+[descoped/stride-application-project](https://github.com/descoped/stride-application-project).
+
+- **Stride stays small.** Core holds only what every application needs; anything optional is its own module.
+  Open an issue before adding a dependency, a module or a configuration key.
+- **Tests start a real application** and assert on the status and the body of real requests.
+- **One concern for each commit and pull request.** A change in behaviour or in a default gets a line in the
+  [changelog](CHANGELOG.md).
+- **Java 25, `jakarta.*` only**, and no preview features.
 
 ## License
 
