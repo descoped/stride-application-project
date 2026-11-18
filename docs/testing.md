@@ -14,7 +14,7 @@ application, for example a resource wired to an in-memory collaborator. The appl
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-junit-jupiter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <scope>test</scope>
 </dependency>
 ```

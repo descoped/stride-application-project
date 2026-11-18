@@ -2,10 +2,10 @@
 
 What changes for an application built on Stride. Changes that only concern Stride's own build are left out.
 
-## 0.1.0 (not released yet)
+## 0.1.0 (2026-11-18)
 
 The last release was 0.0.23, in February 2023. After it Stride was published only as `0.0.24-SNAPSHOT`, which is
-now left as it is: the changes below are breaking, so development continues as `0.1.0-SNAPSHOT`.
+now left as it is: the changes below are breaking, so the version is `0.1.0`.
 This section is written for an application that built on those snapshots: Java 17, Jetty 11, Jersey 3.1.
 
 ### Before you upgrade

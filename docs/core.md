@@ -11,7 +11,7 @@ HTTP/2), serves REST resources (Jersey 4, JSON through Jackson), and starts and 
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-core</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
