@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -57,8 +56,6 @@ public final class ApplicationConfigurationJson {
     static final Predicate<String> edgeFieldPredicate = fieldMatcher::contains;
     static final Function<Set<Node>, String> formatAncestors = ancestors ->
             ancestors.stream().skip(1).map(Node::fieldName).collect(Collectors.joining("."));
-    static final Function<Set<Node>, String> indentAncestors = ancestors ->
-            Arrays.stream(new String[ancestors.size()]).map(element -> " ").collect(Collectors.joining());
 
     Set<String> keys(String fieldName) {
         return keys(json.get(fieldName));

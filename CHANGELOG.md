@@ -85,6 +85,9 @@ Most applications are affected by these.
 - `application.url` is a declared key, empty by default. `Application.url()` returns an `Optional<String>`. It
   used to invent `http://<host>:<port><context-path>`.
 - Removed: `JsonMerger`, the constructors that took `ApplicationProperties`, and the `Application.Cors` accessor.
+- Removed from core: `DefaultExceptionServletFilter` and `ObjectMapperFactory`. Stride never registered either,
+  so they did nothing unless an application named them itself. An application that did keeps a copy of the
+  class: both are a few lines.
 
 ### Components
 
