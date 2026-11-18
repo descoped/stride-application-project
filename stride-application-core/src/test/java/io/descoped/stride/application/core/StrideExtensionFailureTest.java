@@ -10,6 +10,7 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.core.LauncherFactory;
@@ -135,9 +136,11 @@ class StrideExtensionFailureTest {
         TestExecutionSummary summary = run(ClientInTheConstructorOfANestedClass.class);
 
         assertEquals(1, summary.getFailures().size());
-        Throwable failure = summary.getFailures().getFirst().getException();
-        Throwable cause = failure.getCause() == null ? failure : failure.getCause();
-        assertInstanceOf(IllegalStateException.class, cause, failure.toString());
+        assertEquals(0, summary.getTestsSucceededCount());
+        // JUnit wraps what a parameter resolver throws
+        Throwable failure = assertInstanceOf(ParameterResolutionException.class,
+                summary.getFailures().getFirst().getException());
+        Throwable cause = assertInstanceOf(IllegalStateException.class, failure.getCause(), failure.toString());
         assertTrue(cause.getMessage().startsWith("No application is running yet."), cause.getMessage());
         assertTrue(cause.getMessage().endsWith("use a static field to have it in constructors and @BeforeAll methods"),
                 cause.getMessage());
