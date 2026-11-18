@@ -131,10 +131,6 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
         return Arrays.stream(value.split(" ")).filter(s -> !s.isEmpty()).collect(Collectors.toUnmodifiableSet());
     }
 
-    /**
-     * RFC 9728 section 1.2: a resource identifier is a URL that uses the https scheme and has no fragment. A query
-     * is allowed. The identifier is quoted in a challenge, so it must also be quotable.
-     */
     // The same rule as requireHttps, with messages that name the key the operator has to set.
     private static void requireIssuer(String issuer) {
         if (issuer == null || issuer.isBlank()) {
@@ -146,13 +142,16 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("security.issuer is not a URL: '" + issuer + "'", e);
         }
-        if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null
-                || uri.getQuery() != null || uri.getFragment() != null) {
+        if (!isPlainHttps(uri)) {
             throw new IllegalArgumentException("security.issuer must be an absolute https URL without credentials, "
                     + "query or fragment: '" + issuer + "'");
         }
     }
 
+    /**
+     * RFC 9728 section 1.2: a resource identifier is a URL that uses the https scheme and has no fragment. A query
+     * is allowed. The identifier is quoted in a challenge, so it must also be quotable.
+     */
     private static void requireResourceIdentifier(String value) {
         URI uri;
         try {
@@ -167,10 +166,14 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
         }
     }
 
+    private static boolean isPlainHttps(URI uri) {
+        return "https".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null && uri.getUserInfo() == null
+                && uri.getQuery() == null && uri.getFragment() == null;
+    }
+
     public static URI requireHttps(String value) {
         URI uri = URI.create(value);
-        if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null
-                || uri.getQuery() != null || uri.getFragment() != null) {
+        if (!isPlainHttps(uri)) {
             throw new IllegalArgumentException("Issuer and JWKS endpoints must be absolute HTTPS URLs without credentials, query or fragment");
         }
         return uri;
