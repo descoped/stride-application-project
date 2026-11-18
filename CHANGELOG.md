@@ -2,9 +2,10 @@
 
 What changes for an application built on Stride. Changes that only concern Stride's own build are left out.
 
-## 0.0.24 (not released yet)
+## 0.1.0 (not released yet)
 
-The last release was 0.0.23, in February 2023. Since then Stride has been published only as `0.0.24-SNAPSHOT`.
+The last release was 0.0.23, in February 2023. After it Stride was published only as `0.0.24-SNAPSHOT`, which is
+now left as it is: the changes below are breaking, so development continues as `0.1.0-SNAPSHOT`.
 This section is written for an application that built on those snapshots: Java 17, Jetty 11, Jersey 3.1.
 
 ### Before you upgrade
@@ -40,6 +41,8 @@ Most applications are affected by these.
 - `services.hk2.threadcount` bounds how many services of one run level start at the same time.
 - Requests that are running when the server stops get time to finish. New key
   `services.jetty.server.config.stopTimeout`, default `PT30S`.
+- A burst of new connections is no longer reset. New key `services.jetty.server.config.acceptQueueSize`, default
+  `1024`: how many connections may wait to be accepted. It was the Java default of 50.
 
 ### Modules
 
@@ -93,6 +96,9 @@ Most applications are affected by these.
   disables one.
 - **A filter or servlet instance is always registered.** `filters.<name>.enabled=false` does not remove an
   instance; Stride logs a warning. An application that wants a switch leaves the instance out.
+- **A configured service class keeps its qualifiers.** A class named in `services.<name>.config.class` is bound
+  with the qualifier annotations it carries, not only `@Named`. A `@MessageReceiver` class named there now
+  receives HK2 topic events; it used to receive none.
 - **A configured service class must not declare its own scope.** A class named in
   `services.<name>.config.class` that carries a scope annotation or HK2's `@Service` fails at
   `StrideApplication.create`, with a message naming the key. A `@Named` class is bound under its name.

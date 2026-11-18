@@ -6,7 +6,7 @@
 
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-project</artifactId>
-    <version>0.0.24-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Stride Application Project</name>

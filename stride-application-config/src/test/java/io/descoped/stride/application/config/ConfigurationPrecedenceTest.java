@@ -39,6 +39,7 @@ class ConfigurationPrecedenceTest {
         assertEquals(10, configuration.server().minThreads());
         assertEquals(150, configuration.server().maxThreads());
         assertEquals(30_000, configuration.server().idleTimeout());
+        assertEquals(1024, configuration.server().acceptQueueSize());
         assertEquals(30_000, configuration.server().stopTimeout());
         assertEquals(Optional.empty(), configuration.application().url());
         assertTrue(configuration.server().isHttp2Enabled());

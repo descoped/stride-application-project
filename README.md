@@ -36,18 +36,18 @@ All modules have the group id `io.descoped.stride.application`.
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-core</artifactId>
-    <version>0.0.24-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 </dependency>
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-junit5</artifactId>
-    <version>0.0.24-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>
 </dependency>
 ```
 
-There is no release yet. Snapshots are published by hand, not on every merge, to
-`https://central.sonatype.com/repository/maven-snapshots/`.
+There is no release yet, and `0.1.0-SNAPSHOT` is not published. Until the first release, build it into your
+local repository with `mvn install`.
 
 Stride logs through SLF4J and ships no backend. Add the one you use, for example `slf4j-simple` or Logback.
 
@@ -187,6 +187,7 @@ The keys you are most likely to set:
 | `services.jetty.server.config.port` | `0` | The port; 0 picks a free one. |
 | `services.jetty.server.config.context-path` | `/` | The path every route is under. |
 | `services.jetty.server.config.stopTimeout` | `PT30S` | How long running requests get to finish at shutdown. |
+| `services.jetty.server.config.acceptQueueSize` | `1024` | How many new connections may wait to be accepted. |
 | `services.jetty.server.config.http2.enabled` | `true` | HTTP/2 without TLS (h2c) next to HTTP/1.1. |
 | `services.jetty.server.config.forwarded.enabled` | `false` | Trust `Forwarded` and `X-Forwarded-*` from a proxy. |
 | `filters.cors.config.origin` | `*` | Allowed origins. |
