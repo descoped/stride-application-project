@@ -68,6 +68,27 @@ class JsonElementValuesTest {
     }
 
     @Test
+    void aNumberThatDoesNotFitIsNotCutToFit() {
+        JsonElement document = document();
+
+        assertEquals(-1, document.asInt("n.fraction", -1), "1.5 is not an int");
+        assertEquals(-1, document.asInt("n.big", -1), "9000000000 is outside the range of an int");
+        assertEquals(-1L, document.asLong("n.fraction", -1L), "1.5 is not a long");
+        assertThrows(IllegalStateException.class, () -> document.requireInt("n.fraction"));
+        assertThrows(IllegalStateException.class, () -> document.requireInt("n.big"));
+    }
+
+    @Test
+    void askingForAnObjectOrAnArrayWhereThereIsNoValueSaysSo() {
+        JsonElement nothing = document().with("absent");
+
+        assertEquals("Expected type is com.fasterxml.jackson.databind.node.ObjectNode, but there is no value",
+                assertThrows(ClassCastException.class, nothing::object).getMessage());
+        assertEquals("Expected type is com.fasterxml.jackson.databind.node.ArrayNode, but there is no value",
+                assertThrows(ClassCastException.class, nothing::array).getMessage());
+    }
+
+    @Test
     void booleansAreReadFromBooleansAndFromText() {
         JsonElement document = document();
 
