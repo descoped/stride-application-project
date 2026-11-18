@@ -246,6 +246,12 @@ security.public-paths=/ping
 - `security.required-scopes` is space separated. The other lists are comma separated.
 - For an authorization server that does not issue RFC 9068 tokens, set `security.token-type=JWT`, and
   `security.scope-claim` if scopes are in another claim.
+- Set `security.resource` to the https URL clients reach the application at, and the application publishes its
+  protected resource metadata (RFC 9728). For `https://api.example.com/orders` the document is served without a
+  token at `/.well-known/oauth-protected-resource/orders`, and every challenge names it in `resource_metadata`. It
+  tells a client which authorization server and scopes to use. A token's audience is normally this same URL, so
+  it is usually also one of `security.audiences`. The path is inside the application's context path:
+  with a context path other than `/`, a proxy must route the well-known URL to it.
 
 All keys are in the module's
 [`defaults.properties`](stride-application-security/src/main/resources/META-INF/stride/defaults.properties).

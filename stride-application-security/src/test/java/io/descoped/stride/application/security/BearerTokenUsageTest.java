@@ -181,6 +181,14 @@ class BearerTokenUsageTest {
     }
 
     @Test
+    void withoutAResourceIdentifierNoProtectedResourceMetadataIsPublished() {
+        var response = client.get("/.well-known/oauth-protected-resource").response();
+
+        assertEquals(401, response.statusCode());
+        assertEquals("Bearer realm=\"stride\"", challenge(response), "and no challenge names a metadata document");
+    }
+
+    @Test
     void rolesFromTheTokenDecideRolesAllowed() throws Exception {
         assertEquals("reader", client.get("/reader", "Authorization", "Bearer " + token()).expect200Ok().body());
         assertEquals(403, client.get("/admin", "Authorization", "Bearer " + token()).response().statusCode());

@@ -23,6 +23,16 @@ class SecurityConfigurationTest {
         assertEquals("scope", security.scopeClaim());
         assertEquals("roles", security.rolesClaim());
         assertEquals("default", security.realm(), "the realm is the application's alias unless set");
+        assertEquals("", security.resource(), "no protected resource metadata unless a resource identifier is set");
+    }
+    @Test void bindsTheResourceIdentifier() {
+        var config = ApplicationConfiguration.builder()
+                .overrideProperty("security.enabled", "true")
+                .overrideProperty("security.issuer", "https://issuer.example/realm")
+                .overrideProperty("security.audiences", "https://api.example.com/orders")
+                .overrideProperty("security.resource", "https://api.example.com/orders")
+                .build();
+        assertEquals("https://api.example.com/orders", SecurityConfiguration.from(config).resource());
     }
     @Test void authenticationIsExplicitlyOptIn() {
         assertFalse(SecurityConfiguration.from(ApplicationConfiguration.builder().build()).enabled());
