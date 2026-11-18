@@ -228,7 +228,9 @@ service. `getLocalPort()` is the port the server listens on.
 
 `TestClient` sends real HTTP requests with the JDK's `java.net.http.HttpClient`. A path such as `/greetings/Ada`
 is resolved against the running application: `http://localhost:<port>/greetings/Ada`. The path includes the query
-string, if any.
+string, if any. It is written without the context path: the request goes under the context path the application
+runs under, which is the root unless the test asks for another (see
+[Run under a context path](#run-under-a-context-path)).
 
 ```java
 client.get("/notes/7").expect200Ok();
@@ -394,6 +396,23 @@ try (TestApplication application = new TestApplication.Builder()
 
 Run levels, `activate()` and `proceedTo(int)` are described in [core.md](core.md).
 
+### Run under a context path
+
+A test runs the application at the root, whatever the configuration says. To run it under a context path, set
+it on the builder. The test still writes its paths without it:
+
+```java
+try (TestApplication application = new TestApplication.Builder().contextPath("/api").build()) {
+    application.start();
+
+    try (TestClient client = TestClient.create(application)) {
+        client.get("/ping").expect200Ok();     // sent to /api/ping
+    }
+}
+```
+
+`contextPath(null)` keeps the context path of the configuration, and the requests go under that one.
+
 ### A client for any server
 
 `TestClient.create` takes a `TestUriResolver`, an interface with one method that turns a path into a URL. A
@@ -404,9 +423,9 @@ int port = application.getLocalPort();
 TestClient client = TestClient.create(uri -> "http://localhost:" + port + uri, Duration.ofSeconds(5));
 ```
 
-`TestApplication.testURL(String)` returns `http://<host>:<port><uri>`, with the host and the listening port of the
-application. An IPv6 host is put in brackets. The context path is not added: with a context path of `/api`, send
-requests to `/api/...`.
+`TestApplication.testURL(String)` returns `http://<host>:<port><context path><uri>`, with the host and the
+listening port of the application and the context path it runs under. An IPv6 host is put in brackets. With a
+context path of `/api`, `testURL("/ping")` ends in `/api/ping`. At the root nothing is added.
 
 ## The test defaults
 
@@ -457,7 +476,7 @@ test seldom needs it: `TestClient` resolves paths against the running applicatio
 | `components(Function<ApplicationConfiguration, Components>)` | `Components.none()` | Ready-made objects wired from the built configuration |
 | `host(String)` | `localhost` | Overrides `services.jetty.server.config.host`; `null` leaves the configured value |
 | `port(int)` | `-1` | Overrides `services.jetty.server.config.port`; a negative value becomes `0`, a free port |
-| `contextPath(String)` | empty | Overrides `services.jetty.server.config.context-path`; `null` leaves the configured value |
+| `contextPath(String)` | empty: the root | The context path the application runs under; overrides `services.jetty.server.config.context-path`. `null` keeps the configured value. The test's requests go under it |
 | `build()` | | A `TestApplication` that is not started |
 
 ### `TestApplication`
@@ -473,7 +492,7 @@ test seldom needs it: `TestClient` resolves paths against the running applicatio
 | `getHost()` | The host the server listens on |
 | `getLocalPort()` | The port the server listens on; `-1` when no server is up |
 | `getPort()` | The configured port of the listener, `0` unless the test set another; `-1` when no server is up |
-| `testURL(String uri)` | `http://<host>:<port><uri>` |
+| `testURL(String uri)` | `http://<host>:<port><context path><uri>` |
 
 ### `TestClient`
 

@@ -86,15 +86,18 @@ Services of one run level start at the same time, each on its own virtual thread
 |---|---|
 | `activate()` | Proceeds to run level 9: the application's services run, the web server does not. |
 | `start()` | Proceeds to the highest run level any service declares: 11, or higher when a service asks for it. |
-| `proceedTo(n)` | Proceeds to run level `n`. With 0 or less on an application that has left run level 0 it stops it. |
+| `proceedTo(n)` | Proceeds to run level `n`. With 0 or less on an application that has left run level 0 it stops it; on one that has not started it does nothing. |
 | `stop()`, `close()` | Proceeds to run level 0 and shuts the application down. |
 | `isRunning()` | True once the application has proceeded to a run level and has not been stopped. |
 | `isCompleted()` | True once it has been stopped. |
 
 `activate()` followed by `start()` is allowed. A stopped application cannot be started again: create a new one.
+On a stopped application `start()`, `activate()` and `proceedTo(n)` above 0 throw an `IllegalStateException`
+with the message `The application is stopped and cannot be started again; create a new one`. Stopping it again
+does nothing.
 
-Before the web server is assembled, `getLocalPort()` and `getPort()` return -1 and `getHost()` returns
-`localhost`.
+Before the web server is assembled, and after the application is stopped, `getLocalPort()` and `getPort()`
+return -1 and `getHost()` returns `localhost`.
 
 ## Add a service
 
@@ -148,7 +151,8 @@ public class PriceReader {
 Rules for such a class:
 
 - Give it a run level. Use 1 to 9 for a service the web server depends on, and 12 or more for one that needs the
-  listener.
+  listener. A service without a run level is not started with the application: it is created once, the first
+  time something asks for it.
 - It must not carry a scope annotation such as `@Singleton`, nor HK2's `@Service`. `StrideApplication.create`
   then throws an `IllegalStateException` whose message names the key `services.<name>.config.class`.
 - A `@Named` class is bound under that name. Other qualifier annotations on the class are kept too.
@@ -192,8 +196,11 @@ A `@Service` without `@RunLevel` is created when something first asks for it.
 Every named service has a switch: `services.<name>.enabled`.
 
 - A discovered `@Service(name = "orders.cache")` is left out when `services.orders.cache.enabled` is `false`.
-  Without that key, `services.hk2.defaults.enabled` (default `true`) decides. A `@Service` without a name is
-  always on.
+  Without that key, `services.hk2.defaults.enabled` (default `true`) decides: with `false`, a discovered named
+  service runs only when its own key is `true`. A `@Service` without a name is always on.
+- The switch is the service's own key, with the whole name. A service named `server` is switched by
+  `services.server.enabled`; `services.jetty.server.enabled` belongs to the service `jetty.server` and does not
+  touch it. The named services of HK2 itself are switched by `services.hk2.<name>.enabled`.
 - A service declared with `Service.builder(name)` is enabled unless `.enabled(false)` is called or
   `services.<name>.enabled=false` comes from a later configuration source. A disabled service is not created.
 - An instance handed in through `Components` has no switch. Leave it out instead.
@@ -222,7 +229,8 @@ Nothing is obtainable only by injection: the same objects can be read from
 
 ## Use the ObjectMapper
 
-Core offers one Jackson `ObjectMapper` for injection. It ignores unknown properties when it reads JSON.
+Core offers one Jackson `ObjectMapper`. It ignores unknown properties when it reads JSON. The mapper is
+injectable, and resources read and write JSON with the same one:
 
 ```java
 @Inject
@@ -231,7 +239,10 @@ public PriceReader(ObjectMapper mapper) {
 }
 ```
 
-To use your own mapper instead, hand it in. It wins over core's:
+A resource that takes a JSON body therefore accepts a body with properties its class does not have.
+
+To use your own mapper instead, hand it in. It wins over core's, for injection and for the JSON of the resources:
+its naming strategy, modules and date format apply to request and response bodies.
 
 ```java
 Components components = Components.builder()
@@ -239,10 +250,13 @@ Components components = Components.builder()
         .build();
 ```
 
-`services.jersey.objectMapper.enabled=false` switches off the service that provides core's mapper. Hand in your
-own if something asks for one.
+Resources use the mapper that an unqualified `@Inject ObjectMapper` gets. Offer a mapper for another format, such
+as YAML or CBOR, under its own type and not under the contract `ObjectMapper`: otherwise the resources write their
+JSON with it.
 
-Core does not register a mapper with Jersey. The mapper described here is the one your own classes get injected.
+`services.jersey.objectMapper.enabled=false` removes core's mapper. When the application hands in none of its
+own, no `ObjectMapper` is injectable, and Jersey reads and writes JSON with a mapper of its own, which answers
+400 to a body with an unknown property.
 
 ## Publish and receive events
 
@@ -291,7 +305,8 @@ application has started.
 
 A REST resource is a JAX-RS class: `@Path` on the class, `@GET`, `@POST` and so on on its methods. Core registers
 it with Jersey, which serves it under the context path. Objects returned from a method with
-`@Produces(MediaType.APPLICATION_JSON)` are written as JSON by Jackson.
+`@Produces(MediaType.APPLICATION_JSON)` are written as JSON by Jackson, with the mapper described in
+[Use the ObjectMapper](#use-the-objectmapper).
 
 ### An instance
 
@@ -400,6 +415,7 @@ The application does not start when:
 
 - `@RolesAllowed` is enforced: core registers Jersey's `RolesAllowedDynamicFeature`. Who the caller is comes
   from the request. See [security.md](security.md).
+- JSON is read and written with the injectable `ObjectMapper`. See [Use the ObjectMapper](#use-the-objectmapper).
 - The WADL description is switched off.
 - `services.jersey.server.config.mediaTypes.<suffix>` maps a path suffix to a media type. Core hands the mappings
   to Jersey as `ServerProperties.MEDIA_TYPE_MAPPINGS`. The defaults are in the
@@ -425,8 +441,7 @@ ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builde
         .servlets(Servlets.builder().servlet(Servlet.builder("hello").pathSpec("/hello")));
 ```
 
-An instance without `servlets.<name>.config.pathSpec` stops the application from starting. An instance is always
-registered, whatever `servlets.<name>.enabled` says.
+An instance is always registered. `servlets.<name>.enabled=false` does not remove it; Stride logs a warning.
 
 Or name the class and let Stride create it through HK2:
 
@@ -434,16 +449,20 @@ Or name the class and let Stride create it through HK2:
 .servlets(Servlets.builder().servlet(Servlet.builder("stock").clazz(StockServlet.class).pathSpec("/stock")))
 ```
 
+A servlet needs a path, as an instance or as a class. Without `servlets.<name>.config.pathSpec` the application
+does not start: `Servlet 'stock' has no path: set servlets.stock.config.pathSpec`.
+
 Jersey is mapped to `/*`. A servlet with a more specific path takes the requests for that path.
 
-Servlets are registered by the service `jersey.server`. With `services.jersey.server.enabled=false` there are no
-REST resources, no servlets and no servlet context initializers. Filters and `/ping` remain.
+Servlets belong to the server, not to Jersey: the service `jetty.server` registers them, after the filters and
+`/ping`. With `services.jersey.server.enabled=false` there are no REST resources. Servlets, servlet context
+initializers, filters and `/ping` remain.
 
 ### Give a servlet a service through the servlet context
 
 A servlet that Stride did not wire can read a collaborator from a servlet context attribute. `binding` puts a
 service that is declared in the configuration into an attribute. `validate` makes the application refuse to start
-when a required attribute is missing.
+when a required attribute or named service is missing.
 
 ```java
 import io.descoped.stride.application.config.ServletContextBinding;
@@ -470,8 +489,15 @@ public class StockServlet extends HttpServlet {
 
 `bind(attribute, serviceName)` takes the name the service has in the configuration. A name that is not a service
 with a class in the configuration binds nothing and is not reported: instances from `Components` and discovered
-`@Service` classes cannot be bound this way. Require the attribute to catch a wrong name. A servlet's `validate`
-checks attributes only; `requireNamedService` has no effect there.
+`@Service` classes cannot be bound this way. Require the attribute to catch a wrong name.
+
+A servlet's `validate` checks both kinds of requirement, once the servlet's bindings are set:
+
+- `requireAttribute(name)`: a servlet context attribute. A missing one stops the start with
+  `Required servletContext attribute 'stock' for 'stock' servlet IS NOT set!`.
+- `requireNamedService(type, name)`: a service of that type and name, for example one a
+  [servlet context initializer](#prepare-the-servlet-context) added. A missing one stops the start with
+  `Required service 'com.example.Stock' named 'main' for 'stock' servlet is NOT available!`.
 
 ## Prepare the servlet context
 
@@ -509,7 +535,10 @@ ApplicationConfiguration.builder().defaults()
 - A named service an initializer adds to the `locator` can be a
   [constructor argument of a configured resource](#a-class-with-constructor-arguments).
 - The requirements are checked once every initializer has run, so one initializer may provide what another does
-  not. A missing attribute or named service stops the application from starting, with a message that names it.
+  not. A missing attribute or named service stops the application from starting, with a message that names it:
+  `Required service 'java.lang.String' named 'announcement' for the servlet context initialization is NOT
+  available!`.
+- Initializers belong to the server, as servlets do. They run whether or not the Jersey service is enabled.
 
 ## Declare a filter
 
@@ -614,9 +643,9 @@ Components components = Components.builder()
 
 A filter built this way does not read `filters.cors.config.origin`, `credentials`, `headers`, `methods` or
 `max-age`: set them with `origin(..)`, `credentials(..)`, `headers(..)`, `methods(..)` and `maxAge(..)`, which
-all take a string. The builder starts from the same values as the configuration, with one difference: its
-methods are `GET, POST, PUT, DELETE, OPTIONS, HEAD`, without `PATCH`. `build()` throws an
-`IllegalArgumentException` when credentials are combined with the origin `*`.
+all take a string. The builder starts from the same values as the configuration: its methods are
+`GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD`. `build()` throws an `IllegalArgumentException` when credentials
+are combined with the origin `*`.
 
 ## Run behind a proxy
 
@@ -741,11 +770,11 @@ Services:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `services.jetty.server.enabled` | `true` | The service that assembles the server, filters and `/ping`. |
+| `services.jetty.server.enabled` | `true` | The service that assembles the server: filters, `/ping`, servlet context initializers and servlets. |
 | `services.jetty.start.enabled` | `true` | The service that opens the listener at run level 11. |
-| `services.jersey.server.enabled` | `true` | The service that registers resources, servlets and initializers. |
-| `services.jersey.objectMapper.enabled` | `true` | The injectable `ObjectMapper`. |
-| `services.hk2.defaults.enabled` | `true` | Whether a named service without its own `enabled` key is on. |
+| `services.jersey.server.enabled` | `true` | The service that registers REST resources with Jersey. |
+| `services.jersey.objectMapper.enabled` | `true` | Core's `ObjectMapper`, for injection and for the JSON of resources. |
+| `services.hk2.defaults.enabled` | `true` | Whether a discovered named service without its own `services.<name>.enabled` key is on. |
 | `services.hk2.threadcount` | `20` | How many services of one run level may start at the same time. |
 | `services.hk2.threadpolicy` | `FULLY_THREADED` | The HK2 run level threading policy. |
 | `services.hk2.SystemInjectResolver.enabled` | `true` | Declared for the HK2 service of that name. Leave it on. |

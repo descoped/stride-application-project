@@ -62,8 +62,10 @@ Without `security.enabled=true` the filter is not created, no request is authent
 
 ## How the keys are found: issuer discovery
 
-When the application starts, the filter reads the issuer's metadata to find its signing keys. The issuer is taken
-from the configuration only, never from a token. Two locations are tried, in this order (RFC 8414 section 5):
+When the application starts, the filter Stride creates reads the issuer's metadata to find its signing keys. An
+application that supplies the keys itself skips this: see [Hand in the filter yourself](#hand-in-the-filter-yourself).
+The issuer is taken from the configuration only, never from a token. Two locations are tried, in this order
+(RFC 8414 section 5):
 
 1. `/.well-known/oauth-authorization-server` inserted between the host and the path of the issuer (RFC 8414
    section 3.1). A slash that ends the issuer is removed first.
@@ -98,7 +100,7 @@ The token must be a signed JWT. All of the following must hold:
 | Check | Rule |
 |---|---|
 | Length | At most 16384 characters. |
-| Signature | Made with a key the issuer publishes, using an algorithm listed in `security.algorithms`. An unsigned token is rejected. |
+| Signature | Made with a key the issuer publishes, or one of the keys the application supplied, using an algorithm listed in `security.algorithms`. An unsigned token is rejected. |
 | `typ` header | Decided by `security.token-type`, see below. |
 | `iss` | Equal to `security.issuer`. |
 | `aud` | Contains at least one of `security.audiences`. |
@@ -331,18 +333,47 @@ StrideApplication.create(configuration, components).start();
   `algorithms`, `tokenType`, `publicPaths`, `requiredScopes`, `scopeClaim`, `rolesClaim`, `realm`,
   `clockSkewSeconds`, `resource`. A second constructor leaves out `resource`, for an application that publishes no
   protected resource metadata.
-- `JwtTokenVerifier.discover(settings)` throws `IOException` when the issuer's metadata or keys cannot be read,
-  and `IllegalArgumentException` when `settings.enabled()` is false.
+- `JwtTokenVerifier.discover(settings)` throws `IOException` when the issuer's metadata or keys cannot be read.
 - The instance uses the path, order and dispatcher types of `filters.security.*`, so it also runs at order 200.
-- An instance that is handed in is always registered, whatever `security.enabled` says, and takes the place of
-  the filter Stride would create. Stride logs a warning when the configuration has the filter disabled. If the
-  application wants a switch, it reads its own configuration and leaves the filter out.
-- `SecurityConfiguration` validates its values only when `enabled` is true. Pass `true` when you build the record
-  yourself.
+- An instance that is handed in is always registered, whatever `filters.security.enabled` says, and takes the
+  place of the filter Stride would create. Stride logs a warning when the configuration has the filter disabled.
+  If the application wants a switch, it reads its own configuration and leaves the filter out.
+- The settings must have `enabled` true. `SecurityConfiguration` validates its values only then, so settings
+  that are not enabled cannot be used to authenticate: `JwtTokenVerifier.discover`, `JwtTokenVerifier.withKeys`
+  and `new BearerAuthenticationFilter(settings, verifier)` throw an `IllegalArgumentException` whose message
+  starts with `security.enabled is false`. Pass `true` when you build the record yourself.
+- `new BearerAuthenticationFilter(settings, verifier)` throws `NullPointerException` for a `null` verifier.
 - `JwtTokenVerifier` is `AutoCloseable`. The filter closes it in `destroy()`, which the server calls when the
   application stops.
-- `JwtTokenVerifier.discover(settings)` is the only public way to create a verifier, so a verifier always reads
-  its keys from an https issuer.
+
+### Supply the keys yourself
+
+`JwtTokenVerifier.discover(settings)` fetches the keys from the issuer. `JwtTokenVerifier.withKeys(settings, keys)`
+creates a verifier with keys the application supplies: a key set it holds, or its own way of fetching them.
+Nothing is fetched from the issuer.
+
+```java
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import java.io.File;
+
+JWKSet keySet = JWKSet.load(new File("/etc/shop/issuer-keys.json"));   // a JWK Set document (RFC 7517)
+JwtTokenVerifier verifier = JwtTokenVerifier.withKeys(settings, new ImmutableJWKSet<>(keySet.toPublicJWKSet()));
+
+Components components = Components.builder()
+        .filter("security", new BearerAuthenticationFilter(settings, verifier))
+        .build();
+```
+
+- `keys` is a Nimbus `JWKSource<SecurityContext>` (`com.nimbusds.jose.jwk.source.JWKSource`,
+  `com.nimbusds.jose.proc.SecurityContext`). The module brings Nimbus JOSE+JWT with it, and its module descriptor
+  passes `com.nimbusds.jose.jwt` on.
+- Everything else is checked as for a discovered verifier. A token must still name `security.issuer` in `iss`,
+  and be signed with an algorithm listed in `security.algorithms`.
+- Give the filter the same settings the verifier was built with. The verifier takes the issuer, audiences and
+  algorithms from them; the filter takes the realm, scopes and public paths.
+- The verifier owns the key source: `close()` closes it when it is a `java.io.Closeable`.
+- `withKeys` throws `NullPointerException` for `null` keys.
 
 `JwtTokenVerifier.verify(token)` can also be used on its own. It returns the `TokenPrincipal` of a valid token. For
 an invalid one it throws a Nimbus exception: `ExpiredJWTException` for an expired token, otherwise another
@@ -369,8 +400,8 @@ application: `start()` throws and no port is opened. Validation happens only whe
 | `security.resource is not a URL: '<value>'` | The resource identifier cannot be parsed as a URL. |
 | `security.resource must be an absolute https URL without credentials or fragment: '<value>'` | The identifier is not https, is relative, has credentials or a fragment, or holds a character that cannot be quoted in a challenge, such as a space. |
 | `No usable authorization server metadata for issuer <issuer>` | Neither metadata location gave a document whose `issuer` is identical to `security.issuer` and whose `jwks_uri` is a valid https URL. |
-| `Could not initialize OIDC signing keys` | The keys could not be fetched from `jwks_uri`, or the issuer publishes no public keys. |
-| `Security must be enabled` | The filter was created from the configuration with `filters.security.enabled=true` while `security.enabled` is false. |
+| `Could not read the signing keys of issuer <issuer> from <jwks_uri>` | The keys could not be fetched from `jwks_uri`, or the key set there has no public signing keys. The cause then reads `The key set at <jwks_uri> has no public signing keys`. |
+| `security.enabled is false, so the security settings are not validated and cannot be used to authenticate: set security.enabled=true, or leave the security filter out (filters.security.enabled=false)` | The filter was created from the configuration with `filters.security.enabled=true` while `security.enabled` is false, or the application built a verifier or a filter from settings that are not enabled. |
 
 ## Test a secured application
 
@@ -379,13 +410,128 @@ secured application is tested:
 
 - Authentication is off unless `security.enabled=true`. A test that does not set it runs without authentication,
   and resources see no principal.
-- With `security.enabled=true` the application reads the issuer's metadata and keys over https when it starts. The
-  test then needs an authorization server it can reach over https, and tokens issued by it.
-- A filter handed in under the name `security` takes the place of the configured one.
+- The filter Stride creates from the configuration reads the issuer's metadata and keys over https when the
+  application starts. A test that relies on it needs an authorization server it can reach over https, and tokens
+  issued by it.
+- A filter handed in under the name `security` takes the place of the configured one. A test can therefore hand
+  in the real filter with a verifier built by `JwtTokenVerifier.withKeys`, and sign its own tokens. No
+  authorization server is needed.
+
+### Test with tokens the test signs
+
+The test makes a key pair, gives the verifier the public half and signs tokens with the private half. The
+application runs the real `BearerAuthenticationFilter`, so the test covers the token validation, the challenges,
+the resources and `@RolesAllowed`. The settings come from the configuration, as in production; the issuer is
+never contacted.
+
+```java
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import io.descoped.stride.application.api.Components;
+import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.security.BearerAuthenticationFilter;
+import io.descoped.stride.application.security.JwtTokenVerifier;
+import io.descoped.stride.application.security.SecurityConfiguration;
+import io.descoped.stride.application.test.server.StrideExtension;
+import io.descoped.stride.application.test.server.TestClient;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class SecuredIdentityTest {
+
+    static final String ISSUER = "https://identity.example.test/realms/shop";
+    static final String AUDIENCE = "https://api.example.test";
+    static final RSAKey KEY = key();
+
+    @RegisterExtension
+    static final StrideExtension stride = StrideExtension.builder()
+            .configuration(() -> ApplicationConfiguration.builder().testDefaults()
+                    .overrideProperty("security.enabled", "true")
+                    .overrideProperty("security.issuer", ISSUER)
+                    .overrideProperty("security.audiences", AUDIENCE)
+                    .overrideProperty("security.realm", "shop"))
+            .components(configuration -> {
+                SecurityConfiguration settings = SecurityConfiguration.from(configuration);
+                JwtTokenVerifier verifier = JwtTokenVerifier.withKeys(settings,
+                        new ImmutableJWKSet<>(new JWKSet(KEY.toPublicJWK())));   // the public half only
+                return Components.builder()
+                        .filter("security", new BearerAuthenticationFilter(settings, verifier))
+                        .resource(new IdentityResource())
+                        .build();
+            })
+            .build();
+
+    private static RSAKey key() {
+        try {
+            return new RSAKeyGenerator(2048).keyID("test").generate();
+        } catch (JOSEException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** A token as the authorization server would issue it (RFC 9068), signed with the test's key. */
+    private static String token(String subject, String... roles) throws JOSEException {
+        Instant now = Instant.now();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .issuer(ISSUER).audience(AUDIENCE).subject(subject)
+                .issueTime(Date.from(now)).expirationTime(Date.from(now.plusSeconds(300)))
+                .claim("client_id", "test-client").jwtID(UUID.randomUUID().toString())
+                .claim("roles", List.of(roles))
+                .build();
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256)
+                .keyID(KEY.getKeyID()).type(new JOSEObjectType("at+jwt")).build(), claims);
+        jwt.sign(new RSASSASigner(KEY));
+        return jwt.serialize();
+    }
+
+    @Test
+    void aValidTokenReachesTheResource(TestClient client) throws Exception {
+        String token = token("alice", "reader");
+
+        assertEquals("alice via Bearer",
+                client.get("/identity", "Authorization", "Bearer " + token).expect200Ok().body());
+    }
+
+    @Test
+    void aRequestWithoutATokenGetsAChallenge(TestClient client) {
+        var response = client.get("/identity").response();
+
+        assertEquals(401, response.statusCode());
+        assertEquals("Bearer realm=\"shop\"", response.headers().firstValue("WWW-Authenticate").orElseThrow());
+    }
+
+    @Test
+    void aRoleTheCallerLacksIsForbidden(TestClient client) throws Exception {
+        String token = token("alice", "reader");
+
+        assertEquals(403, client.get("/admin", "Authorization", "Bearer " + token).response().statusCode());
+    }
+}
+```
+
+`IdentityResource` is the resource shown [above](#use-the-callers-identity-in-a-resource). With
+`security.enabled=true` in the configuration the handed-in filter takes the place of the configured one, so
+Stride does not create a filter that would look for the issuer.
 
 ### Test the resources with a known caller
 
-To test what the resources do for a given caller, hand in a small filter of your own under the name `security`. It
+When the token does not matter to the test, hand in a small filter of your own under the name `security`. It
 sets the principal the way `BearerAuthenticationFilter` does. This tests the resources and `@RolesAllowed`, not
 the token validation.
 
@@ -448,8 +594,9 @@ class IdentityResourceTest {
 
 ### Test against a real authorization server
 
-To test the authentication itself, start the application with `security.enabled=true` and an issuer the test can
-reach over https. `TestClient.get` takes request headers as name and value pairs:
+To test the application together with its authorization server, issuer discovery included, start the application
+with `security.enabled=true` and an issuer the test can reach over https. `TestClient.get` takes request headers
+as name and value pairs:
 
 ```java
 @RegisterExtension
@@ -518,7 +665,7 @@ All are in `io.descoped.stride.application.security`.
 |---|---|
 | `BearerAuthenticationFilter` | The servlet filter. Created by Stride from the configuration, or by the application with `new BearerAuthenticationFilter(settings, verifier)`. |
 | `SecurityConfiguration` | Record with the validated settings. `SecurityConfiguration.from(configuration)` reads the `security.*` keys. `SecurityConfiguration.ACCESS_TOKEN_TYPE` is `at+jwt`. |
-| `JwtTokenVerifier` | Validates tokens. `JwtTokenVerifier.discover(settings)` creates one from the issuer's metadata; `verify(token)` returns a `TokenPrincipal`; `close()` releases the key source. |
+| `JwtTokenVerifier` | Validates tokens. `JwtTokenVerifier.discover(settings)` creates one from the issuer's metadata; `JwtTokenVerifier.withKeys(settings, keys)` creates one with keys the application supplies; `verify(token)` returns a `TokenPrincipal`; `close()` releases the key source. |
 | `TokenPrincipal` | Record and `java.security.Principal`: `subject()`, `scopes()`, `roles()`. `getName()` is the subject. |
 
 ## Reference: specifications

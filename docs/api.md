@@ -61,9 +61,10 @@ There are three `create` methods:
 | `StrideApplication.create(configuration)` | yours | none |
 | `StrideApplication.create(configuration, components)` | yours | yours |
 
-`create` needs a runtime on the class path. Without one it throws a `RuntimeException` with the message
-`Missing SPI for io.descoped.stride.application.spi.ApplicationInitializer`. See
-[Provide a runtime](#provide-a-runtime-applicationinitializer).
+`create` needs exactly one runtime on the class path. Without one it throws an `IllegalStateException` with the
+message `No Stride runtime on the class path: add stride-application-core, or another provider of
+io.descoped.stride.application.spi.ApplicationInitializer`. With more than one it throws an
+`IllegalStateException` that names them. See [Provide a runtime](#provide-a-runtime-applicationinitializer).
 
 ## Stop an application
 
@@ -83,8 +84,9 @@ server stops accepting requests, and requests that are running get `services.jet
 again does nothing.
 
 A stopped application cannot be started again. Create a new one. After `stop()`, the methods `activate()`,
-`start()`, `proceedTo(..)` with a level above 0, `getHost()`, `getPort()` and `getLocalPort()` throw
-`IllegalStateException`, because the service locator is shut down.
+`start()` and `proceedTo(..)` with a level above 0 throw an `IllegalStateException` with the message
+`The application is stopped and cannot be started again; create a new one`. The address is gone:
+`getHost()` returns `localhost`, and `getPort()` and `getLocalPort()` return `-1`.
 
 A failure while starting is thrown from `start()` as a `RuntimeException`. Call `close()` then too, so that
 whatever did start is stopped; try-with-resources does it for you.
@@ -103,7 +105,8 @@ the HTTP listener starts at 11.
 | `stop()`, `close()` | Proceeds to run level 0 and shuts the application down. |
 
 `proceedTo` has two special cases. A level of 0 or less on an application that is above level 0 is the same as
-`stop()`. The highest run level is the same as `start()`.
+`stop()`; on an application that has not started it does nothing, and the application can still be started. The
+highest run level is the same as `start()`.
 
 Use `activate()` when something must happen after your services are up and before the first request can arrive:
 
@@ -121,7 +124,7 @@ How to give a service a run level is described in [config.md](config.md) and [co
 
 | Method | Returns |
 |---|---|
-| `isRunning()` | `true` from the first `activate()`, `proceedTo(..)` or `start()` until the application is stopped. `false` on a newly created application. |
+| `isRunning()` | `true` from the first `activate()`, `proceedTo(..)` above 0 or `start()` until the application is stopped. `false` on a newly created application. |
 | `isCompleted()` | `true` once the application is stopped. |
 | `getHost()` | The host the listener is configured with: `services.jetty.server.config.host`, default `localhost`. |
 | `getPort()` | The port the listener is configured with: `services.jetty.server.config.port`, default `0`. |
@@ -135,9 +138,9 @@ application.start();
 log.info("Listening on http://{}:{}/", application.getHost(), application.getLocalPort());
 ```
 
-Read the address after `start()`. Before the web server is assembled, for example after `activate()`,
-`getPort()` and `getLocalPort()` return `-1`, `getHost()` returns `localhost` whatever the configuration says, and
-each call logs an error saying the server is not started.
+Read the address after `start()`. Before the web server is assembled, for example after `activate()`, and after
+the application is stopped, `getPort()` and `getLocalPort()` return `-1` and `getHost()` returns `localhost`
+whatever the configuration says. Asking for the address then is not an error, and no error is logged.
 
 ## Hand ready-made objects to Stride
 
@@ -238,7 +241,7 @@ variable and system property, even for settings the builder did not set:
 For example `-Dfilters.audit.config.order=50` moves the filter above ahead of CORS.
 
 `filters.<name>.enabled=false` does not remove a filter instance. Stride registers it and logs a warning.
-A servlet instance is mounted too when `servlets.<name>.enabled` is `false`, without a warning.
+The same holds for a servlet instance and `servlets.<name>.enabled=false`.
 
 Filters belong to the server, not to Jersey. They apply to every servlet and to `/ping`, also when
 `services.jersey.server.enabled` is `false`.
@@ -284,7 +287,8 @@ Unlike a filter, a servlet gets no implied settings from its builder: `servlets.
 overridden by environment variable or system property only when the builder sets `pathSpec(..)` or the key is
 declared in a defaults file.
 
-Servlets are mounted by the Jersey service. They are not mounted when `services.jersey.server.enabled` is `false`.
+Servlets belong to the server, not to Jersey, as filters do. They are mounted also when
+`services.jersey.server.enabled` is `false`.
 
 ### Offer an instance for injection
 
@@ -400,8 +404,14 @@ the two ways `ServiceLoader` supports:
   provides io.descoped.stride.application.spi.ApplicationInitializer with com.example.MyInitializer;
   ```
 
-`create` uses the first implementation `ServiceLoader` finds. Keep exactly one on the class path: with several,
-which one is used is not defined by Stride.
+Exactly one implementation must be on the class path. `create` throws an `IllegalStateException` otherwise:
+
+- with none: `No Stride runtime on the class path: add stride-application-core, or another provider of
+  io.descoped.stride.application.spi.ApplicationInitializer`;
+- with several: `More than one Stride runtime on the class path, and only one can create the application:`
+  followed by their class names, sorted and separated by commas. None of them is created.
+
+A replacement runtime therefore goes on a class path without `stride-application-core`.
 
 ## Reference
 
@@ -415,15 +425,15 @@ Package `io.descoped.stride.application.api`. Extends `AutoCloseable`.
 | `static StrideApplication create(ApplicationConfiguration)` | An application with no components. |
 | `static StrideApplication create(ApplicationConfiguration, Components)` | An application with the objects it wired itself. |
 | `void activate()` | Proceed to run level 9, below the web server. |
-| `void proceedTo(int runLevel)` | Proceed to a run level. 0 or less stops; the highest level starts. |
+| `void proceedTo(int runLevel)` | Proceed to a run level. 0 or less stops, or does nothing before the first start; the highest level starts. |
 | `void start()` | Proceed to the highest run level. |
 | `void stop()` | Proceed to run level 0 and shut down. |
 | `void close()` | Same as `stop()`. |
 | `boolean isRunning()` | Started, at any run level, and not stopped. |
 | `boolean isCompleted()` | Stopped. |
-| `String getHost()` | The configured host of the listener. |
-| `int getPort()` | The configured port of the listener; `-1` before the server is assembled. |
-| `int getLocalPort()` | The bound port of the listener; `-1` before the server is assembled. |
+| `String getHost()` | The configured host of the listener; `localhost` before the server is assembled and after the application is stopped. |
+| `int getPort()` | The configured port of the listener; `-1` before the server is assembled and after the application is stopped. |
+| `int getLocalPort()` | The bound port of the listener; `-1` before the server is assembled and after the application is stopped. |
 | `ServiceLocator getServiceLocator()` | The application's HK2 service locator. |
 
 ### `Components`

@@ -67,9 +67,9 @@ The `.json` and `.yaml` suffixes work because Stride maps them to media types, w
 The document is pretty-printed. The resource is a singleton, so the description is built once, not for every
 request. It does not list `/openapi` itself.
 
-Swagger finds the resource classes itself. It takes those registered with Jersey, and it also scans the class path
-for classes annotated with `@Path`. A resource class that is on the class path but not registered, or registered
-disabled, can therefore appear in the document.
+The document describes the resources registered with Stride: the classes declared in the configuration and the
+instances handed in with `Components`. That is what the application serves. A class annotated with `@Path` that
+is only on the class path is not described, and neither is a resource that is declared disabled.
 
 ## Annotate your resources
 
@@ -105,21 +105,31 @@ own two methods.
 ### Mark an operation as needing no token
 
 When the document declares the bearer scheme (see [below](#declare-bearer-authentication)), every operation
-requires it. To describe one operation as open, give it a single security requirement named `none`:
+requires it. To describe one operation as open, give it a single security requirement named `none`. The constant
+`ApplicationOpenApiSpecFilter.NO_AUTHENTICATION` holds that name:
 
 ```java
+import io.descoped.stride.application.openapi.ApplicationOpenApiSpecFilter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @GET
 @Path("/status")
-@SecurityRequirement(name = "none")
+@SecurityRequirement(name = ApplicationOpenApiSpecFilter.NO_AUTHENTICATION)
 public String status() {
     return "ok";
 }
 ```
 
-The module replaces that requirement with an empty one, which in OpenAPI means "no security". This changes the
-document only. Whether the path really needs a token is decided by the security filter: see
+The module replaces that requirement with an empty one, which in OpenAPI means "no security":
+
+```json
+"/status": { "get": { "security": [ {} ] } }
+```
+
+The other operations carry no requirement of their own and follow the document's.
+
+Use it on the operations behind the paths listed in `security.public-paths`. The annotation changes the document
+only: it does not open the path. Whether a path needs a token is decided by the security filter: see
 [security.md](security.md).
 
 ## Set the title and version
@@ -258,7 +268,7 @@ Both are in the package `io.descoped.stride.application.openapi`.
 | Class | Role |
 |---|---|
 | `ApplicationOpenApiResource` | The JAX-RS resource at `/openapi`. Register this one. |
-| `ApplicationOpenApiSpecFilter` | Turns a single security requirement named `none` into "no security". Used by the resource; you do not register it. |
+| `ApplicationOpenApiSpecFilter` | Turns a single security requirement named `none` into "no security". Used by the resource; you do not register it. Its constant `NO_AUTHENTICATION` is that name, for `@SecurityRequirement`. |
 
 ### Configuration keys
 
@@ -284,7 +294,7 @@ The bearer scheme depends on a key of the [security module](security.md):
 |---|---|---|
 | `info.title` | Always | `application.alias` followed by ` API` |
 | `info.version` | Always | `application.version` |
-| `paths` | Always | The JAX-RS resources registered with Jersey or found on the class path, without `/openapi` |
+| `paths` | Always | The JAX-RS resources registered with Stride, as classes or as instances, without `/openapi` |
 | `servers` | `application.url` is set | One entry with that URL |
 | `components.securitySchemes.bearerAuth` | A filter named `security` is in force | `http`, `bearer`, `JWT` |
 | `security` | A filter named `security` is in force | A requirement for `bearerAuth` |

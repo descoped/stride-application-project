@@ -157,14 +157,14 @@ boolean http2 = configuration.requireBoolean("services.jetty.server.config.http2
 |---|---|---|
 | `requireString(key)` | the text | the key is missing |
 | `requireInt(key)` | the number | the key is missing or the value is not a whole number |
-| `requireBoolean(key)` | `true` for the text `true` in any letter case, `false` for any other text | see below |
+| `requireBoolean(key)` | `true` or `false` | the key is missing or the value is neither `true` nor `false` |
 
 The message names the key as it was passed: `Configuration key 'greeting.salutation' is missing or malformed; it
 must be declared in the META-INF/stride/defaults.properties of the module that reads it`. After `with(..)`, and
 in the typed accessors below, that is the part of the key after the prefix.
 
-`requireBoolean` on an `ApplicationConfiguration` does not fail for a missing key: it returns `false`. Declare
-the key, and check its spelling.
+A boolean is written `true` or `false`, in any letter case. Any other value, such as `yes`, `1` or an empty
+value, is malformed.
 
 A key declared with an empty value (`application.url=`) is present: `requireString` returns `""`.
 
@@ -249,18 +249,24 @@ Services.builder()
 |---|---|---|
 | `enabled(boolean)` | `services.<name>.enabled` | Whether Stride creates the service. |
 | `clazz(Class)`, `className(String)` | `services.<name>.config.class` | The class to create. |
-| `runLevel(int)` | `services.<name>.config.runLevel` | The run level it starts at. Always set it for a class you name. |
+| `runLevel(int)` | `services.<name>.config.runLevel` | The run level it starts at. A service without a run level is not started with the application: it is created the first time it is asked for. |
 | `metadata(Metadata.Builder)` | `services.<name>.metadata.<property>` | Free-form properties attached to the service. |
 
 A class named here must not carry a scope annotation or HK2's `@Service`; Stride refuses to start and says so.
 
 An entry without a class configures a service that HK2 discovers by itself under that name. This is how Stride's
-own services are switched: `services.jetty.server.enabled`, `services.jersey.server.enabled`. A named service
-that HK2 discovers is disabled unless `services.<name>.enabled` is `true`, so declare that key for every such
-service of your own. A service without a name is always enabled.
+own services are switched: `services.jetty.server.enabled`, `services.jersey.server.enabled`.
 
-`Service.builder(Class)` uses the class name as the service name. It does not set the class; call `clazz(..)` as
-well.
+A named service that HK2 discovers is switched by `services.<name>.enabled`, where `<name>` is the whole name of
+the service. A key of the same name elsewhere in the configuration is not its switch: a service named `server`
+is switched by `services.server.enabled`, not by `services.jetty.server.enabled`. Without the key,
+`services.hk2.defaults.enabled` decides, and its default is `true`. To keep such a service off, set
+`services.<name>.enabled=false` in a properties file or with `overrideProperty`. To set it from an environment
+variable or a system property, declare the key in your own `META-INF/stride/defaults.properties` first. A service
+without a name is always enabled.
+
+`Service.builder(Class)` declares a service of that class, named after the class:
+`Service.builder(OrderService.class).runLevel(5)`.
 
 ### Declare a filter
 
@@ -308,8 +314,6 @@ class nor an instance fails at startup.
 Declaring `Filter.builder("cors")` changes Stride's CORS filter. Only the settings you set change; the rest keep
 their defaults.
 
-`Filter.Builder.context(..)` stores a value under `filters.<name>.config.context`. Stride does not act on it.
-
 ### Declare a servlet
 
 ```java
@@ -336,7 +340,10 @@ Servlets.builder().servlet(Servlet.builder("hello").pathSpec("/hello"))
 ```
 
 Without it the application does not start: `Servlet 'hello' has no path: set servlets.hello.config.pathSpec`.
-A servlet instance is always registered: `servlets.hello.enabled=false` does not remove it.
+A servlet declared with a class and no `pathSpec` fails in the same way. A servlet instance is always
+registered: `servlets.hello.enabled=false` does not remove it, and Stride logs a warning.
+
+Servlets are registered by the server, like filters. They do not depend on the Jersey service.
 
 ### Give a servlet its collaborators: ServletContextBinding
 
@@ -381,10 +388,12 @@ with `Service.builder(Class)`.
 |---|---|
 | `requireAttribute(name)` | A servlet context attribute of that name. |
 | `requireAttributes(Set<String>)` | Each of those attributes. Replaces the attributes required so far. |
-| `requireNamedService(type, name)` | A service of that type and name. Checked for the initialization only, not for a servlet. |
+| `requireNamedService(type, name)` | A service of that type and name: one an initializer added (see below), or any other named service of the application. |
 
-On a servlet (`Servlet.Builder.validate(..)`) the attributes are checked after the servlet's bindings are set.
-A missing one fails with `Required servletContext attribute 'stock' for 'stock' servlet IS NOT set!`.
+On a servlet (`Servlet.Builder.validate(..)`) the requirements are checked after the servlet's bindings are set.
+A missing attribute fails with `Required servletContext attribute 'stock' for 'stock' servlet IS NOT set!`. A
+missing named service fails with `Required service 'com.example.Stock' named 'main' for 'stock' servlet is NOT
+available!`.
 
 ### Prepare the servlet context: ServletContextInitialization
 
@@ -495,9 +504,8 @@ for (Service service : configuration.services().iterator()) {
 }
 ```
 
-Each collection has a lookup by name, a lookup by class name and `iterator()`. The lookup by name does not tell
-whether a component is declared: for a name that is not declared it returns a component that is not enabled and
-has no class. The lookup by class name and `iterator()` return declared components only.
+Each collection has a lookup by name, a lookup by class name and `iterator()`. All three give declared components
+only. A lookup returns an `Optional`, which is empty for a name or a class that is not declared.
 
 | Collection | By name | By class name |
 |---|---|---|
@@ -530,9 +538,11 @@ Navigate:
 | `has(name)` | Whether a direct child exists. |
 | `isEmpty()` | Whether the element holds no node. |
 | `json()` | The underlying `JsonNode`. `ApplicationConfiguration.json()` returns a copy. |
-| `toObjectNode()`, `toArrayNode()` | The node as that type, as an `Optional`. `object()` and `array()` return the node itself, and throw `ClassCastException` for a node of another type and `NullPointerException` for an empty element. |
+| `toObjectNode()`, `toArrayNode()` | The node as that type, as an `Optional`. `object()` and `array()` return the node itself, and throw `ClassCastException` for a node of another type and for an empty element. For an empty element the message ends in `but there is no value`. |
 
 Read values. For the number and boolean reads a value may be a JSON number or boolean, or text that holds one.
+`asInt`, `asLong` and `requireInt` take a whole number within the range of the type: a JSON number with a
+fraction, or one outside the range, is not a value of that type and is not cut to fit.
 The string reads take text only: a JSON number is not a string.
 
 | Method | Meaning |
@@ -559,9 +569,10 @@ List<String> all = document.with("list").toList(JsonNode::asText);
 
 `readTree` throws the checked `JsonProcessingException`.
 
-For booleans only the text `true`, in any letter case, is true; any other text is false. That includes the empty
-node of `ofEphemeral`: there `asBoolean(default)` returns `false` for a key that does not exist, whatever the
-default.
+A boolean is a JSON boolean, or the text `true` or `false` in any letter case. Anything else is not a boolean:
+other text, a number, an object, or a key that does not exist. `asBoolean()` is then empty, `asBoolean(default)`
+returns the default, and `requireBoolean` fails. This holds for every factory, the empty node of `ofEphemeral`
+included.
 
 Use the `as..(default)` methods for your own JSON documents. For configuration keys use the `require..` methods,
 so that a default exists in one place only: the defaults file.
@@ -589,7 +600,7 @@ server does with these settings is described in [core.md](core.md).
 
 | Key | Default | Meaning |
 |---|---|---|
-| `services.hk2.defaults.enabled` | `true` | Read when Stride decides whether a named service is enabled. Do not rely on it: give each named service its own `services.<name>.enabled`. |
+| `services.hk2.defaults.enabled` | `true` | Whether a named service that HK2 discovers is enabled when it has no `services.<name>.enabled` key of its own. |
 | `services.hk2.threadpolicy` | `FULLY_THREADED` | The threading policy of the HK2 run level controller (`RunLevelController.ThreadingPolicy`). |
 | `services.hk2.threadcount` | `20` | How many services of one run level may start at the same time, each on its own virtual thread. |
 | `services.hk2.SystemInjectResolver.enabled` | `true` | Keeps the HK2 service of that name enabled. |
@@ -622,8 +633,8 @@ with a low order that admits a bounded number of requests.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `services.jersey.objectMapper.enabled` | `true` | Whether the service that makes a Jackson `ObjectMapper` injectable (`jersey.objectMapper`) is enabled. |
-| `services.jersey.server.enabled` | `true` | Whether the service that registers servlets and REST resources (`jersey.server`) is enabled. |
+| `services.jersey.objectMapper.enabled` | `true` | Whether the service that offers Stride's Jackson `ObjectMapper` (`jersey.objectMapper`) is enabled. The mapper is injectable, and resources read and write JSON with it. With `false`, and no mapper handed in by the application, no `ObjectMapper` is injectable and Jersey uses its own. |
+| `services.jersey.server.enabled` | `true` | Whether the service that registers REST resources (`jersey.server`) is enabled. Filters, servlets, servlet context initializers and `/ping` do not depend on it. |
 | `services.jersey.server.config.mediaTypes.yaml` | `application/yaml` | Maps the URI extension `.yaml` to this media type. |
 | `services.jersey.server.config.mediaTypes.txt` | `text/plain` | Maps `.txt` to this media type. |
 | `services.jersey.server.config.mediaTypes.schema` | `application/schema+json` | Maps `.schema` to this media type. |
@@ -666,6 +677,7 @@ These keys exist once a component of that name is declared, in code or in a file
 | `servlets.<name>.config.pathSpec` | `Servlet.Builder.pathSpec` |
 | `servlets.<name>.config.binding.<attribute>` | `ServletContextBinding.Builder.bind` |
 | `servlets.<name>.config.validation.requires.servletContextAttributes.<index>` | `ServletContextValidation.Builder.requireAttribute`, `requireAttributes` |
+| `servlets.<name>.config.validation.requires.namedServices.<index>.type`, `.named` | `ServletContextValidation.Builder.requireNamedService` |
 | `resources.<name>.enabled` | `Resource.Builder.enabled` |
 | `resources.<name>.config.class` | `Resource.Builder.clazz`, `className` |
 | `resources.<name>.config.args.<index>.class`, `.named` | `Args.Builder.arg` |
