@@ -21,7 +21,8 @@ public record ServicesImpl(ObjectNode json) implements Services {
      */
     @Override
     public Optional<Service> service(String name) {
-        return JsonElement.ofEphemeral(json)
+        // strict: a name that is not declared has no entry, where the ephemeral strategy would invent an empty one
+        return JsonElement.ofStrict(json)
                 .with(name)
                 .toObjectNode()
                 .map(json -> new ServiceImpl(name, json));

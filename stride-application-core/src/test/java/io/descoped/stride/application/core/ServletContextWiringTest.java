@@ -172,7 +172,44 @@ class ServletContextWiringTest {
                         .initializerClass(Announcer.class)
                         .validate(ServletContextValidation.builder().requireNamedService(String.class, "absent"))));
 
-        assertTrue(failure.contains("Required service 'class java.lang.String' named 'absent' NOT available!"),
+        assertTrue(failure.contains("Required service 'java.lang.String' named 'absent' for the servlet context initialization is NOT available!"),
                 failure);
+    }
+
+    @Test
+    void aServletThatRequiresANamedServiceNobodyOffersStopsTheApplicationFromStarting() {
+        String failure = startFailure(ApplicationConfiguration.builder().testDefaults()
+                .servlets(Servlets.builder().servlet(Servlet.builder("announced")
+                        .clazz(AnnouncedServlet.class).pathSpec("/announced")
+                        .validate(ServletContextValidation.builder().requireNamedService(String.class, "announcement")))));
+
+        assertTrue(failure.contains("Required service 'java.lang.String' named 'announcement' for 'announced' servlet"
+                + " is NOT available!"), failure);
+    }
+
+    @Test
+    void aServletClassWithoutAPathStopsTheApplicationFromStartingAndNamesTheKey() {
+        String failure = startFailure(ApplicationConfiguration.builder().testDefaults()
+                .servlets(Servlets.builder().servlet(Servlet.builder("announced").clazz(AnnouncedServlet.class))));
+
+        assertTrue(failure.contains("Servlet 'announced' has no path: set servlets.announced.config.pathSpec"), failure);
+    }
+
+    @Test
+    void servletsAndInitializersAreThereWhenJerseyIsDisabled() {
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder().testDefaults()
+                .overrideProperty("services.jersey.server.enabled", "false")
+                .initialization(ServletContextInitialization.builder().initializerClass(Announcer.class))
+                .servlets(Servlets.builder().servlet(Servlet.builder("announced")
+                        .clazz(AnnouncedServlet.class).pathSpec("/announced")
+                        .validate(ServletContextValidation.builder().requireNamedService(String.class, "announcement"))));
+
+        try (TestApplication application = new TestApplication.Builder().configuration(configuration).build()) {
+            application.start();
+
+            TestClient client = TestClient.create(application);
+            assertEquals("yes", client.get("/announced").expect200Ok().body());
+            client.get("/ping").expect200Ok();
+        }
     }
 }

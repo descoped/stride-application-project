@@ -96,4 +96,44 @@ class LifecycleStepsTest {
             assertThrows(TestClientException.class, () -> client.get("/ping"));
         }
     }
+
+    @Test
+    void aStoppedApplicationStillAnswersWhereItWasWithNoAddress() {
+        try (TestApplication application = application()) {
+            application.start();
+            application.stop();
+
+            assertEquals(-1, application.getLocalPort());
+            assertEquals(-1, application.getPort());
+            assertEquals("localhost", application.getHost());
+        }
+    }
+
+    @Test
+    void aStoppedApplicationCannotBeStartedAgainAndSaysSo() {
+        try (TestApplication application = application()) {
+            application.start();
+            application.stop();
+
+            for (Runnable step : new Runnable[]{application::start, application::activate, () -> application.proceedTo(5)}) {
+                IllegalStateException failure = assertThrows(IllegalStateException.class, step::run);
+                assertEquals("The application is stopped and cannot be started again; create a new one",
+                        failure.getMessage());
+            }
+            application.stop(); // stopping again is allowed and does nothing
+        }
+    }
+
+    @Test
+    void proceedingToZeroBeforeAnythingStartedLeavesTheApplicationReadyToStart() {
+        try (TestApplication application = application()) {
+            application.proceedTo(0);
+            assertFalse(application.isCompleted());
+
+            application.start();
+
+            assertTrue(active(application, Late.class));
+            TestClient.create(application).get("/ping").expect200Ok();
+        }
+    }
 }
