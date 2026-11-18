@@ -40,9 +40,11 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- the library's own tests need a logging backend; it brings none to the projects that use it -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
