@@ -19,6 +19,10 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
+        <!-- Reproducible builds: every jar entry gets this time, so the same tag builds the same bytes.
+             release:prepare sets it to the release time. -->
+        <project.build.outputTimestamp>2026-11-18T22:20:06Z</project.build.outputTimestamp>
+
         <!-- Java baseline. `release` alone sets the language level, the class file version and the JDK API that
              the code is checked against; `source` and `target` would only repeat it. -->
         <maven.compiler.release>25</maven.compiler.release>
@@ -82,11 +86,12 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <!-- The root POM has a copy for the release plugin: change both together. -->
     <scm child.scm.connection.inherit.append.path="false"
          child.scm.developerConnection.inherit.append.path="false"
          child.scm.url.inherit.append.path="false">
         <connection>scm:git:git://github.com/descoped/stride-application-project.git</connection>
-        <developerConnection>scm:git:https://github.com/descoped/stride-application-project.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:descoped/stride-application-project.git</developerConnection>
         <url>https://github.com/descoped/stride-application-project</url>
         <tag>HEAD</tag>
     </scm>
@@ -329,6 +334,7 @@
              Snapshot (no signing needed): mvn deploy -P central,secrets -pl '!:stride-application-sample'
              The -pl is required: with the sample in the reactor the build fails before anything is uploaded.
              Release (by hand, never from CI): mvn release:prepare release:perform -P central,sign,secrets
+             The release plugin is configured in the root POM, where a release is run.
              A release is uploaded with autoPublish=false and published by hand in the Portal.
              Dry run without uploading: add -DskipUpload=true -->
         <profile>
@@ -550,23 +556,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>3.7.0</version>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <configuration>
-                        <tagNameFormat>v@{project.version}</tagNameFormat>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <releaseProfiles>central,sign</releaseProfiles>
-                        <goals>deploy</goals>
-                        <!-- The sample application is an example, never an artifact: it is left out of the builds
-                             the release runs, as it is left out of the snapshot command above. That includes the
-                             verify before the tag; pull request and master builds test the sample. The sample's
-                             own POM fails any build that has both the sample and the central profile. -->
-                        <arguments>-pl !:stride-application-sample</arguments>
-                    </configuration>
                 </plugin>
 
                 <plugin>
