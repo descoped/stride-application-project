@@ -50,6 +50,8 @@ Most applications are affected by these.
 - `stride-application-openapi` is new and optional. It serves the OpenAPI document at `/openapi.json` and
   `/openapi.yaml`. It adds a server entry only when `application.url` is set, and declares the bearer scheme only
   when a filter named `security` is in force.
+  It describes the resources registered with Stride, as classes or instances. A JAX-RS class that is only on the
+  class path is not described.
 - `stride-application-security` is new and optional. It holds bearer authentication and Nimbus JOSE+JWT. Core no
   longer depends on Nimbus JOSE+JWT or `java.net.http`.
 - **`stride-application-junit5` is renamed `stride-application-junit-jupiter`.** Change the artifactId in your
