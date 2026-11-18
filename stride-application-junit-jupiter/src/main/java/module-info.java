@@ -1,7 +1,7 @@
 /**
  * Test support: starts a real Stride application and calls it over HTTP.
  */
-module stride.application.junit5 {
+module stride.application.junit.jupiter {
 
     requires transitive stride.application.api;
     // TestClient and ResponseHelper expose java.net.http types
