@@ -34,7 +34,7 @@
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-core</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Stride logs through SLF4J and ships no backend: the application picks one. -->
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-junit5</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 

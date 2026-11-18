@@ -35,7 +35,7 @@
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-config</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -56,14 +56,14 @@
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-core</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-junit5</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
