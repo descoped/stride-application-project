@@ -21,8 +21,8 @@ public record ServletsImpl(ObjectNode json) implements Servlets {
      */
     @Override
     public Optional<Servlet> servlet(String name) {
-        // Only a name that is declared: "jetty" is the parent of "jetty.server", not a component, and the
-        // ephemeral strategy would invent an empty entry for any name.
+        // Only a name that is declared: the parent of a dotted name is not a component, and the ephemeral
+        // strategy would invent an empty entry for any name.
         if (!ApplicationConfigurationJson.keys(json).contains(name)) {
             return Optional.empty();
         }
