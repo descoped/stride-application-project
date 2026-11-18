@@ -86,18 +86,17 @@ public class JerseyServerService implements PreDestroy {
         for (Class<?> initializerClass : initialization.classes()) {
             ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
             initializer.initialize(jerseyServiceLocator, servletContextHandler.getServletContext());
+        }
 
-            // validate requires
-            ServletContextValidation validation = initialization.validation();
-            if (validation != null) {
-                validateInitializer(validation, initializerClass, servletContextHandler);
-            }
+        // validate requires, once every initializer has run: one may provide what another does not
+        ServletContextValidation validation = initialization.validation();
+        if (validation != null) {
+            validateInitialization(validation, servletContextHandler);
         }
     }
 
-    private void validateInitializer(ServletContextValidation validation,
-                                     Class<?> initializerClass,
-                                     ServletContextHandler servletContextHandler) {
+    private void validateInitialization(ServletContextValidation validation,
+                                        ServletContextHandler servletContextHandler) {
         Set<ServletContextValidation.NamedService> namedServices = validation.serviceLocatorNamedServices();
         for (ServletContextValidation.NamedService namedService : namedServices) {
             ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
@@ -116,9 +115,8 @@ public class JerseyServerService implements PreDestroy {
             boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
             if (!valid) {
                 throw new ValidationException(
-                        String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
-                                attribute,
-                                initializerClass
+                        String.format("Required servletContext attribute '%s' for the servlet context initialization IS NOT set!",
+                                attribute
                         )
                 );
             }

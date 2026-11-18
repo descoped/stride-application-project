@@ -99,6 +99,10 @@ Most applications are affected by these.
   disables one.
 - **A filter or servlet instance is always registered.** `filters.<name>.enabled=false` does not remove an
   instance; Stride logs a warning. An application that wants a switch leaves the instance out.
+- **Requirements declared on the servlet context initialization are checked.**
+  `ServletContextInitialization.builder().validate(..)` was accepted and then ignored, because of a misspelled
+  key inside Stride. A required attribute or named service that is missing now stops the application from
+  starting, as the same requirement on a servlet always did.
 - **A configured service class keeps its qualifiers.** A class named in `services.<name>.config.class` is bound
   with the qualifier annotations it carries, not only `@Named`. A `@MessageReceiver` class named there now
   receives HK2 topic events; it used to receive none.
