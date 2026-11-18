@@ -41,8 +41,6 @@ public interface Filter {
      */
     int order();
 
-    ServletContextBinding context();
-
     interface Builder {
 
         String name();
@@ -58,8 +56,6 @@ public interface Filter {
         Builder dispatches(EnumSet<DispatcherType> dispatches);
 
         Builder order(int order);
-
-        Builder context(ServletContextValidation.Builder contextBuilder);
 
         Filter build();
     }
