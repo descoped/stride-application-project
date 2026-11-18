@@ -36,18 +36,18 @@ All artifacts have the group id `io.descoped.stride.application`.
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-core</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-junit-jupiter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <scope>test</scope>
 </dependency>
 ```
 
-There is no release yet, and `0.1.0-SNAPSHOT` is not published. Until the first release, build it into your
-local repository with `mvn install`.
+Releases are on Maven Central. `master` holds the next version as a snapshot, which is not published: build it
+into your local repository with `mvn install`.
 
 Stride logs through SLF4J and ships no backend. Add the one you use, for example `slf4j-simple` or Logback.
 

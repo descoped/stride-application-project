@@ -11,7 +11,7 @@ description. It is optional: [core](core.md) does not bring Swagger.
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-openapi</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
