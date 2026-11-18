@@ -454,20 +454,16 @@
                                 <version>${hk2.version}</version>
                             </path>
                         </annotationProcessorPaths>
-                    </configuration>
-                    <executions>
                         <!-- Tests are compiled into the module under test, which need not require java.net.http;
-                             the tests call the application over HTTP with the JDK client. -->
-                        <execution>
-                            <id>default-testCompile</id>
-                            <configuration>
-                                <compilerArgs>
-                                    <arg>--add-modules</arg>
-                                    <arg>java.net.http</arg>
-                                </compilerArgs>
-                            </configuration>
-                        </execution>
-                    </executions>
+                             the tests call the application over HTTP with the JDK client. The option only makes
+                             the module resolvable: main code still cannot use it without requiring it. It is set
+                             for main and test alike, because an IDE that sees different compiler options for the
+                             two imports every Maven module as a separate main and test module. -->
+                        <compilerArgs>
+                            <arg>--add-modules</arg>
+                            <arg>java.net.http</arg>
+                        </compilerArgs>
+                    </configuration>
                 </plugin>
 
                 <plugin>
