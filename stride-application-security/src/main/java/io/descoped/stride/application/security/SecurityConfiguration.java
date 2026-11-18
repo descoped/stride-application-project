@@ -21,11 +21,13 @@ import java.util.stream.Collectors;
  * @param scopeClaim     the claim holding the granted scopes; {@code scope} per RFC 9068 section 2.2.3
  * @param rolesClaim     the claim holding roles; {@code roles} per RFC 9068 section 2.2.3.1
  * @param realm          the {@code realm} of the {@code WWW-Authenticate} challenge
+ * @param resource       this resource server's resource identifier (RFC 9728 section 1.2), an https URL without a
+ *                       fragment; empty when no protected resource metadata is published
  */
 public record SecurityConfiguration(boolean enabled, String issuer, Set<String> audiences,
                                     Set<String> algorithms, String tokenType, Set<String> publicPaths,
                                     Set<String> requiredScopes, String scopeClaim, String rolesClaim,
-                                    String realm, int clockSkewSeconds) {
+                                    String realm, int clockSkewSeconds, String resource) {
 
     /** The token type of the JWT profile for access tokens (RFC 9068 section 2.1). */
     public static final String ACCESS_TOKEN_TYPE = "at+jwt";
@@ -37,7 +39,17 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
     private static final Pattern SCOPE_TOKEN = Pattern.compile("[\\x21\\x23-\\x5B\\x5D-\\x7E]+");
     private static final Pattern QUOTED_TEXT = Pattern.compile("[\\x20\\x21\\x23-\\x5B\\x5D-\\x7E]+");
 
+    /** Settings of a resource server that publishes no protected resource metadata. */
+    public SecurityConfiguration(boolean enabled, String issuer, Set<String> audiences,
+                                 Set<String> algorithms, String tokenType, Set<String> publicPaths,
+                                 Set<String> requiredScopes, String scopeClaim, String rolesClaim,
+                                 String realm, int clockSkewSeconds) {
+        this(enabled, issuer, audiences, algorithms, tokenType, publicPaths, requiredScopes, scopeClaim, rolesClaim,
+                realm, clockSkewSeconds, "");
+    }
+
     public SecurityConfiguration {
+        resource = resource == null ? "" : resource;
         audiences = Set.copyOf(audiences);
         algorithms = Set.copyOf(algorithms);
         publicPaths = Set.copyOf(publicPaths);
@@ -76,6 +88,9 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
                 throw new IllegalArgumentException("security.realm is required and cannot contain a quote, a backslash "
                         + "or characters outside printable ASCII");
             }
+            if (!resource.isEmpty()) {
+                requireResourceIdentifier(resource);
+            }
         }
     }
 
@@ -85,7 +100,8 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
                 csv(config.requireString("security.algorithms")), config.requireString("security.token-type"),
                 csv(config.requireString("security.public-paths")), scopes(config.requireString("security.required-scopes")),
                 config.requireString("security.scope-claim"), config.requireString("security.roles-claim"),
-                config.requireString("security.realm"), config.requireInt("security.clock-skew-seconds"));
+                config.requireString("security.realm"), config.requireInt("security.clock-skew-seconds"),
+                config.requireString("security.resource"));
     }
 
     static Set<String> csv(String value) {
@@ -95,6 +111,24 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
     /** A scope list is delimited by spaces (OAuth 2.1 section 1.4.1); a scope value may itself contain a comma. */
     static Set<String> scopes(String value) {
         return Arrays.stream(value.split(" ")).filter(s -> !s.isEmpty()).collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * RFC 9728 section 1.2: a resource identifier is a URL that uses the https scheme and has no fragment. A query
+     * is allowed. The identifier is quoted in a challenge, so it must also be quotable.
+     */
+    private static void requireResourceIdentifier(String value) {
+        URI uri;
+        try {
+            uri = URI.create(value);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("security.resource is not a URL: '" + value + "'", e);
+        }
+        if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null
+                || uri.getFragment() != null || !QUOTED_TEXT.matcher(value).matches()) {
+            throw new IllegalArgumentException("security.resource must be an absolute https URL without credentials "
+                    + "or fragment: '" + value + "'");
+        }
     }
 
     public static URI requireHttps(String value) {

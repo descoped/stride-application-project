@@ -19,10 +19,14 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Authenticates every servlet route except explicitly configured exact public paths. */
+/**
+ * Authenticates every servlet route except explicitly configured exact public paths. When a resource identifier
+ * is configured, it also serves this resource server's protected resource metadata (RFC 9728) without a token.
+ */
 public final class BearerAuthenticationFilter extends HttpFilter {
     private final SecurityConfiguration settings;
     private final JwtTokenVerifier verifier;
+    private final ProtectedResourceMetadata metadata;
 
     /**
      * Used when Stride creates the filter from the configuration: reads {@code security.*} and fetches the issuer's
@@ -41,6 +45,7 @@ public final class BearerAuthenticationFilter extends HttpFilter {
     public BearerAuthenticationFilter(SecurityConfiguration settings, JwtTokenVerifier verifier) {
         this.settings = settings;
         this.verifier = verifier;
+        this.metadata = ProtectedResourceMetadata.of(settings);
     }
 
     // OAuth 2.1 section 5.1.1: credentials = "bearer" 1*SP token68, the scheme name in any case
@@ -54,6 +59,10 @@ public final class BearerAuthenticationFilter extends HttpFilter {
     @Override protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String path = request.getRequestURI().substring(request.getContextPath().length());
+        if (metadata != null && metadata.isAt(path, request.getQueryString())) {
+            metadata(request, response);
+            return;
+        }
         if (settings.publicPaths().contains(path)) {
             chain.doFilter(request, response);
             return;
@@ -98,9 +107,30 @@ public final class BearerAuthenticationFilter extends HttpFilter {
     }
 
     /**
+     * RFC 9728 section 3.1 and 3.2: the metadata is queried with GET and answered with 200 and a JSON object. It
+     * describes the resource server and is not protected.
+     */
+    private void metadata(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        boolean head = "HEAD".equals(request.getMethod());
+        if (!head && !"GET".equals(request.getMethod())) {
+            response.setHeader("Allow", "GET, HEAD");
+            response.setStatus(405);
+            return;
+        }
+        byte[] document = metadata.document();
+        response.setStatus(200);
+        response.setContentType("application/json");
+        response.setContentLength(document.length);
+        if (!head) {
+            response.getOutputStream().write(document);
+        }
+    }
+
+    /**
      * Answers with the status and a {@code WWW-Authenticate} challenge (OAuth 2.1 section 5.3.1). The scheme must
-     * be followed by at least one attribute, so the realm is always there. Every value is a constant or was
-     * validated as quotable when the settings were read.
+     * be followed by at least one attribute, so the realm is always there. With a resource identifier configured
+     * the challenge also says where the protected resource metadata is (RFC 9728 section 5.1). Every value is a
+     * constant or was validated as quotable when the settings were read.
      */
     private void reject(HttpServletResponse response, int status, String error, String description, String scope) {
         StringBuilder challenge = new StringBuilder("Bearer realm=\"").append(settings.realm()).append('"');
@@ -109,6 +139,9 @@ public final class BearerAuthenticationFilter extends HttpFilter {
         }
         if (scope != null && !scope.isEmpty()) {
             challenge.append(", scope=\"").append(scope).append('"');
+        }
+        if (metadata != null) {
+            challenge.append(", resource_metadata=\"").append(metadata.location()).append('"');
         }
         response.setHeader("WWW-Authenticate", challenge.toString());
         response.setHeader("Cache-Control", "no-store");
