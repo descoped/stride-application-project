@@ -109,10 +109,24 @@ class ProtectedResourceMetadataTest {
 
     @Test
     void section3_2AParameterWithoutAValueIsLeftOut() throws Exception {
-        JsonNode metadata = json(ProtectedResourceMetadata.of(settings(Set.of(), RESOURCE)).document());
+        // an application without required scopes, and with a resource identifier that has no path
+        SecurityConfiguration settings = settings(Set.of(), "https://api.example.test");
+        Components components = Components.builder()
+                .filter("security", new BearerAuthenticationFilter(settings, JwtTokenVerifierTest.verifier(settings)))
+                .build();
+        try (TestApplication unscoped = new TestApplication.Builder()
+                .configuration(ApplicationConfiguration.builder().testDefaults()).components(components).build()) {
+            unscoped.start();
+            try (TestClient unscopedClient = TestClient.create(unscoped)) {
+                var response = unscopedClient.get("/.well-known/oauth-protected-resource").response();
 
-        assertFalse(metadata.has("scopes_supported"), metadata.toString());
-        assertEquals(RESOURCE, metadata.path("resource").asText());
+                assertEquals(200, response.statusCode());
+                JsonNode metadata = json(response.body().getBytes(StandardCharsets.UTF_8));
+                assertFalse(metadata.has("scopes_supported"), metadata.toString());
+                assertEquals("https://api.example.test", metadata.path("resource").asText());
+                assertEquals(3, metadata.size(), metadata.toString());
+            }
+        }
     }
 
     @Test
