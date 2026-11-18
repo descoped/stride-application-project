@@ -6,7 +6,7 @@ import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.Populator;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
+import org.glassfish.hk2.extras.ExtrasUtilities;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -49,8 +49,9 @@ class BeanDiscovery {
         return dynamicConfiguration;
     }
 
+    /** Enables HK2 topic events. */
     private void propagate() throws MultiException {
-        dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
+        ExtrasUtilities.enableTopicDistribution(serviceLocator);
     }
 
     private void populate() {
