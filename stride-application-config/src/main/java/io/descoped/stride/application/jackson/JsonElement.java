@@ -53,7 +53,7 @@ public interface JsonElement {
     }
 
     default ObjectNode object() {
-        return toObjectNode().orElseThrow(() -> new ClassCastException("Excepted type is " + ObjectNode.class + ", but was " + json().getClass().getName()));
+        return toObjectNode().orElseThrow(() -> new ClassCastException("Expected type is " + ObjectNode.class.getName() + ", but was " + json().getClass().getName()));
     }
 
     default Optional<ArrayNode> toArrayNode() {
@@ -61,7 +61,7 @@ public interface JsonElement {
     }
 
     default ArrayNode array() {
-        return toArrayNode().orElseThrow(() -> new ClassCastException("Excepted type is " + ObjectNode.class + ", but was " + json().getClass().getName()));
+        return toArrayNode().orElseThrow(() -> new ClassCastException("Expected type is " + ArrayNode.class.getName() + ", but was " + json().getClass().getName()));
     }
 
     default boolean has(String name) {

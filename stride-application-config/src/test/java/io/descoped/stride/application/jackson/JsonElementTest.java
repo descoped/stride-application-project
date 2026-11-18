@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class JsonElementTest {
 
@@ -25,7 +26,6 @@ class JsonElementTest {
         ObjectNode jn = mapper.readValue(json, ObjectNode.class);
         JsonElement je = JsonElement.ofStrict(jn).find(name);
 
-        //log.trace("match: {}", je.json());
         assertEquals("bar", je.asString(null));
     }
 
@@ -37,5 +37,18 @@ class JsonElementTest {
 
         // the dynamic strategy creates the missing nodes in the document itself
         assertEquals("{\"foo\":{\"bar\":{\"a\":\"b\"}}}", je.json().toString());
+    }
+
+    @Test
+    void askingAnObjectForAnArrayOrAnArrayForAnObjectSaysWhatWasExpectedAndWhatWasThere() {
+        JsonElement object = JsonElement.ofStrict(JsonNodeFactory.instance.objectNode());
+        JsonElement array = JsonElement.ofStrict(JsonNodeFactory.instance.arrayNode());
+
+        assertEquals("Expected type is com.fasterxml.jackson.databind.node.ArrayNode, "
+                        + "but was com.fasterxml.jackson.databind.node.ObjectNode",
+                assertThrows(ClassCastException.class, object::array).getMessage());
+        assertEquals("Expected type is com.fasterxml.jackson.databind.node.ObjectNode, "
+                        + "but was com.fasterxml.jackson.databind.node.ArrayNode",
+                assertThrows(ClassCastException.class, array::object).getMessage());
     }
 }
