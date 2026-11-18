@@ -19,7 +19,8 @@ application, for example a resource wired to an in-memory collaborator. The appl
 </dependency>
 ```
 
-The library brings `stride-application-api`, `junit-jupiter-api` and `junit-jupiter-engine` with it. It does not bring the runtime: the application is created through `StrideApplication.create`, which needs
+The library brings `stride-application-api`, `junit-jupiter-api` and `junit-jupiter-engine` with it. It does not
+bring the runtime: the application is created through `StrideApplication.create`, which needs
 `stride-application-core` on the class path. An application built on Stride already has it. See
 [core.md](core.md).
 
