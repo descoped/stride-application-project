@@ -42,13 +42,13 @@
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-config</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-api</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -169,8 +169,16 @@
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-junit5</artifactId>
-            <version>0.0.24-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- The test library brings slf4j-simple as its logging backend. Core's tests log through
+                     Logback (logback-test.xml), and two backends on the class path make SLF4J warn. -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

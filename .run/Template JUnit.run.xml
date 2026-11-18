@@ -1,0 +1,14 @@
+<!-- Shared template for JUnit run configurations in IntelliJ IDEA: tests run on the class path, as Surefire runs
+     them (useModulePath is false in stride-application-parent/pom.xml). Without it the IDE runs JUnit on the
+     module path and does not open the test packages to it, so no test can be created. -->
+<component name="ProjectRunConfigurationManager">
+  <configuration default="true" type="JUnit" factoryName="JUnit">
+    <useClassPathOnly />
+    <option name="MAIN_CLASS_NAME" value="" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
