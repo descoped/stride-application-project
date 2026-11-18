@@ -4,6 +4,7 @@ import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import jakarta.inject.Named;
+import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -14,6 +15,7 @@ import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.util.stream.Stream;
 
 public class ApplicationInitialization {
@@ -68,6 +70,14 @@ public class ApplicationInitialization {
             Named named = serviceClass.getAnnotation(Named.class);
             if (named != null) {
                 link = link.named(named.value());
+            }
+            // The class keeps its other qualifiers too, as HK2's own discovery would give it: HK2 finds, for
+            // example, the subscribers of topic events by their @MessageReceiver qualifier.
+            for (Annotation annotation : serviceClass.getAnnotations()) {
+                Class<? extends Annotation> type = annotation.annotationType();
+                if (type != Named.class && type.isAnnotationPresent(Qualifier.class)) {
+                    link = link.qualifiedBy(type.getName());
+                }
             }
             DescriptorImpl descriptorImpl = link.build();
             descriptorImpl.addMetadata(RunLevel.RUNLEVEL_MODE_META_TAG, String.valueOf(RunLevel.RUNLEVEL_MODE_VALIDATING));
