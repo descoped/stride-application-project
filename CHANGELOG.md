@@ -40,6 +40,8 @@ Most applications are affected by these.
 - `services.hk2.threadcount` bounds how many services of one run level start at the same time.
 - Requests that are running when the server stops get time to finish. New key
   `services.jetty.server.config.stopTimeout`, default `PT30S`.
+- A burst of new connections is no longer reset. New key `services.jetty.server.config.acceptQueueSize`, default
+  `1024`: how many connections may wait to be accepted. It was the Java default of 50.
 
 ### Modules
 
