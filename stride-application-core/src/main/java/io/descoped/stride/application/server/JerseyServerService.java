@@ -243,8 +243,11 @@ public class JerseyServerService implements PreDestroy {
             Constructor<?> constructor = resourceClazz.getDeclaredConstructor(parameterClasses.toArray(new Class[0]));
             return constructor.newInstance(parameterInstances.toArray(new Object[0]));
 
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-                 InvocationTargetException e) {
+        } catch (InvocationTargetException e) {
+            // the cause is in the message too: HK2 reports a failed start by its messages only
+            throw new IllegalStateException("The constructor of resource " + resourceClass + " failed: " + e.getCause(),
+                    e.getCause());
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException("Resource " + resourceClass + " could not be created with a constructor "
                     + "taking (" + parameterClasses.stream().map(Class::getName).collect(Collectors.joining(", "))
                     + ")", e);

@@ -49,12 +49,21 @@ class ResourceArgumentsTest {
                         .args(Args.builder().arg(argumentType, named))));
     }
 
+    /** A resource whose constructor refuses its argument. */
+    @Path("/strict")
+    public static class StrictResource {
+        public StrictResource(Rates rates) {
+            throw new IllegalArgumentException("a rate of " + rates.percent() + " is not allowed");
+        }
+    }
+
     private static final Components NORWAY = Components.builder()
             .service(Rates.class, "norway", new Rates(25))
             .build();
 
-    private static String startFailure(ApplicationConfiguration.Builder configuration) {
-        try (StrideApplication application = StrideApplication.create(configuration.build(), NORWAY)) {
+    /** Every message in the chain of the failure that stops the start. */
+    private static String startFailure(ApplicationConfiguration.Builder configuration, Components components) {
+        try (StrideApplication application = StrideApplication.create(configuration.build(), components)) {
             StringBuilder messages = new StringBuilder();
             for (Throwable t = assertThrows(RuntimeException.class, application::start); t != null; t = t.getCause()) {
                 messages.append(t.getMessage()).append('\n');
@@ -75,7 +84,7 @@ class ResourceArgumentsTest {
 
     @Test
     void anArgumentNoServiceProvidesStopsTheApplicationFromStartingAndNamesIt() {
-        String failure = startFailure(configuration(Rates.class, "sweden"));
+        String failure = startFailure(configuration(Rates.class, "sweden"), NORWAY);
 
         assertTrue(failure.contains("Resource " + VatResource.class.getName() + " needs a service of type "
                 + Rates.class.getName() + " named 'sweden', and there is none"), failure);
@@ -84,15 +93,23 @@ class ResourceArgumentsTest {
     @Test
     void argumentsThatMatchNoConstructorStopTheApplicationFromStartingAndNameTheTypes() {
         Components components = Components.builder().service(String.class, "norway", "25").build();
-        ApplicationConfiguration configuration = configuration(String.class, "norway").build();
 
-        try (StrideApplication application = StrideApplication.create(configuration, components)) {
-            StringBuilder messages = new StringBuilder();
-            for (Throwable t = assertThrows(RuntimeException.class, application::start); t != null; t = t.getCause()) {
-                messages.append(t.getMessage()).append('\n');
-            }
-            assertTrue(messages.toString().contains("Resource " + VatResource.class.getName()
-                    + " could not be created with a constructor taking (java.lang.String)"), messages.toString());
-        }
+        String failure = startFailure(configuration(String.class, "norway"), components);
+
+        assertTrue(failure.contains("Resource " + VatResource.class.getName()
+                + " could not be created with a constructor taking (java.lang.String)"), failure);
+    }
+
+    @Test
+    void aConstructorThatFailsStopsTheApplicationFromStartingAndItsOwnFailureIsNamed() {
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder().testDefaults()
+                .resources(Resources.builder().resource(Resource.builder("strict")
+                        .clazz(StrictResource.class)
+                        .args(Args.builder().arg(Rates.class, "norway"))));
+
+        String failure = startFailure(configuration, NORWAY);
+
+        assertTrue(failure.contains("The constructor of resource " + StrictResource.class.getName()
+                + " failed: java.lang.IllegalArgumentException: a rate of 25 is not allowed"), failure);
     }
 }
