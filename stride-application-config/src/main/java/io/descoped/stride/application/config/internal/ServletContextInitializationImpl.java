@@ -9,7 +9,9 @@ import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.config.exception.ExceptionFunction;
 import io.descoped.stride.application.jackson.JsonElement;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record ServletContextInitializationImpl(ObjectNode json) implements ServletContextInitialization {
 
@@ -20,7 +22,8 @@ public record ServletContextInitializationImpl(ObjectNode json) implements Servl
                 .toList(JsonNode::asText)
                 .stream()
                 .<Class<?>>map(ExceptionFunction.call(() -> Class::forName))
-                .toList();
+                // a list the caller may change, as it always has been: classes() is public API
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
