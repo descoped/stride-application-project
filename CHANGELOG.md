@@ -90,6 +90,13 @@ Most applications are affected by these.
 
 ### Components
 
+- **A stopped application says so.** `start()`, `activate()` and `proceedTo(n)` on a stopped application fail
+  with `The application is stopped and cannot be started again; create a new one`. `getHost()`, `getPort()` and
+  `getLocalPort()` then return `localhost` and `-1`, as before the server is started. All of these used to fail
+  with HK2's `ServiceLocatorImpl(..) has been shut down`.
+- `proceedTo(0)` on an application that has not started does nothing. It used to mark the application as
+  completed, after which `start()` silently did nothing.
+- Asking for the address before the server is up no longer logs an error.
 - **An application can hand Stride ready-made objects.** `Components` holds resource, filter and servlet
   instances, and service instances offered for injection by contract and optional name. Pass it to
   `StrideApplication.create(configuration, components)`. HK2 injection still works and is optional.
