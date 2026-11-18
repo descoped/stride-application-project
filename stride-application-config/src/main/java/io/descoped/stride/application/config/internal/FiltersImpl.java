@@ -21,7 +21,11 @@ public record FiltersImpl(ObjectNode json) implements Filters {
      */
     @Override
     public Optional<Filter> filter(String name) {
-        // strict: a name that is not declared has no entry, where the ephemeral strategy would invent an empty one
+        // Only a name that is declared: "jetty" is the parent of "jetty.server", not a component, and the
+        // ephemeral strategy would invent an empty entry for any name.
+        if (!ApplicationConfigurationJson.keys(json).contains(name)) {
+            return Optional.empty();
+        }
         return JsonElement.ofStrict(json)
                 .with(name)
                 .toObjectNode()

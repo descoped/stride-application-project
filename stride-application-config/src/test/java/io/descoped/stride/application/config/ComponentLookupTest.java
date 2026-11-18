@@ -29,6 +29,8 @@ class ComponentLookupTest {
     void aNameThatIsNotDeclaredGivesNothing() {
         assertTrue(CONFIGURATION.services().service("nosuch").isEmpty());
         assertTrue(CONFIGURATION.services().service("jetty.nosuch").isEmpty());
+        assertTrue(CONFIGURATION.services().service("jetty").isEmpty(), "the parent of jetty.server is not a service");
+        assertTrue(CONFIGURATION.services().service("jersey").isEmpty());
         assertTrue(CONFIGURATION.filters().filter("nosuch").isEmpty());
         assertTrue(CONFIGURATION.servlets().servlet("nosuch").isEmpty());
         assertTrue(CONFIGURATION.resources().resource("nosuch").isEmpty());
