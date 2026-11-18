@@ -318,6 +318,7 @@
     <profiles>
         <!-- Publishing to Maven Central through the Central Portal. Run from the root of the repository.
              Snapshot (no signing needed): mvn deploy -P central,secrets -pl '!:stride-application-sample'
+             The -pl is required: with the sample in the reactor the build fails before anything is uploaded.
              Release (by hand, never from CI): mvn release:prepare release:perform -P central,sign,secrets
              A release is uploaded with autoPublish=false and published by hand in the Portal.
              Dry run without uploading: add -DskipUpload=true -->
@@ -549,6 +550,12 @@
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.7.0</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>3.3.1</version>
                     <configuration>
@@ -558,7 +565,8 @@
                         <goals>deploy</goals>
                         <!-- The sample application is an example, never an artifact: it is left out of the builds
                              the release runs, as it is left out of the snapshot command above. That includes the
-                             verify before the tag; pull request and master builds test the sample. -->
+                             verify before the tag; pull request and master builds test the sample. The sample's
+                             own POM fails any build that has both the sample and the central profile. -->
                         <arguments>-pl !:stride-application-sample</arguments>
                     </configuration>
                 </plugin>

@@ -13,7 +13,8 @@
     </parent>
 
     <!-- A small application built on Stride, kept working by the build. It is an example, not a library: the
-         builds that publish leave this module out (see the CI workflow and the release plugin in the parent). -->
+         builds that publish leave this module out (see the central profile and the release plugin in the parent),
+         and the central profile below fails a build that does not. -->
     <artifactId>stride-application-sample</artifactId>
     <packaging>jar</packaging>
 
@@ -61,5 +62,38 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <!-- The publishing profile of the parent uploads the whole reactor in one go, at the end of the build.
+             Failing here in the first phase means this module never reaches deploy, and the build stops before
+             anything is uploaded. -->
+        <profile>
+            <id>central</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sample-is-never-published</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <alwaysFail>
+                                            <message>The sample application is never published. Add -pl '!:stride-application-sample' to a build that uses the central profile.</message>
+                                        </alwaysFail>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
