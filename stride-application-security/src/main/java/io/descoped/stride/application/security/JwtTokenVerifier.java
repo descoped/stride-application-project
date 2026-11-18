@@ -32,8 +32,11 @@ public final class JwtTokenVerifier implements AutoCloseable {
     private final SecurityConfiguration settings;
     private final JWKSource<SecurityContext> keys;
 
+    /**
+     * A verifier that reads the issuer's metadata and keys over the network, as {@code security.issuer} says.
+     */
     public static JwtTokenVerifier discover(SecurityConfiguration settings) throws IOException {
-        if (!settings.enabled()) throw new IllegalArgumentException("Security must be enabled");
+        requireEnabled(settings);
         var retriever = new DefaultResourceRetriever(2000, 3000, 1024 * 1024) {
             @Override protected java.net.HttpURLConnection openHTTPConnection(java.net.URL url) throws IOException {
                 var connection = super.openHTTPConnection(url);
@@ -50,14 +53,37 @@ public final class JwtTokenVerifier implements AutoCloseable {
                 .cache(300_000, 5_000).refreshAheadCache(false).rateLimited(30_000).retrying(false).build();
         try {
             if (keys.get(new JWKSelector(new JWKMatcher.Builder().publicOnly(true).build()), null).isEmpty())
-                throw new IOException("OIDC provider has no public signing keys");
+                throw new IOException("The key set at " + jwks + " has no public signing keys");
             return new JwtTokenVerifier(settings, keys);
         } catch (KeySourceException | IOException e) {
             if (keys instanceof java.io.Closeable closeable) {
                 try { closeable.close(); }
                 catch (IOException cleanup) { e.addSuppressed(cleanup); }
             }
-            throw new IOException("Could not initialize OIDC signing keys", e);
+            throw new IOException("Could not read the signing keys of issuer " + settings.issuer() + " from " + jwks, e);
+        }
+    }
+
+    /**
+     * A verifier with keys the application supplies itself: a key set it holds, its own way of fetching them, or
+     * in a test the public half of a key the test signs tokens with. Nothing is fetched from the issuer; the
+     * tokens must still name it in {@code iss}.
+     * <p>
+     * The verifier owns the key source from here on: {@link #close()} closes it when it is {@code Closeable}.
+     * Give the filter the same settings the verifier was built with; the filter takes the realm, scopes and
+     * public paths from them, the verifier the issuer, audiences and algorithms.
+     */
+    public static JwtTokenVerifier withKeys(SecurityConfiguration settings, JWKSource<SecurityContext> keys) {
+        requireEnabled(settings);
+        return new JwtTokenVerifier(settings, java.util.Objects.requireNonNull(keys, "keys"));
+    }
+
+    // SecurityConfiguration validates its values only when it is enabled
+    static void requireEnabled(SecurityConfiguration settings) {
+        if (!settings.enabled()) {
+            throw new IllegalArgumentException("security.enabled is false, so the security settings are not validated "
+                    + "and cannot be used to authenticate: set security.enabled=true, or leave the security filter out "
+                    + "(filters.security.enabled=false)");
         }
     }
 
