@@ -18,7 +18,6 @@
     <description>Stride Application</description>
     <inceptionYear>2023</inceptionYear>
 
-
     <licenses>
         <license>
             <name>The Apache License, Version 2.0</name>
@@ -173,6 +172,5 @@
             </exclusions>
         </dependency>
     </dependencies>
-
 
 </project>
