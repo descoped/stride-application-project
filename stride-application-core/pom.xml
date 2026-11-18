@@ -163,14 +163,6 @@
             <artifactId>stride-application-junit-jupiter</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
-            <exclusions>
-                <!-- The test library brings slf4j-simple as its logging backend. Core's tests log through
-                     Logback (logback-test.xml), and two backends on the class path make SLF4J warn. -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 

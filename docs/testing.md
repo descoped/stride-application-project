@@ -19,13 +19,12 @@ application, for example a resource wired to an in-memory collaborator. The appl
 </dependency>
 ```
 
-The library brings `stride-application-api`, `junit-jupiter-api`, `junit-jupiter-engine` and `slf4j-simple` with
-it. It does not bring the runtime: the application is created through `StrideApplication.create`, which needs
+The library brings `stride-application-api`, `junit-jupiter-api` and `junit-jupiter-engine` with it. It does not bring the runtime: the application is created through `StrideApplication.create`, which needs
 `stride-application-core` on the class path. An application built on Stride already has it. See
 [core.md](core.md).
 
-`slf4j-simple` is an SLF4J backend. A project whose tests log through another backend excludes it from this
-dependency.
+It brings no logging backend. Stride logs through SLF4J, so the tests log with the backend the project has on its
+test class path, for example `slf4j-simple` or Logback. Without one, SLF4J prints a notice and logs nothing.
 
 Everything is in one package, `io.descoped.stride.application.test.server`. The Java module is
 `stride.application.junit.jupiter`.
