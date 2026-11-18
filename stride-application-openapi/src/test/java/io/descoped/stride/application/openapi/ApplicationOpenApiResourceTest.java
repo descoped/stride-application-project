@@ -41,6 +41,8 @@ class ApplicationOpenApiResourceTest {
             assertTrue(document.path("paths").has("/pets/{name}"), body);
             assertTrue(document.at("/paths/~1pets~1{name}").has("get"), body);
             assertFalse(document.path("paths").has("/openapi"), "the document does not list itself");
+            assertFalse(document.path("paths").has("/unregistered"),
+                    "a JAX-RS class that is on the class path but not registered is not served, so not described");
             assertFalse(document.has("servers"), "no server entry unless application.url is set");
             assertFalse(document.has("security"), "no security requirement unless security is enabled");
         }
@@ -87,6 +89,46 @@ class ApplicationOpenApiResourceTest {
             String body = TestClient.create(application).get("/openapi.json").expect200Ok().body();
 
             assertFalse(new ObjectMapper().readTree(body).has("security"), body);
+        }
+    }
+
+    @Test
+    void describesAResourceHandedInAsAnInstance() throws Exception {
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder().testDefaults()
+                .resources(Resources.builder()
+                        .resource(Resource.builder("openapi").clazz(ApplicationOpenApiResource.class)));
+        Components components = Components.builder().resource(new PetResource()).build();
+
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(configuration).components(components).build()) {
+            application.start();
+
+            JsonNode document = new ObjectMapper()
+                    .readTree(TestClient.create(application).get("/openapi.json").expect200Ok().body());
+
+            assertTrue(document.path("paths").has("/pets/{name}"), document.toString());
+            assertFalse(document.path("paths").has("/unregistered"), document.toString());
+        }
+    }
+
+    @Test
+    void anOperationCanSayThatItNeedsNoTokenInAnApplicationThatAuthenticates() throws Exception {
+        Components components = Components.builder()
+                .filter("security", new HttpFilter() {
+                })
+                .resource(new StatusResource())
+                .build();
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(configuration()).components(components).build()) {
+            application.start();
+
+            JsonNode document = new ObjectMapper()
+                    .readTree(TestClient.create(application).get("/openapi.json").expect200Ok().body());
+
+            assertEquals("[{}]", document.at("/paths/~1status/get/security").toString(), document.toString());
+            assertTrue(document.at("/paths/~1pets~1{name}/get/security").isMissingNode(),
+                    "other operations follow the document's requirement");
+            assertEquals("[{\"bearerAuth\":[]}]", document.path("security").toString());
         }
     }
 }

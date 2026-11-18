@@ -62,6 +62,9 @@ class Lifecycle {
 
     synchronized void proceedTo(int runLevel) {
         if (completed.get()) {
+            if (runLevel > 0) {
+                ensureNotStopped();
+            }
             return;
         }
 
@@ -75,7 +78,15 @@ class Lifecycle {
         completed.set(runLevel == 0);
     }
 
+    // the service locator is shut down with the application; its services cannot come back
+    void ensureNotStopped() {
+        if (completed.get()) {
+            throw new IllegalStateException("The application is stopped and cannot be started again; create a new one");
+        }
+    }
+
     void start() {
+        ensureNotStopped();
         proceedTo(getMaxRunLevel()); // start all run levels
     }
 

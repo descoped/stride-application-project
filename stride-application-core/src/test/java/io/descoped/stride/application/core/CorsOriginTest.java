@@ -2,6 +2,7 @@ package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import io.descoped.stride.application.test.server.TestApplication;
 import io.descoped.stride.application.test.server.TestClient;
 import jakarta.ws.rs.GET;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -71,6 +73,30 @@ class CorsOriginTest {
 
             assertEquals("42", response.body());
             assertEquals(Optional.empty(), response.headers().firstValue("Access-Control-Allow-Origin"));
+        }
+    }
+
+    @Test
+    void aFilterMadeWithTheBuilderAllowsTheMethodsTheDeclaredDefaultAllows() {
+        // the instance replaces the configured filter of the same name
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(ApplicationConfiguration.builder().testDefaults())
+                .components(Components.builder()
+                        .filter("cors", ApplicationCORSServletFilter.builder().build())
+                        .build())
+                .build()) {
+            application.start();
+            TestClient client = TestClient.create(application);
+
+            // the declared default, so the builder and the defaults file cannot drift apart
+            String declared = ApplicationConfiguration.builder().testDefaults().build()
+                    .requireString("filters.cors.config.methods");
+            assertTrue(declared.contains("PATCH"), declared);
+            for (String method : declared.split(", ")) {
+                var preflight = client.options("/ping", "Origin", "https://shop.example",
+                        "Access-Control-Request-Method", method).expectAnyOf(204);
+                assertEquals(declared, preflight.response().headers().firstValue("Access-Control-Allow-Methods").orElse(null));
+            }
         }
     }
 }
