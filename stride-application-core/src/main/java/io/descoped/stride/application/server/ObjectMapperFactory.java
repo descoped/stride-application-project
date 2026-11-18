@@ -7,13 +7,18 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.Service;
 
+/**
+ * Makes a Jackson {@code ObjectMapper} injectable in every application. HK2 finds this factory through the
+ * metadata generated at build time ({@code META-INF/hk2-locator/default}); no code refers to it. Its rank is
+ * below the default, so an {@code ObjectMapper} the application offers itself wins.
+ */
 @Service(name = "jersey.objectMapper")
 public class ObjectMapperFactory implements Factory<ObjectMapper> {
     private final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     public ObjectMapperFactory() {
-        // There is nothing to set up.
+        // HK2 creates the factory; there is nothing to set up.
     }
 
     @Override
