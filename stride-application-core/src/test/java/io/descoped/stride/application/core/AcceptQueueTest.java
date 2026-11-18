@@ -6,6 +6,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.junit.jupiter.api.Test;
 
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -19,7 +21,11 @@ class AcceptQueueTest {
         try (StrideApplication application = StrideApplication.create(configuration)) {
             application.start();
             Server server = application.getServiceLocator().getService(Server.class);
-            return ((ServerConnector) server.getConnectors()[0]).getAcceptQueueSize();
+            return Stream.of(server.getConnectors())
+                    .filter(ServerConnector.class::isInstance)
+                    .map(ServerConnector.class::cast)
+                    .findFirst().orElseThrow()
+                    .getAcceptQueueSize();
         }
     }
 
