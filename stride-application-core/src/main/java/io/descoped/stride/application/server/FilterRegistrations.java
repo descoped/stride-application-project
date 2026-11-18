@@ -49,8 +49,9 @@ final class FilterRegistrations {
                 instance = serviceLocator.createAndInitialize(filterClass);
             } else if (!filter.isEnabled() && filter.json().has("enabled")) {
                 // code decides which components exist; an instance is never dropped by configuration
+                String name = filter.name();
                 log.warn("Filter '{}' was handed in as an instance and is registered although filters.{}.enabled is false",
-                        filter.name(), filter.name());
+                        name, name);
             }
             registrations.add(new Registration(filter.name(), filter.order(), instance, filter.pathSpec(), filter.dispatches()));
         }

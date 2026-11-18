@@ -20,9 +20,10 @@ public class DefaultExceptionServletFilter extends HttpFilter {
         try {
             chain.doFilter(request, response);
         } catch (Throwable t) {
-            log.error(String.format("While attempting to serve: %s %s",
+            // The last resort: an Error is answered with 500 too, not only an Exception.
+            log.error("While attempting to serve: {} {}",
                     request.getMethod(),
-                    request.getRequestURI()), t);
+                    request.getRequestURI(), t);
             response.sendError(500);
         }
     }

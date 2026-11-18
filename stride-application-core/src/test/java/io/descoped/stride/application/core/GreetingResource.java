@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 public class GreetingResource {
 
     public GreetingResource() {
+        // Jersey creates the resource from its class; it has nothing to set up.
     }
 
     @GET

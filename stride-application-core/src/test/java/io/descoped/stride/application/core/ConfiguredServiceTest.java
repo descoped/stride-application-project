@@ -71,8 +71,10 @@ class ConfiguredServiceTest {
 
     @Test
     void aClassWithItsOwnScopeIsRejectedNamingTheKey() {
+        ApplicationConfiguration configuration = configuration("cache", SingletonService.class);
+
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> StrideApplication.create(configuration("cache", SingletonService.class)));
+                () -> StrideApplication.create(configuration));
 
         assertTrue(failure.getMessage().contains("services.cache.config.class"), failure.getMessage());
         assertTrue(failure.getMessage().contains(SingletonService.class.getName()), failure.getMessage());
@@ -80,8 +82,10 @@ class ConfiguredServiceTest {
 
     @Test
     void anHk2ServiceClassIsRejectedInsteadOfBeingLeftOut() {
+        ApplicationConfiguration configuration = configuration("discovered", Hk2Service.class);
+
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> StrideApplication.create(configuration("discovered", Hk2Service.class)));
+                () -> StrideApplication.create(configuration));
 
         assertTrue(failure.getMessage().contains("services.discovered.config.class"), failure.getMessage());
     }

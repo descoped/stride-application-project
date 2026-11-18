@@ -15,14 +15,11 @@ import jakarta.servlet.Servlet;
 import jakarta.validation.ValidationException;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
-import org.glassfish.hk2.api.Injectee;
-import org.glassfish.hk2.api.JustInTimeInjectionResolver;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.runlevel.RunLevel;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.jvnet.hk2.annotations.Service;
@@ -68,7 +65,24 @@ public class JerseyServerService implements PreDestroy {
 
         // initialize initializers
         jerseyServiceLocator = ServiceLocatorFactory.getInstance().create(null, serviceLocator);
-        ServletContextInitialization initialization = configuration.initialization();
+        runInitializers(configuration.initialization(), serviceLocator, servletContextHandler);
+
+        registerServlets(configuration, components, serviceLocator, servletContextHandler);
+
+        registerResources(configuration, components, resourceConfig);
+
+        // initialize container
+        servletContainer = new JerseyServletContainer(resourceConfig);
+        ServletHolder servletHolder = new ServletHolder(servletContainer);
+        servletHolder.setInitOrder(1);
+        servletContextHandler.addServlet(servletHolder, "/*");
+
+        log.info("Jersey Servlet container started!");
+    }
+
+    private void runInitializers(ServletContextInitialization initialization,
+                                 ServiceLocator serviceLocator,
+                                 ServletContextHandler servletContextHandler) {
         for (Class<?> initializerClass : initialization.classes()) {
             ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
             initializer.initialize(jerseyServiceLocator, servletContextHandler.getServletContext());
@@ -76,47 +90,50 @@ public class JerseyServerService implements PreDestroy {
             // validate requires
             ServletContextValidation validation = initialization.validation();
             if (validation != null) {
-                Set<ServletContextValidation.NamedService> namedServices = validation.serviceLocatorNamedServices();
-                for (ServletContextValidation.NamedService namedService : namedServices) {
-                    ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
-                    if (serviceHandle == null) {
-                        throw new ValidationException(
-                                String.format("Required service '%s' named '%s' NOT available!",
-                                        namedService.type(),
-                                        namedService.named()
-                                )
-                        );
-                    }
-                }
+                validateInitializer(validation, initializerClass, servletContextHandler);
+            }
+        }
+    }
 
-                Set<String> attributes = validation.servletContextAttributes();
-                for (String attribute : attributes) {
-                    boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
-                    if (!valid) {
-                        throw new ValidationException(
-                                String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
-                                        attribute,
-                                        initializerClass
-                                )
-                        );
-                    }
-                }
+    private void validateInitializer(ServletContextValidation validation,
+                                     Class<?> initializerClass,
+                                     ServletContextHandler servletContextHandler) {
+        Set<ServletContextValidation.NamedService> namedServices = validation.serviceLocatorNamedServices();
+        for (ServletContextValidation.NamedService namedService : namedServices) {
+            ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
+            if (serviceHandle == null) {
+                throw new ValidationException(
+                        String.format("Required service '%s' named '%s' NOT available!",
+                                namedService.type(),
+                                namedService.named()
+                        )
+                );
             }
         }
 
+        Set<String> attributes = validation.servletContextAttributes();
+        for (String attribute : attributes) {
+            boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
+            if (!valid) {
+                throw new ValidationException(
+                        String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
+                                attribute,
+                                initializerClass
+                        )
+                );
+            }
+        }
+    }
+
+    private static void registerServlets(ApplicationConfiguration configuration,
+                                         Components components,
+                                         ServiceLocator serviceLocator,
+                                         ServletContextHandler servletContextHandler) {
         // register servlets
         List<ServletSpec> servletSpecList = new ArrayList<>();
 
         Services services = configuration.services();
-        Set<String> servletsWithPath = new HashSet<>();
-        for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
-            if (servlet.pathSpec() != null) servletsWithPath.add(servlet.name());
-        }
-        for (String name : components.servlets().keySet()) {
-            if (!servletsWithPath.contains(name)) {
-                throw new IllegalStateException("Servlet '" + name + "' has no path: set servlets." + name + ".config.pathSpec");
-            }
-        }
+        requirePathForServletInstances(configuration, components);
         for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
             Servlet servletInstance = components.servlets().get(servlet.name());
             if (servletInstance == null && !servlet.isEnabled()) continue;
@@ -135,22 +152,7 @@ public class JerseyServerService implements PreDestroy {
                         .ifPresent(instance -> servletContextHandler.getServletContext().setAttribute(name, instance)));
             }
 
-            // validate servletContext attributes
-            ServletContextValidation validation = servlet.validation();
-            if (validation != null) {
-                Set<String> requires = validation.servletContextAttributes();
-                for (String require : requires) {
-                    boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
-                    if (!valid) {
-                        throw new ValidationException(
-                                String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
-                                        require,
-                                        servlet.name()
-                                )
-                        );
-                    }
-                }
-            }
+            validateServlet(servlet, servletContextHandler);
 
             ServletHolder servletHolder = new ServletHolder(servletInstance);
             servletSpecList.add(new ServletSpec(servletHolder, servlet.pathSpec()));
@@ -159,7 +161,43 @@ public class JerseyServerService implements PreDestroy {
         for (ServletSpec servletSpec : servletSpecList) {
             servletContextHandler.addServlet(servletSpec.holder, servletSpec.pathSpec());
         }
+    }
 
+    private static void requirePathForServletInstances(ApplicationConfiguration configuration, Components components) {
+        Set<String> servletsWithPath = new HashSet<>();
+        for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
+            if (servlet.pathSpec() != null) servletsWithPath.add(servlet.name());
+        }
+        for (String name : components.servlets().keySet()) {
+            if (!servletsWithPath.contains(name)) {
+                throw new IllegalStateException("Servlet '" + name + "' has no path: set servlets." + name + ".config.pathSpec");
+            }
+        }
+    }
+
+    private static void validateServlet(io.descoped.stride.application.config.Servlet servlet,
+                                        ServletContextHandler servletContextHandler) {
+        // validate servletContext attributes
+        ServletContextValidation validation = servlet.validation();
+        if (validation != null) {
+            Set<String> requires = validation.servletContextAttributes();
+            for (String require : requires) {
+                boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
+                if (!valid) {
+                    throw new ValidationException(
+                            String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
+                                    require,
+                                    servlet.name()
+                            )
+                    );
+                }
+            }
+        }
+    }
+
+    private void registerResources(ApplicationConfiguration configuration,
+                                   Components components,
+                                   ResourceConfig resourceConfig) throws ClassNotFoundException {
         // register resources: instances the application wired itself, then classes named in the configuration
         components.resources().forEach(resourceConfig::register);
         for (Resource resource : configuration.resources().iterator()) {
@@ -170,25 +208,7 @@ public class JerseyServerService implements PreDestroy {
                 if (args.isEmpty()) {
                     resourceConfig.register(getClass().getClassLoader().loadClass(resourceClass));
                 } else {
-                    // create resource using reflection (TODO: replace this with HK2 Injection)
-                    Class<?> resourceClazz = getClass().getClassLoader().loadClass(resourceClass);
-
-                    List<Class<?>> parameterClasses = new ArrayList<>();
-                    List<Object> parameterInstances = new ArrayList<>();
-                    for (Arg arg : args) {
-                        parameterClasses.add(arg.clazz());
-                        parameterInstances.add(jerseyServiceLocator.getService(arg.clazz(), arg.named()));
-                    }
-
-                    try {
-                        Constructor<?> constructor = resourceClazz.getDeclaredConstructor(parameterClasses.toArray(new Class[0]));
-                        Object resourceInstance = constructor.newInstance(parameterInstances.toArray(new Object[0]));
-                        resourceConfig.register(resourceInstance);
-
-                    } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-                             InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
+                    resourceConfig.register(createResource(resourceClass, args));
                 }
 
                 log.debug("Registered: {}", resourceClass);
@@ -198,14 +218,27 @@ public class JerseyServerService implements PreDestroy {
                 throw e;
             }
         }
+    }
 
-        // initialize container
-        servletContainer = new JerseyServletContainer(resourceConfig);
-        ServletHolder servletHolder = new ServletHolder(servletContainer);
-        servletHolder.setInitOrder(1);
-        servletContextHandler.addServlet(servletHolder, "/*");
+    private Object createResource(String resourceClass, List<Arg> args) throws ClassNotFoundException {
+        // create resource using reflection (TODO: replace this with HK2 Injection)
+        Class<?> resourceClazz = getClass().getClassLoader().loadClass(resourceClass);
 
-        log.info("Jersey Servlet container started!");
+        List<Class<?>> parameterClasses = new ArrayList<>();
+        List<Object> parameterInstances = new ArrayList<>();
+        for (Arg arg : args) {
+            parameterClasses.add(arg.clazz());
+            parameterInstances.add(jerseyServiceLocator.getService(arg.clazz(), arg.named()));
+        }
+
+        try {
+            Constructor<?> constructor = resourceClazz.getDeclaredConstructor(parameterClasses.toArray(new Class[0]));
+            return constructor.newInstance(parameterInstances.toArray(new Object[0]));
+
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                 InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -215,38 +248,5 @@ public class JerseyServerService implements PreDestroy {
     }
 
     record ServletSpec(ServletHolder holder, String pathSpec) {
-    }
-
-
-    //    @Provider
-    static class ResourceInjectionBinder extends AbstractBinder {
-
-        private final Class<?> resourceClazz;
-
-        public ResourceInjectionBinder(Class<?> resourceClazz) {
-            this.resourceClazz = resourceClazz;
-        }
-
-        @Override
-        protected void configure() {
-            bind(resourceClazz).to(ResourceJustInTimeInjectionResolver.class);
-        }
-    }
-
-    //    @Service
-    static class ResourceJustInTimeInjectionResolver implements JustInTimeInjectionResolver {
-
-        @Override
-        public boolean justInTimeResolution(Injectee injectee) {
-            if (injectee.getInjecteeClass() == null) {
-                return false;
-            }
-
-            log.trace("{}", injectee.getRequiredType());
-
-            System.err.println("-----: " + injectee.getInjecteeDescriptor().getInjectees());
-
-            return false;
-        }
     }
 }

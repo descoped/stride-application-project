@@ -10,7 +10,10 @@ class CorsFilterSettingsTest {
     // Fetch standard, CORS protocol: a response to a credentialed request cannot allow every origin with "*"
     @Test
     void credentialsCannotBeAllowedForEveryOrigin() {
-        assertThrows(IllegalArgumentException.class,
-                () -> ApplicationCORSServletFilter.builder().origin("*").credentials("true").build());
+        ApplicationCORSServletFilter.Builder builder = ApplicationCORSServletFilter.builder()
+                .origin("*")
+                .credentials("true");
+
+        assertThrows(IllegalArgumentException.class, builder::build);
     }
 }

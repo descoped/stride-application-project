@@ -4,9 +4,13 @@ import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.config.Resources;
 import io.descoped.stride.application.test.server.TestApplication;
+import io.descoped.stride.application.test.server.TestClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestApplicationTest {
 
@@ -33,6 +37,12 @@ public class TestApplicationTest {
 
     @Test
     void testApplication() {
+        assertTrue(application.isRunning());
+        assertTrue(application.getLocalPort() > 0, "the server listens on a port of its own choosing");
 
+        try (TestClient client = TestClient.create(application)) {
+            assertEquals("{\"name\":\"world\",\"greeting\":\"hello\"}",
+                    client.get("/greet/world?greeting=hello").expect200Ok().body());
+        }
     }
 }

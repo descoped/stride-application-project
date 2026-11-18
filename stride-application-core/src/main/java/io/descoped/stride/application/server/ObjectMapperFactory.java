@@ -13,6 +13,7 @@ public class ObjectMapperFactory implements Factory<ObjectMapper> {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     public ObjectMapperFactory() {
+        // HK2 creates the factory; there is nothing to set up.
     }
 
     @Override
@@ -24,5 +25,6 @@ public class ObjectMapperFactory implements Factory<ObjectMapper> {
 
     @Override
     public void dispose(ObjectMapper instance) {
+        // The one mapper lives as long as the application and holds nothing to release.
     }
 }
