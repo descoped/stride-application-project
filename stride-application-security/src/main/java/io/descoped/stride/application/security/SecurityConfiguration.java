@@ -55,7 +55,7 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
         publicPaths = Set.copyOf(publicPaths);
         requiredScopes = Set.copyOf(requiredScopes);
         if (enabled) {
-            requireHttps(issuer);
+            requireIssuer(issuer);
             if (audiences.isEmpty()) {
                 throw new IllegalArgumentException("security.audiences is required");
             }
@@ -135,6 +135,24 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
      * RFC 9728 section 1.2: a resource identifier is a URL that uses the https scheme and has no fragment. A query
      * is allowed. The identifier is quoted in a challenge, so it must also be quotable.
      */
+    // The same rule as requireHttps, with messages that name the key the operator has to set.
+    private static void requireIssuer(String issuer) {
+        if (issuer == null || issuer.isBlank()) {
+            throw new IllegalArgumentException("security.issuer is required when security.enabled is true");
+        }
+        URI uri;
+        try {
+            uri = URI.create(issuer);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("security.issuer is not a URL: '" + issuer + "'", e);
+        }
+        if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null
+                || uri.getQuery() != null || uri.getFragment() != null) {
+            throw new IllegalArgumentException("security.issuer must be an absolute https URL without credentials, "
+                    + "query or fragment: '" + issuer + "'");
+        }
+    }
+
     private static void requireResourceIdentifier(String value) {
         URI uri;
         try {

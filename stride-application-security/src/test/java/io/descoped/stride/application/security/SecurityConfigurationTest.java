@@ -34,6 +34,30 @@ class SecurityConfigurationTest {
                 .build();
         assertEquals("https://api.example.com/orders", SecurityConfiguration.from(config).resource());
     }
+    private static String failureWithIssuer(String issuer) {
+        var builder = ApplicationConfiguration.builder()
+                .overrideProperty("security.enabled", "true")
+                .overrideProperty("security.audiences", "api");
+        if (issuer != null) {
+            builder.overrideProperty("security.issuer", issuer);
+        }
+        var config = builder.build();
+        return assertThrows(IllegalArgumentException.class, () -> SecurityConfiguration.from(config)).getMessage();
+    }
+    @Test void enabledWithoutAnIssuerFailsNamingTheKey() {
+        assertEquals("security.issuer is required when security.enabled is true", failureWithIssuer(null));
+    }
+    @Test void anIssuerThatIsNotAUrlFailsNamingTheKeyAndTheValue() {
+        assertEquals("security.issuer is not a URL: 'https://issuer example'",
+                failureWithIssuer("https://issuer example"));
+    }
+    @Test void anIssuerThatIsNotAnHttpsUrlFailsNamingTheKeyAndTheValue() {
+        for (String issuer : java.util.List.of("http://issuer.example", "issuer.example",
+                "https://user@issuer.example", "https://issuer.example/realm?x=1", "https://issuer.example/#f")) {
+            assertEquals("security.issuer must be an absolute https URL without credentials, query or fragment: '"
+                    + issuer + "'", failureWithIssuer(issuer));
+        }
+    }
     @Test void authenticationIsExplicitlyOptIn() {
         assertFalse(SecurityConfiguration.from(ApplicationConfiguration.builder().build()).enabled());
     }
