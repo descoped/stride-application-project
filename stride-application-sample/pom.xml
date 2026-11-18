@@ -13,7 +13,8 @@
     </parent>
 
     <!-- A small application built on Stride, kept working by the build. It is an example, not a library: the
-         builds that publish leave this module out (see the central profile and the release plugin in the parent),
+         builds that publish leave this module out (see the central profile in the parent and the release plugin
+         in the root POM),
          and the central profile below fails a build that does not. -->
     <artifactId>stride-application-sample</artifactId>
     <packaging>jar</packaging>

@@ -86,6 +86,7 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <!-- The root POM has a copy for the release plugin: change both together. -->
     <scm child.scm.connection.inherit.append.path="false"
          child.scm.developerConnection.inherit.append.path="false"
          child.scm.url.inherit.append.path="false">
