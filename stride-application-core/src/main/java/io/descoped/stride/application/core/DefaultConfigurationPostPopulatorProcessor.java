@@ -14,13 +14,37 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration configuration)
         implements PopulatorPostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultConfigurationPostPopulatorProcessor.class);
+
+    /**
+     * The configuration of the service an HK2 descriptor names: {@code services.<name>}, or for the services HK2
+     * names itself, {@code services.hk2.<name>}. The name is the whole path; a key of the same name elsewhere in
+     * the configuration is not the service's. Which of the two it is, is told by the {@code enabled} key: an
+     * entry under {@code services.hk2} without one is not found, and nothing declares such an entry.
+     */
+    static JsonElement serviceConfiguration(ApplicationConfiguration configuration, String name) {
+        JsonElement services = configuration.with("services");
+        JsonElement own = services.with(name);
+        return own.with("enabled").asBoolean().isPresent() ? own : pick(own, services.with("hk2").with(name));
+    }
+
+    private static JsonElement pick(JsonElement own, JsonElement hk2) {
+        return hk2.with("enabled").asBoolean().isPresent() ? hk2 : own;
+    }
+
+    /**
+     * Whether a named service is switched on: {@code services.<name>.enabled} when the key is set, and
+     * {@code services.hk2.defaults.enabled} when it is not.
+     */
+    static boolean isEnabled(ApplicationConfiguration configuration, String name) {
+        return serviceConfiguration(configuration, name).with("enabled")
+                .asBoolean(configuration.requireBoolean("services.hk2.defaults.enabled"));
+    }
 
     @Override
     public DescriptorImpl process(ServiceLocator serviceLocator, DescriptorImpl descriptorImpl) {
@@ -30,13 +54,8 @@ record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration confi
             return descriptorImpl;
         }
 
-        boolean defaultValue = configuration.requireBoolean("services.hk2.defaults.enabled");
-
-        JsonElement serviceConfiguration = configuration.with("services").find(name);
-        boolean enabled = Optional.of(serviceConfiguration)
-                .map(e -> e.with("enabled"))
-                .map(e -> e.asBoolean(defaultValue))
-                .orElse(false);
+        JsonElement serviceConfiguration = serviceConfiguration(configuration, name);
+        boolean enabled = isEnabled(configuration, name);
 
         if (enabled) {
             serviceConfiguration.with("metadata").getObjectAs(object -> {

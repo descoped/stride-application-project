@@ -2,6 +2,7 @@ package io.descoped.stride.application.server;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Rank;
@@ -24,6 +25,7 @@ public class ObjectMapperFactory implements Factory<ObjectMapper> {
     @Override
     @Rank(-1)
     @Singleton
+    @Named("jersey.objectMapper") // the mapper carries the factory's name, so the factory's switch removes both
     public ObjectMapper provide() {
         return objectMapper;
     }

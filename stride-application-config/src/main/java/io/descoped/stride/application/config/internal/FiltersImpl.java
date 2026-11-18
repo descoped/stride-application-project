@@ -21,7 +21,8 @@ public record FiltersImpl(ObjectNode json) implements Filters {
      */
     @Override
     public Optional<Filter> filter(String name) {
-        return JsonElement.ofEphemeral(json)
+        // strict: a name that is not declared has no entry, where the ephemeral strategy would invent an empty one
+        return JsonElement.ofStrict(json)
                 .with(name)
                 .toObjectNode()
                 .map(json -> new FilterImpl(name, json));

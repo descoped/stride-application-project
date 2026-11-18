@@ -21,7 +21,9 @@ public interface StrideApplication extends AutoCloseable {
     void start();
 
     /**
-     * Stop application by enabling run-level 0
+     * Stop application by enabling run-level 0. Requests that are running get time to finish. A stopped
+     * application cannot be started again: {@link #start()}, {@link #activate()} and {@link #proceedTo(int)} above
+     * 0 then fail with an {@code IllegalStateException}. Stopping again does nothing.
      */
     void stop();
 
@@ -34,10 +36,13 @@ public interface StrideApplication extends AutoCloseable {
 
     ServiceLocator getServiceLocator();
 
+    /** The host the server listens on; {@code localhost} before the server is started and after it is stopped. */
     String getHost();
 
+    /** The port the server listens on; {@code -1} before the server is started and after it is stopped. */
     int getLocalPort();
 
+    /** The configured port, {@code 0} for a free one; {@code -1} before the server is started and after it is stopped. */
     int getPort();
 
     static StrideApplication create() {
