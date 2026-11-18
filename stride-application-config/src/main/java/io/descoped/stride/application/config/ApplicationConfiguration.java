@@ -361,6 +361,14 @@ public final class ApplicationConfiguration implements JsonElement {
         }
 
         /**
+         * How many connections may wait to be accepted. One that arrives when the queue is full is refused or
+         * reset by the operating system, which also caps the number.
+         */
+        public int acceptQueueSize() {
+            return element.requireInt("acceptQueueSize");
+        }
+
+        /**
          * How long, in milliseconds, requests that are running when the server stops get to finish.
          */
         public long stopTimeout() {

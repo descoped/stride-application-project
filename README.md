@@ -187,6 +187,7 @@ The keys you are most likely to set:
 | `services.jetty.server.config.port` | `0` | The port; 0 picks a free one. |
 | `services.jetty.server.config.context-path` | `/` | The path every route is under. |
 | `services.jetty.server.config.stopTimeout` | `PT30S` | How long running requests get to finish at shutdown. |
+| `services.jetty.server.config.acceptQueueSize` | `1024` | How many new connections may wait to be accepted. |
 | `services.jetty.server.config.http2.enabled` | `true` | HTTP/2 without TLS (h2c) next to HTTP/1.1. |
 | `services.jetty.server.config.forwarded.enabled` | `false` | Trust `Forwarded` and `X-Forwarded-*` from a proxy. |
 | `filters.cors.config.origin` | `*` | Allowed origins. |

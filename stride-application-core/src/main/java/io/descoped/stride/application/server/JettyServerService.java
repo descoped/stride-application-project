@@ -79,6 +79,7 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
             httpConnector = new ServerConnector(server, http11);
         }
         httpConnector.setIdleTimeout(jettyConfig.idleTimeout());
+        httpConnector.setAcceptQueueSize(jettyConfig.acceptQueueSize());
         httpConnector.setHost(jettyConfig.host());
         httpConnector.setPort(jettyConfig.port());
         server.addConnector(httpConnector);
