@@ -116,6 +116,10 @@ Most applications are affected by these.
 - **An application can hand Stride ready-made objects.** `Components` holds resource, filter and servlet
   instances, and service instances offered for injection by contract and optional name. Pass it to
   `StrideApplication.create(configuration, components)`. HK2 injection still works and is optional.
+- A class path with more than one `ApplicationInitializer` is refused at `StrideApplication.create`, naming them.
+  The first one found used to be taken silently. A class path with none fails with an
+  `IllegalStateException` that says to add `stride-application-core`; it was a `RuntimeException` saying
+  `Missing SPI for ..`.
 - **`ApplicationInitializer.initialize` takes the components as a second argument.** Implementations must add
   the parameter.
 - **Components declared in code are enabled by default.** `Service.builder(name)`, `Filter.builder(name)`,
