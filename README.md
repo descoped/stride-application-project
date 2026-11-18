@@ -36,18 +36,18 @@ All modules have the group id `io.descoped.stride.application`.
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-core</artifactId>
-    <version>0.0.24-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 </dependency>
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-junit5</artifactId>
-    <version>0.0.24-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>
 </dependency>
 ```
 
-There is no release yet. Snapshots are published by hand, not on every merge, to
-`https://central.sonatype.com/repository/maven-snapshots/`.
+There is no release yet, and `0.1.0-SNAPSHOT` is not published. Until the first release, build it into your
+local repository with `mvn install`.
 
 Stride logs through SLF4J and ships no backend. Add the one you use, for example `slf4j-simple` or Logback.
 
