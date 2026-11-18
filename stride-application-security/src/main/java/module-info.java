@@ -9,7 +9,8 @@ module stride.application.security {
 
     requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
-    requires com.nimbusds.jose.jwt;
+    // in the public API: the key source of JwtTokenVerifier.withKeys and the exceptions of verify
+    requires transitive com.nimbusds.jose.jwt;
 
     exports io.descoped.stride.application.security;
     // Stride creates the filter by reflection

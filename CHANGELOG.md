@@ -153,6 +153,9 @@ Bearer authentication follows OAuth 2.1 (draft-ietf-oauth-v2-1-16, section 5), R
 - Required scopes and the realm are validated at startup against the characters a challenge may carry.
 - A missing or malformed `security.issuer` fails at startup with a message that names the key and the value.
   It used to fail with a `NullPointerException` or a message that did not say which setting was wrong.
+- **A verifier can be built from keys the application supplies:** `JwtTokenVerifier.withKeys(settings, keys)`.
+  The only public way was `discover`, which fetches the issuer's keys over the network, so an application could
+  not hold its own key set, or test its secured resources without an issuer.
 - **Protected resource metadata (RFC 9728) can be published.** New key `security.resource`, empty by default:
   the https URL clients reach the application at. When it is set, the metadata is served without a token at
   `/.well-known/oauth-protected-resource` followed by the URL's path, and every challenge names the document in

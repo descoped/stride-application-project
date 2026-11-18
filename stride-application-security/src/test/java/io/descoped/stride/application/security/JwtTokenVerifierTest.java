@@ -39,7 +39,7 @@ class JwtTokenVerifierTest {
                 Set.of("/public"), Set.of("read"), scopeClaim, "roles", "stride", 0);
     }
     static JwtTokenVerifier verifier(SecurityConfiguration settings) {
-        return new JwtTokenVerifier(settings, new ImmutableJWKSet<>(new JWKSet(KEY.toPublicJWK())));
+        return JwtTokenVerifier.withKeys(settings, new ImmutableJWKSet<>(new JWKSet(KEY.toPublicJWK())));
     }
     static JwtTokenVerifier verifier() {
         return verifier(settings());

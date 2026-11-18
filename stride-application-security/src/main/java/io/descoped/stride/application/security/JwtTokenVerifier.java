@@ -32,6 +32,9 @@ public final class JwtTokenVerifier implements AutoCloseable {
     private final SecurityConfiguration settings;
     private final JWKSource<SecurityContext> keys;
 
+    /**
+     * A verifier that reads the issuer's metadata and keys over the network, as {@code security.issuer} says.
+     */
     public static JwtTokenVerifier discover(SecurityConfiguration settings) throws IOException {
         if (!settings.enabled()) throw new IllegalArgumentException("Security must be enabled");
         var retriever = new DefaultResourceRetriever(2000, 3000, 1024 * 1024) {
@@ -59,6 +62,19 @@ public final class JwtTokenVerifier implements AutoCloseable {
             }
             throw new IOException("Could not initialize OIDC signing keys", e);
         }
+    }
+
+    /**
+     * A verifier with keys the application supplies itself: a key set it holds, its own way of fetching them, or
+     * in a test the public half of a key the test signs tokens with. Nothing is fetched from the issuer; the
+     * tokens must still name it in {@code iss}.
+     * <p>
+     * The verifier owns the key source from here on: {@link #close()} closes it when it is {@code Closeable}.
+     * Give the filter the same settings the verifier was built with; the filter takes the realm, scopes and
+     * public paths from them, the verifier the issuer, audiences and algorithms.
+     */
+    public static JwtTokenVerifier withKeys(SecurityConfiguration settings, JWKSource<SecurityContext> keys) {
+        return new JwtTokenVerifier(settings, java.util.Objects.requireNonNull(keys, "keys"));
     }
 
     JwtTokenVerifier(SecurityConfiguration settings, JWKSource<SecurityContext> keys) {
