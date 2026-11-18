@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -119,8 +120,9 @@ class ConfiguredServiceTest {
             application.start();
             assertEquals(0, PLAIN.get(), "no run level starts it");
 
-            assertNotNull(application.getServiceLocator().getService(PlainService.class));
-            application.getServiceLocator().getService(PlainService.class);
+            PlainService first = application.getServiceLocator().getService(PlainService.class);
+            assertNotNull(first);
+            assertSame(first, application.getServiceLocator().getService(PlainService.class));
 
             assertEquals(1, PLAIN.get(), "created once, on demand");
         }

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -87,9 +88,14 @@ class CorsOriginTest {
             application.start();
             TestClient client = TestClient.create(application);
 
-            for (String method : "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD".split(", ")) {
-                client.options("/ping", "Origin", "https://shop.example", "Access-Control-Request-Method", method)
-                        .expectAnyOf(204);
+            // the declared default, so the builder and the defaults file cannot drift apart
+            String declared = ApplicationConfiguration.builder().testDefaults().build()
+                    .requireString("filters.cors.config.methods");
+            assertTrue(declared.contains("PATCH"), declared);
+            for (String method : declared.split(", ")) {
+                var preflight = client.options("/ping", "Origin", "https://shop.example",
+                        "Access-Control-Request-Method", method).expectAnyOf(204);
+                assertEquals(declared, preflight.response().headers().firstValue("Access-Control-Allow-Methods").orElse(null));
             }
         }
     }
