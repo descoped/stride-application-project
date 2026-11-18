@@ -3,6 +3,7 @@ package io.descoped.stride.application.openapi;
 import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Filter;
+import io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
@@ -28,11 +29,12 @@ import jakarta.ws.rs.core.UriInfo;
  * Serves the OpenAPI document of the application's JAX-RS resources at {@code /openapi.json} and
  * {@code /openapi.yaml}, or at {@code /openapi} by {@code Accept} header. Register it like any other resource:
  * <pre>{@code
- * Resources.builder().resource(Resource.builder("openapi").enabled(true).clazz(ApplicationOpenApiResource.class))
+ * Resources.builder().resource(Resource.builder("openapi").clazz(ApplicationOpenApiResource.class))
  * }</pre>
  * The title and version come from {@code application.alias} and {@code application.version}; a server entry is
  * added only when {@code application.url} is set; and the bearer scheme is declared when a filter named
- * {@code security} authenticates requests.
+ * {@code security} authenticates requests. The document describes the resources registered with Stride, as
+ * classes or as instances, and nothing else that happens to be on the class path.
  */
 @Path("/openapi")
 @Singleton // the description is built once, not for every request
@@ -51,6 +53,9 @@ public class ApplicationOpenApiResource extends BaseOpenApiResource {
     public ApplicationOpenApiResource(ApplicationConfiguration configuration, Components components) {
         openApiConfiguration(new SwaggerConfiguration()
                 .openAPI(describe(configuration, authenticates(configuration, components)))
+                // Describe what the application serves: the classes and instances registered with Jersey. Swagger's
+                // default also searches the whole class path for @Path and would describe classes nobody registered.
+                .scannerClass(JaxrsApplicationScanner.class.getName())
                 .filterClass(ApplicationOpenApiSpecFilter.class.getName())
                 .prettyPrint(true));
     }
