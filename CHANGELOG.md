@@ -112,6 +112,9 @@ Most applications are affected by these.
     answer 400. To keep that, offer your own `ObjectMapper`, or set `services.jersey.objectMapper.enabled=false`
     to get Jersey's.
   - An application's own mapper (naming strategy, modules, date format) now applies to its resources.
+  - The mapper used is the one an unqualified `@Inject ObjectMapper` gets. An application that offers a mapper
+    for another format (YAML, CBOR) under the contract `ObjectMapper` would have its resources' JSON written by
+    it: offer such a mapper under its own type.
 - `services.jersey.objectMapper.enabled=false` removes the injectable mapper cleanly. Injecting `ObjectMapper`
   then used to fail inside HK2.
 - **Servlets and servlet context initializers belong to the server, not to Jersey.** With
