@@ -49,7 +49,7 @@ class BeanDiscovery {
         return dynamicConfiguration;
     }
 
-    /** Enables HK2 topic events through HK2's public API; it adds the default distribution service once. */
+    /** Enables HK2 topic events. */
     private void propagate() throws MultiException {
         ExtrasUtilities.enableTopicDistribution(serviceLocator);
     }
