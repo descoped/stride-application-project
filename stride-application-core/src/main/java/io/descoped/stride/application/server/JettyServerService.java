@@ -117,7 +117,12 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
 
         // initializers and servlets, after the filters and before Jersey takes the remaining paths
         webServiceLocator = ServiceLocatorFactory.getInstance().create(null, serviceLocator);
-        new ServletRegistrations(serviceLocator, webServiceLocator, servletContextHandler).register(configuration, components);
+        try {
+            new ServletRegistrations(serviceLocator, webServiceLocator, servletContextHandler).register(configuration, components);
+        } catch (RuntimeException e) {
+            webServiceLocator.shutdown(); // preDestroy does not run for a service whose constructor failed
+            throw e;
+        }
         servletContextHandler.setAttribute(WEB_SERVICE_LOCATOR, webServiceLocator);
 
         Handler handler = servletContextHandler;

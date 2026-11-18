@@ -113,6 +113,11 @@ Most applications are affected by these.
 - **A servlet class needs a path.** A servlet declared with a class and no `config.pathSpec` used to start and
   answer nowhere. It now fails at startup naming the key, as a servlet instance without a path does.
 - A servlet instance that configuration disables is registered with a warning, as a filter instance is.
+- The message for a required named service that is missing changed: it names the type without the `class `
+  prefix and says who required it, for example `Required service 'java.lang.String' named 'x' for the servlet
+  context initialization is NOT available!`.
+- `JerseyServerService`'s constructor no longer takes a `ServiceLocator`. HK2 creates that class; an application
+  does not.
 - **A resource argument that no service provides stops the start.** A resource declared with
   `Resource.builder(..).args(..)` used to be created with `null` for an argument whose named service was
   missing. The application now fails at startup with a message naming the resource, the type and the name.

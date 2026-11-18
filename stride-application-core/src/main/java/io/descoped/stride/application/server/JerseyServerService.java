@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service(name = "jersey.server")
@@ -51,7 +52,9 @@ public class JerseyServerService implements PreDestroy {
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
         // where the servlet context initializers put their services: resource arguments are looked up there
-        jerseyServiceLocator = (ServiceLocator) servletContextHandler.getAttribute(JettyServerService.WEB_SERVICE_LOCATOR);
+        jerseyServiceLocator = Objects.requireNonNull(
+                (ServiceLocator) servletContextHandler.getAttribute(JettyServerService.WEB_SERVICE_LOCATOR),
+                "the server service did not set " + JettyServerService.WEB_SERVICE_LOCATOR);
 
         registerResources(configuration, components, resourceConfig);
 

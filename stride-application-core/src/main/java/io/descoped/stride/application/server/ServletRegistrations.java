@@ -131,6 +131,8 @@ final class ServletRegistrations {
         }
     }
 
+    // An instance without any configuration entry is never met by the loop over the configured servlets, so its
+    // missing path is caught here.
     private static void requirePathForServletInstances(ApplicationConfiguration configuration, Components components) {
         Set<String> servletsWithPath = new HashSet<>();
         for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
