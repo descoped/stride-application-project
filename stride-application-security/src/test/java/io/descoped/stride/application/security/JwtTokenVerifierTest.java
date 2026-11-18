@@ -84,12 +84,14 @@ class JwtTokenVerifierTest {
         // signed outside the lambdas: only verify may throw inside them
         String wrongSignature = token(attacker, claims().build(), "at+jwt");
         String idToken = token(KEY, claims().build(), "JWT");
+        String unsigned = new com.nimbusds.jwt.PlainJWT(claims().build()).serialize();
+        String tooLong = "a".repeat(16_385);
         try (var verifier = verifier()) {
             assertThrows(Exception.class, () -> verifier.verify(wrongSignature));
             assertThrows(Exception.class, () -> verifier.verify(idToken));
-            assertThrows(Exception.class, () -> verifier.verify(new com.nimbusds.jwt.PlainJWT(claims().build()).serialize()));
+            assertThrows(Exception.class, () -> verifier.verify(unsigned));
             assertThrows(Exception.class, () -> verifier.verify("not-a-token"));
-            assertThrows(Exception.class, () -> verifier.verify("a".repeat(16_385)));
+            assertThrows(Exception.class, () -> verifier.verify(tooLong));
         }
     }
     @Test void cachesKeysAndRefreshesOnUnknownKey() throws Exception {
@@ -181,8 +183,10 @@ class JwtTokenVerifierTest {
             assertEquals("alice", verifier.verify(token(KEY, claims().build(), "at+jwt")).getName());
             assertEquals("alice", verifier.verify(token(KEY, claims().build(), "application/at+jwt")).getName());
             assertEquals("alice", verifier.verify(token(KEY, claims().build(), "AT+JWT")).getName(), "media type names are case-insensitive");
-            for (String type : java.util.List.of("JWT", "jwt", "id_token+jwt", "at+jwt+x"))
-                assertThrows(BadJOSEException.class, () -> verifier.verify(token(KEY, claims().build(), type)), type);
+            for (String type : java.util.List.of("JWT", "jwt", "id_token+jwt", "at+jwt+x")) {
+                String token = token(KEY, claims().build(), type);
+                assertThrows(BadJOSEException.class, () -> verifier.verify(token), type);
+            }
         }
     }
 
@@ -190,7 +194,8 @@ class JwtTokenVerifierTest {
         try (var verifier = verifier()) {
             for (String claim : java.util.List.of("iss", "exp", "aud", "sub", "client_id", "iat", "jti")) {
                 var incomplete = new JWTClaimsSet.Builder(claims().build()).claim(claim, null).build();
-                assertThrows(BadJOSEException.class, () -> verifier.verify(token(incomplete)), claim);
+                String token = token(incomplete);
+                assertThrows(BadJOSEException.class, () -> verifier.verify(token), claim);
             }
         }
     }
@@ -198,7 +203,8 @@ class JwtTokenVerifierTest {
     @Test void rfc9068Section4ExpiredTokensAreToldApartFromOtherwiseInvalidOnes() throws Exception {
         try (var verifier = verifier()) {
             var expired = claims().expirationTime(Date.from(Instant.now().minusSeconds(60))).build();
-            assertThrows(com.nimbusds.jwt.proc.ExpiredJWTException.class, () -> verifier.verify(token(expired)));
+            String token = token(expired);
+            assertThrows(com.nimbusds.jwt.proc.ExpiredJWTException.class, () -> verifier.verify(token));
         }
     }
 
@@ -206,7 +212,8 @@ class JwtTokenVerifierTest {
         var plain = new JWTClaimsSet.Builder(claims().build()).claim("client_id", null).jwtID(null).build();
         try (var verifier = verifier(settings("JWT", "scope"))) {
             assertEquals("alice", verifier.verify(token(KEY, plain, "JWT")).getName());
-            assertThrows(BadJOSEException.class, () -> verifier.verify(token(KEY, plain, "at+jwt")));
+            String profiled = token(KEY, plain, "at+jwt");
+            assertThrows(BadJOSEException.class, () -> verifier.verify(profiled));
         }
     }
 
