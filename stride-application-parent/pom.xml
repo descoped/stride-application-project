@@ -400,8 +400,12 @@
                          any test ran. The file is in the parent module, the first of the build, so that `clean`
                          removes it before the tests write to it.
                          A module's report is written when that module is built, before the tests of later modules
-                         have run. For the complete figures build twice: `verify -P coverage`, then
-                         `verify -P coverage -DskipTests`, which writes every report again from the full data. -->
+                         have run. For the complete figures build twice: `clean verify -P coverage`, then
+                         `verify -P coverage -DskipTests`, which writes every report again from the full data (the
+                         build on master adds the `sonar` profile to the second).
+                         Without `clean`, or when the parent module is not part of the build (`-pl` without `-am`),
+                         the file keeps the data of earlier runs.
+                         The sample's tests count too: they are a real application running the stack. -->
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
