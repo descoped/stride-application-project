@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-         child.project.url.inherit.append.path="false">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" child.project.url.inherit.append.path="false">
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.descoped.stride.application</groupId>
     <artifactId>stride-application-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
 
     <name>Stride Application Parent</name>
@@ -21,7 +18,7 @@
     <properties>
         <!-- Reproducible builds: every jar entry gets this time, so the same tag builds the same bytes.
              release:prepare sets it to the release time. -->
-        <project.build.outputTimestamp>2026-11-18T22:20:06Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-11-18T22:25:45Z</project.build.outputTimestamp>
 
         <!-- Java baseline. `release` alone sets the language level, the class file version and the JDK API that
              the code is checked against; `source` and `target` would only repeat it. -->
@@ -87,13 +84,11 @@
     </distributionManagement>
 
     <!-- The root POM has a copy for the release plugin: change both together. -->
-    <scm child.scm.connection.inherit.append.path="false"
-         child.scm.developerConnection.inherit.append.path="false"
-         child.scm.url.inherit.append.path="false">
+    <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
         <connection>scm:git:git://github.com/descoped/stride-application-project.git</connection>
         <developerConnection>scm:git:git@github.com:descoped/stride-application-project.git</developerConnection>
         <url>https://github.com/descoped/stride-application-project</url>
-        <tag>HEAD</tag>
+        <tag>v0.1.0</tag>
     </scm>
 
     <dependencyManagement>
@@ -534,8 +529,7 @@
                         <consoleOutputReporter>
                             <disable>true</disable>
                         </consoleOutputReporter>
-                        <statelessTestsetInfoReporter
-                                implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter"/>
+                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
                     </configuration>
                 </plugin>
 
