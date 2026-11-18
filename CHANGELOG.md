@@ -165,6 +165,10 @@ Most applications are affected by these.
 - **Filters run in ascending `config.order`, then by name.** CORS is at 100, authentication at 200, and a filter
   without an order at 1000. Application filters used to run in the order of the configuration's keys.
 - A `config.order` that is not a whole number fails at startup. It used to become 1000 silently.
+- `ApplicationCORSServletFilter.builder()` allows `PATCH` by default, as the configured filter does.
+- Removed: `Filter.Builder.context(..)` and `Filter.context()`. They stored a value nothing read.
+- `Service.builder(SomeClass.class)` declares a service of that class. It used to set only the name, and the
+  service was never created.
 - A filter without `config.pathSpec` applies to `/*`, and one without `config.dispatches` to `REQUEST`. Both used
   to fail at startup.
 - An enabled filter with neither a class nor an instance fails at startup, naming the missing key.

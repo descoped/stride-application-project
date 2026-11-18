@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.descoped.stride.application.config.Filter;
-import io.descoped.stride.application.config.ServletContextBinding;
-import io.descoped.stride.application.config.ServletContextValidation;
 import io.descoped.stride.application.jackson.JsonElement;
 import jakarta.servlet.DispatcherType;
 
@@ -63,15 +61,6 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
                 "filters." + name + ".config.order must be a whole number, but is '" + order.asString().get() + "'"));
     }
 
-    @Override
-    public ServletContextBinding context() {
-        return JsonElement.ofEphemeral(json)
-                .with("config.context")
-                .toObjectNode()
-                .map(ServletContextBindingImpl::new)
-                .orElse(null);
-    }
-
     // ------------------------------------------------------------------------------------------------------------
 
     public record FilterBuilder(String name, ObjectNode builder) implements Filter.Builder {
@@ -127,15 +116,6 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
                     .with(CONFIG)
                     .object()
                     .set("dispatches", arrayNode);
-            return this;
-        }
-
-        @Override
-        public Builder context(ServletContextValidation.Builder contextBuilder) {
-            JsonElement.ofDynamic(builder)
-                    .with(CONFIG)
-                    .object()
-                    .set("context", contextBuilder.build().json());
             return this;
         }
 
