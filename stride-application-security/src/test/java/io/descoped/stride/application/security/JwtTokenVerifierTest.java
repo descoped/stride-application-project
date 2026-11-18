@@ -225,16 +225,22 @@ class JwtTokenVerifierTest {
         return new SecurityConfiguration(true, ISSUER, audiences, algorithms, "at+jwt", publicPaths, requiredScopes, "scope", "roles", realm, 0);
     }
 
+    // The sets are built before the lambda, so only the constructor of the settings can throw inside it.
+    static void assertRejected(Set<String> audiences, Set<String> algorithms, Set<String> publicPaths,
+                               Set<String> requiredScopes, String realm) {
+        assertThrows(IllegalArgumentException.class, () -> settings(audiences, algorithms, publicPaths, requiredScopes, realm));
+    }
+
     @Test void rejectsUnsafeSettings() {
         assertDoesNotThrow(() -> settings(Set.of("api"), Set.of("RS256"), Set.of("/ping"), Set.of("urn:example:rating=G,PG-13"), "stride api"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of(), Set.of("RS256"), Set.of(), Set.of(), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("HS256"), Set.of(), Set.of(), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("none"), Set.of(), Set.of(), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of("/*"), Set.of(), "stride"));
+        assertRejected(Set.of(), Set.of("RS256"), Set.of(), Set.of(), "stride");
+        assertRejected(Set.of("api"), Set.of("HS256"), Set.of(), Set.of(), "stride");
+        assertRejected(Set.of("api"), Set.of("none"), Set.of(), Set.of(), "stride");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of("/*"), Set.of(), "stride");
         // OAuth 2.1 section 5.3.1: what may appear in the challenge's scope and realm attributes
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read\"write"), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read write"), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "my \"realm\""));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), ""));
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read\"write"), "stride");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read write"), "stride");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "my \"realm\"");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "");
     }
 }

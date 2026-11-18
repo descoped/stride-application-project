@@ -59,38 +59,56 @@ public record SecurityConfiguration(boolean enabled, String issuer, Set<String> 
             if (audiences.isEmpty()) {
                 throw new IllegalArgumentException("security.audiences is required");
             }
-            if (algorithms.isEmpty() || !ASYMMETRIC_ALGORITHMS.containsAll(algorithms)) {
-                throw new IllegalArgumentException("security.algorithms must contain supported asymmetric algorithms");
-            }
+            requireAsymmetric(algorithms);
             if (!Set.of(ACCESS_TOKEN_TYPE, "JWT").contains(tokenType)) {
                 throw new IllegalArgumentException("security.token-type must be at+jwt or JWT");
             }
             if (clockSkewSeconds < 0 || clockSkewSeconds > 300) {
                 throw new IllegalArgumentException("security.clock-skew-seconds must be between 0 and 300");
             }
-            for (String path : publicPaths) {
-                if (!path.startsWith("/") || path.contains("*") || path.contains(";") || path.contains("%") || path.contains("..")) {
-                    throw new IllegalArgumentException("security.public-paths must contain exact application paths");
-                }
-            }
-            for (String scope : requiredScopes) {
-                if (!SCOPE_TOKEN.matcher(scope).matches()) {
-                    throw new IllegalArgumentException("security.required-scopes holds a value that is not a scope: '" + scope + "'");
-                }
-            }
-            if (scopeClaim == null || scopeClaim.isBlank()) {
-                throw new IllegalArgumentException("security.scope-claim is required");
-            }
-            if (rolesClaim == null || rolesClaim.isBlank()) {
-                throw new IllegalArgumentException("security.roles-claim is required");
-            }
-            if (realm == null || !QUOTED_TEXT.matcher(realm).matches()) {
-                throw new IllegalArgumentException("security.realm is required and cannot contain a quote, a backslash "
-                        + "or characters outside printable ASCII");
-            }
+            requireExactPaths(publicPaths);
+            requireScopeTokens(requiredScopes);
+            requireClaimName("security.scope-claim", scopeClaim);
+            requireClaimName("security.roles-claim", rolesClaim);
+            requireQuotableRealm(realm);
             if (!resource.isEmpty()) {
                 requireResourceIdentifier(resource);
             }
+        }
+    }
+
+    private static void requireAsymmetric(Set<String> algorithms) {
+        if (algorithms.isEmpty() || !ASYMMETRIC_ALGORITHMS.containsAll(algorithms)) {
+            throw new IllegalArgumentException("security.algorithms must contain supported asymmetric algorithms");
+        }
+    }
+
+    private static void requireExactPaths(Set<String> publicPaths) {
+        for (String path : publicPaths) {
+            if (!path.startsWith("/") || path.contains("*") || path.contains(";") || path.contains("%") || path.contains("..")) {
+                throw new IllegalArgumentException("security.public-paths must contain exact application paths");
+            }
+        }
+    }
+
+    private static void requireScopeTokens(Set<String> requiredScopes) {
+        for (String scope : requiredScopes) {
+            if (!SCOPE_TOKEN.matcher(scope).matches()) {
+                throw new IllegalArgumentException("security.required-scopes holds a value that is not a scope: '" + scope + "'");
+            }
+        }
+    }
+
+    private static void requireClaimName(String key, String claim) {
+        if (claim == null || claim.isBlank()) {
+            throw new IllegalArgumentException(key + " is required");
+        }
+    }
+
+    private static void requireQuotableRealm(String realm) {
+        if (realm == null || !QUOTED_TEXT.matcher(realm).matches()) {
+            throw new IllegalArgumentException("security.realm is required and cannot contain a quote, a backslash "
+                    + "or characters outside printable ASCII");
         }
     }
 
