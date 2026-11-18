@@ -31,7 +31,11 @@ public class ClassPathResourceUtils {
         }
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceStream, StandardCharsets.UTF_8))) {
             return reader.lines().collect(Collectors.joining("\n"));
+        } catch (UncheckedIOException e) {
+            // lines() reports a failure to read this way
+            throw new UncheckedIOException("Could not read resource: " + resourceName, e.getCause());
         } catch (IOException e) {
+            // close() reports a failure this way
             throw new UncheckedIOException("Could not read resource: " + resourceName, e);
         }
     }
