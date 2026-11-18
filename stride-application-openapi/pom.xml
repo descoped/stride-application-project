@@ -13,6 +13,9 @@
     <artifactId>stride-application-openapi</artifactId>
     <packaging>jar</packaging>
 
+    <name>Stride Application OpenAPI</name>
+    <description>Optional: serves the OpenAPI document of an application built on Stride</description>
+
 
     <licenses>
         <license>

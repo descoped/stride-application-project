@@ -13,6 +13,9 @@
     <artifactId>stride-application-security</artifactId>
     <packaging>jar</packaging>
 
+    <name>Stride Application Security</name>
+    <description>Optional: JWT bearer authentication for a resource server built on Stride</description>
+
 
     <licenses>
         <license>

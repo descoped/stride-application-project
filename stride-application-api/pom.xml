@@ -13,6 +13,9 @@
     <artifactId>stride-application-api</artifactId>
     <packaging>jar</packaging>
 
+    <name>Stride Application API</name>
+    <description>The StrideApplication lifecycle contract, Components and the ApplicationInitializer SPI</description>
+
 
     <licenses>
         <license>

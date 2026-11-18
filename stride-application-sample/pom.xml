@@ -17,6 +17,9 @@
     <artifactId>stride-application-sample</artifactId>
     <packaging>jar</packaging>
 
+    <name>Stride Application Sample</name>
+    <description>A small application built on Stride. An example, never published</description>
+
     <properties>
         <sonar.skip>true</sonar.skip>
     </properties>
