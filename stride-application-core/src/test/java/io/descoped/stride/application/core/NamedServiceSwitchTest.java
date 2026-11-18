@@ -13,6 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * A named HK2 service found on the class path is switched by {@code services.<name>.enabled}. Without that key,
  * {@code services.hk2.defaults.enabled} decides.
+ * <p>
+ * The two services below are in the test class path's HK2 metadata, so every application started by a core test
+ * creates them at run level 5. They only count; keep them that trivial.
  */
 class NamedServiceSwitchTest {
 

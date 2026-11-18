@@ -24,7 +24,8 @@ record DefaultConfigurationPostPopulatorProcessor(ApplicationConfiguration confi
     /**
      * The configuration of the service an HK2 descriptor names: {@code services.<name>}, or for the services HK2
      * names itself, {@code services.hk2.<name>}. The name is the whole path; a key of the same name elsewhere in
-     * the configuration is not the service's.
+     * the configuration is not the service's. Which of the two it is, is told by the {@code enabled} key: an
+     * entry under {@code services.hk2} without one is not found, and nothing declares such an entry.
      */
     static JsonElement serviceConfiguration(ApplicationConfiguration configuration, String name) {
         JsonElement services = configuration.with("services");

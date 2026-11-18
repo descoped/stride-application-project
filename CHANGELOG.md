@@ -80,7 +80,9 @@ Most applications are affected by these.
   that take a default (`asBoolean(default)`, `asInt(default)`, `asLong(default)`) give the default in these cases.
 - **`services.hk2.defaults.enabled` takes effect.** A named HK2 service found on the class path, with no
   `services.<name>.enabled` key, is now enabled when this key is `true`, which is the default. It used to be left
-  out whatever the key said. To keep such a service off, set `services.<name>.enabled=false`.
+  out whatever the key said. To keep such a service off, set `services.<name>.enabled=false` in a
+  properties file or with `overrideProperty`. To set it from an environment variable or a system property, declare
+  the key in your own `META-INF/stride/defaults.properties` first, as for any key.
 - **A named service is switched by its own key only.** The key is `services.<name>.enabled`, with the whole name.
   A service named `server` used to be switched by `services.jetty.server.enabled`.
 - `Services.service(name)`, `Filters.filter(name)`, `Servlets.servlet(name)` and `Resources.resource(name)` return
