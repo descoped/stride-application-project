@@ -27,7 +27,7 @@ All modules have the group id `io.descoped.stride.application`.
 | Artifact | Use it for |
 |---|---|
 | `stride-application-core` | The runtime. Brings `stride-application-api` and `stride-application-config`. |
-| `stride-application-junit5` | Tests: the JUnit extension and HTTP test client. Test scope. |
+| `stride-application-junit-jupiter` | Tests: the JUnit extension and HTTP test client. Test scope. |
 | `stride-application-security` | Optional. JWT bearer authentication for a resource server. |
 | `stride-application-openapi` | Optional. Serves the OpenAPI description of your resources. |
 | `stride-application-parent` | The parent POM of the modules above; you do not need it. |
@@ -40,7 +40,7 @@ All modules have the group id `io.descoped.stride.application`.
 </dependency>
 <dependency>
     <groupId>io.descoped.stride.application</groupId>
-    <artifactId>stride-application-junit5</artifactId>
+    <artifactId>stride-application-junit-jupiter</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>
 </dependency>

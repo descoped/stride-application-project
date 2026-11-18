@@ -19,6 +19,7 @@ Most applications are affected by these.
   in the new optional module `stride-application-openapi`.
 - **Authentication is in its own module.** An application that sets `security.*` must add
   `stride-application-security`.
+- **The test library is `stride-application-junit-jupiter`.** It was `stride-application-junit5`.
 - **Jetty 12.1 (EE11), Jersey 4 and HK2 4** replace Jetty 11, Jersey 3.1 and HK2 3. Code that uses their APIs
   directly, or the Servlet API, must build against Servlet 6.1 and JAX-RS 4.0.
 
@@ -51,7 +52,9 @@ Most applications are affected by these.
   when a filter named `security` is in force.
 - `stride-application-security` is new and optional. It holds bearer authentication and Nimbus JOSE+JWT. Core no
   longer depends on Nimbus JOSE+JWT or `java.net.http`.
-- `stride-application-junit5` has a module descriptor, `stride.application.junit5`.
+- **`stride-application-junit5` is renamed `stride-application-junit-jupiter`.** Change the artifactId in your
+  POM. The name follows the programming model, JUnit Jupiter, not a JUnit version: the module runs on JUnit 6.
+  The Java packages are unchanged. It has a module descriptor, `stride.application.junit.jupiter`.
 
 ### Configuration
 

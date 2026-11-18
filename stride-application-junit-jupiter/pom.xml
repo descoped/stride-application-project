@@ -11,11 +11,11 @@
         <relativePath>../stride-application-parent</relativePath>
     </parent>
 
-    <artifactId>stride-application-junit5</artifactId>
+    <artifactId>stride-application-junit-jupiter</artifactId>
     <packaging>jar</packaging>
 
-    <name>Stride Application JUnit5 Extension</name>
-    <description>Stride Application JUnit5 Extension</description>
+    <name>Stride Application JUnit Jupiter Extension</name>
+    <description>Stride Application JUnit Jupiter Extension</description>
     <inceptionYear>2023</inceptionYear>
 
     <properties>
