@@ -105,6 +105,9 @@ Most applications are affected by these.
   `ServletContextInitialization.builder().validate(..)` was accepted and then ignored, because of a misspelled
   key inside Stride. A required attribute or named service that is missing now stops the application from
   starting, as the same requirement on a servlet always did.
+- **A resource argument that no service provides stops the start.** A resource declared with
+  `Resource.builder(..).args(..)` used to be created with `null` for an argument whose named service was
+  missing. The application now fails at startup with a message naming the resource, the type and the name.
 - **A configured service class keeps its qualifiers.** A class named in `services.<name>.config.class` is bound
   with the qualifier annotations it carries, not only `@Named`. A `@MessageReceiver` class named there now
   receives HK2 topic events; it used to receive none.
