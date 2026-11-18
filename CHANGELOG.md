@@ -74,6 +74,19 @@ Most applications are affected by these.
   declared key.
 - **There are no fallback values in code.** Keys are read with `requireString`, `requireInt` and
   `requireBoolean`.
+- **A value that is not what is asked for is not accepted.** `requireBoolean` fails for a key that is missing or
+  holds anything but `true` or `false` (in any letter case); it used to return `false`. `requireInt` fails for a
+  JSON number with a fraction or outside the range of an `int`; it used to cut the number to fit. The readers
+  that take a default (`asBoolean(default)`, `asInt(default)`, `asLong(default)`) give the default in these cases.
+- **`services.hk2.defaults.enabled` takes effect.** A named HK2 service found on the class path, with no
+  `services.<name>.enabled` key, is now enabled when this key is `true`, which is the default. It used to be left
+  out whatever the key said. To keep such a service off, set `services.<name>.enabled=false` in a
+  properties file or with `overrideProperty`. To set it from an environment variable or a system property, declare
+  the key in your own `META-INF/stride/defaults.properties` first, as for any key.
+- **A named service is switched by its own key only.** The key is `services.<name>.enabled`, with the whole name.
+  A service named `server` used to be switched by `services.jetty.server.enabled`.
+- `Services.service(name)`, `Filters.filter(name)`, `Servlets.servlet(name)` and `Resources.resource(name)` return
+  an empty `Optional` for a name that is not declared. They used to return an empty component.
 - Every Stride key can now be set by an environment variable or a system property. About 30 keys could not.
 - The environment variable for a key is the key in upper case with every character that is not a letter or a
   digit replaced by `_`: `services.jetty.server.config.port` is `SERVICES_JETTY_SERVER_CONFIG_PORT`.
@@ -90,6 +103,13 @@ Most applications are affected by these.
 
 ### Components
 
+- **A stopped application says so.** `start()`, `activate()` and `proceedTo(n)` on a stopped application fail
+  with `The application is stopped and cannot be started again; create a new one`. `getHost()`, `getPort()` and
+  `getLocalPort()` then return `localhost` and `-1`, as before the server is started. All of these used to fail
+  with HK2's `ServiceLocatorImpl(..) has been shut down`.
+- `proceedTo(0)` on an application that has not started does nothing. It used to mark the application as
+  completed, after which `start()` silently did nothing.
+- Asking for the address before the server is up no longer logs an error.
 - **An application can hand Stride ready-made objects.** `Components` holds resource, filter and servlet
   instances, and service instances offered for injection by contract and optional name. Pass it to
   `StrideApplication.create(configuration, components)`. HK2 injection still works and is optional.
@@ -105,6 +125,31 @@ Most applications are affected by these.
   `ServletContextInitialization.builder().validate(..)` was accepted and then ignored, because of a misspelled
   key inside Stride. A required attribute or named service that is missing now stops the application from
   starting, as the same requirement on a servlet always did.
+- **Resources read and write JSON with the injectable `ObjectMapper`.** Jersey used a mapper of its own, so the
+  mapper Stride offers, and one the application offered with `Components.service(ObjectMapper.class, ..)`, had
+  no effect on a resource's JSON. Two things follow:
+  - A resource now **ignores unknown properties** in a request body, as Stride's mapper is set up to. It used to
+    answer 400. To keep that, offer your own `ObjectMapper`, or set `services.jersey.objectMapper.enabled=false`
+    to get Jersey's.
+  - An application's own mapper (naming strategy, modules, date format) now applies to its resources.
+  - The mapper used is the one an unqualified `@Inject ObjectMapper` gets. An application that offers a mapper
+    for another format (YAML, CBOR) under the contract `ObjectMapper` would have its resources' JSON written by
+    it: offer such a mapper under its own type.
+- `services.jersey.objectMapper.enabled=false` removes the injectable mapper cleanly. Injecting `ObjectMapper`
+  then used to fail inside HK2.
+- **Servlets and servlet context initializers belong to the server, not to Jersey.** With
+  `services.jersey.server.enabled=false` they used to disappear, while filters and `/ping` stayed. They are now
+  registered either way.
+- **What a servlet requires is checked in full.** A named service required with
+  `Servlet.builder(..).validate(..requireNamedService(..))` was never checked; a missing one now stops the start.
+- **A servlet class needs a path.** A servlet declared with a class and no `config.pathSpec` used to start and
+  answer nowhere. It now fails at startup naming the key, as a servlet instance without a path does.
+- A servlet instance that configuration disables is registered with a warning, as a filter instance is.
+- The message for a required named service that is missing changed: it names the type without the `class `
+  prefix and says who required it, for example `Required service 'java.lang.String' named 'x' for the servlet
+  context initialization is NOT available!`.
+- `JerseyServerService`'s constructor no longer takes a `ServiceLocator`. HK2 creates that class; an application
+  does not.
 - **A resource argument that no service provides stops the start.** A resource declared with
   `Resource.builder(..).args(..)` used to be created with `null` for an argument whose named service was
   missing. The application now fails at startup with a message naming the resource, the type and the name.
@@ -120,6 +165,10 @@ Most applications are affected by these.
 - **Filters run in ascending `config.order`, then by name.** CORS is at 100, authentication at 200, and a filter
   without an order at 1000. Application filters used to run in the order of the configuration's keys.
 - A `config.order` that is not a whole number fails at startup. It used to become 1000 silently.
+- `ApplicationCORSServletFilter.builder()` allows `PATCH` by default, as the configured filter does.
+- Removed: `Filter.Builder.context(..)` and `Filter.context()`. They stored a value nothing read.
+- `Service.builder(SomeClass.class)` declares a service of that class. It used to set only the name, and the
+  service was never created.
 - A filter without `config.pathSpec` applies to `/*`, and one without `config.dispatches` to `REQUEST`. Both used
   to fail at startup.
 - An enabled filter with neither a class nor an instance fails at startup, naming the missing key.
