@@ -48,6 +48,7 @@ class SecuredGreetingApplicationTest {
                 SecurityConfiguration settings = SecurityConfiguration.from(configuration);
                 JwtTokenVerifier verifier = JwtTokenVerifier.withKeys(settings,
                         new ImmutableJWKSet<>(new JWKSet(KEY.toPublicJWK())));
+                // the resource is wired as in GreetingApplication.components; the filter is added beside it
                 return Components.builder()
                         .resource(new GreetingResource(new Greetings(configuration.requireString("greeting.salutation"))))
                         // an instance named "security" takes the place of the filter Stride would create

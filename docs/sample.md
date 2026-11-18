@@ -81,7 +81,7 @@ To run the sample with authentication, set `security.enabled=true`, `security.is
 Stride then creates the filter and reads the issuer's keys when it starts. Every request needs a token after
 that, `/ping` included, unless its path is listed in `security.public-paths`.
 
-`SecuredGreetingApplicationTest` turns authentication on without an issuer. It makes a key pair, hands the
+`SecuredGreetingApplicationTest` turns authentication on with an issuer it never contacts. It makes a key pair, hands the
 application a filter built with `JwtTokenVerifier.withKeys` and the public half, and signs its tokens with the
 private half. The filter is the real one, so the test proves the challenge for a request without a token, the
 rejection of a token from another issuer, and the greeting by the token's subject. See
