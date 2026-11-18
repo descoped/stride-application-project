@@ -27,6 +27,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.servlet.ServletProperties;
@@ -39,8 +40,14 @@ import org.slf4j.LoggerFactory;
 public class JettyServerService implements Factory<ServletContextHandler>, PreDestroy {
 
     private static final Logger log = LoggerFactory.getLogger(JettyServerService.class);
+    /**
+     * The context attribute that holds the child locator the servlet context initializers put their services in.
+     * The Jersey service reads it from the handler it is given, to look resource arguments up there.
+     */
+    static final String WEB_SERVICE_LOCATOR = "io.descoped.stride.application.server.webServiceLocator";
     private final Server server;
     private final ServletContextHandler servletContextHandler;
+    private final ServiceLocator webServiceLocator;
 
     @Inject
     public JettyServerService(ApplicationConfiguration configuration,
@@ -108,6 +115,11 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         });
         servletContextHandler.addServlet(pingServletHolder, "/ping");
 
+        // initializers and servlets, after the filters and before Jersey takes the remaining paths
+        webServiceLocator = ServiceLocatorFactory.getInstance().create(null, serviceLocator);
+        new ServletRegistrations(serviceLocator, webServiceLocator, servletContextHandler).register(configuration, components);
+        servletContextHandler.setAttribute(WEB_SERVICE_LOCATOR, webServiceLocator);
+
         Handler handler = servletContextHandler;
         if (securityHandlerProvider.getHandle() != null) {
             SecurityHandler securityHandler = securityHandlerProvider.get();
@@ -144,5 +156,6 @@ public class JettyServerService implements Factory<ServletContextHandler>, PreDe
         } catch (Exception e) {
             log.error("Could not stop Jetty server", e);
         }
+        if (!webServiceLocator.isShutdown()) webServiceLocator.shutdown();
     }
 }

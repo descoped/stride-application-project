@@ -194,4 +194,22 @@ class ServletContextWiringTest {
 
         assertTrue(failure.contains("Servlet 'announced' has no path: set servlets.announced.config.pathSpec"), failure);
     }
+
+    @Test
+    void servletsAndInitializersAreThereWhenJerseyIsDisabled() {
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder().testDefaults()
+                .overrideProperty("services.jersey.server.enabled", "false")
+                .initialization(ServletContextInitialization.builder().initializerClass(Announcer.class))
+                .servlets(Servlets.builder().servlet(Servlet.builder("announced")
+                        .clazz(AnnouncedServlet.class).pathSpec("/announced")
+                        .validate(ServletContextValidation.builder().requireNamedService(String.class, "announcement"))));
+
+        try (TestApplication application = new TestApplication.Builder().configuration(configuration).build()) {
+            application.start();
+
+            TestClient client = TestClient.create(application);
+            assertEquals("yes", client.get("/announced").expect200Ok().body());
+            client.get("/ping").expect200Ok();
+        }
+    }
 }
