@@ -180,7 +180,7 @@ public interface JsonElement {
         return with(with).asInt().orElseThrow(() -> missing(with));
     }
 
-    /** Returns a {@code boolean} value that must be present. */
+    /** Returns a {@code boolean} value that must be present and be {@code true} or {@code false}. */
     default boolean requireBoolean(String with) {
         return with(with).asBoolean().orElseThrow(() -> missing(with));
     }
@@ -276,14 +276,17 @@ public interface JsonElement {
 
     default Optional<Boolean> asBoolean() {
         return optionalNode().flatMap(value -> {
-            if (value instanceof BooleanNode number) {
-                return Optional.of(number.booleanValue());
+            if (value instanceof BooleanNode bool) {
+                return Optional.of(bool.booleanValue());
             }
-            try {
-                return Optional.of(Boolean.parseBoolean(value.asText()));
-            } catch (NumberFormatException _) {
-                return Optional.empty();
+            // text holds a boolean only when it says so: a missing key, an object or other text is not false
+            if (value.isTextual() && "true".equalsIgnoreCase(value.textValue())) {
+                return Optional.of(true);
             }
+            if (value.isTextual() && "false".equalsIgnoreCase(value.textValue())) {
+                return Optional.of(false);
+            }
+            return Optional.empty();
         });
     }
 
