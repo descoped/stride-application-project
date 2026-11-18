@@ -206,11 +206,13 @@ class DeploymentTest {
         Services services = configuration.services();
         assertEquals(JettyServerService.class, services.service("jetty.server").orElseThrow().clazz());
         assertEquals(JerseyServerService.class, services.service("jersey.server").orElseThrow().clazz());
+        assertEquals(Service.class, services.service("dummy.service").orElseThrow().clazz());
         assertEquals("bar", services.service("dummy.service").orElseThrow().metadata().value("foo"));
 
         Filter filter = configuration.filters().filter("dummy").orElseThrow();
         assertEquals(jakarta.servlet.Filter.class, filter.clazz());
         assertEquals("/dummy", filter.pathSpec());
+        assertEquals(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST), filter.dispatches());
 
         Servlets servlets = configuration.servlets();
         assertEquals(AdminServlet.class, servlets.servlet("admin").orElseThrow().clazz());
