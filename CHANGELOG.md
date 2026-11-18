@@ -15,6 +15,9 @@ Most applications are affected by these.
 - **Java 25 or newer is required.** It was 17.
 - **Core no longer brings a logging backend.** Add the one you use, for example Logback or `slf4j-simple`. Core
   needs only `slf4j-api`.
+- **Stride no longer brings `jackson-dataformat-yaml` and `snakeyaml`.** Stride reads properties files and never
+  used them. An application that uses Jackson's YAML support declares it. `stride-application-openapi` still
+  brings both, through Swagger.
 - **Core no longer brings WebSocket, Dropwizard Metrics, JAXB or Swagger.** Declare the ones you use. Swagger is
   in the new optional module `stride-application-openapi`.
 - **Authentication is in its own module.** An application that sets `security.*` must add
