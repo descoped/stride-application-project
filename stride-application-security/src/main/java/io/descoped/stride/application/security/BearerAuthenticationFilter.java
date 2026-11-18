@@ -44,8 +44,9 @@ public final class BearerAuthenticationFilter extends HttpFilter {
      * {@link JwtTokenVerifier#withKeys}, and hands the filter to Stride under the name {@code "security"}.
      */
     public BearerAuthenticationFilter(SecurityConfiguration settings, JwtTokenVerifier verifier) {
+        JwtTokenVerifier.requireEnabled(settings);
         this.settings = settings;
-        this.verifier = verifier;
+        this.verifier = java.util.Objects.requireNonNull(verifier, "verifier");
         this.metadata = ProtectedResourceMetadata.of(settings);
     }
 

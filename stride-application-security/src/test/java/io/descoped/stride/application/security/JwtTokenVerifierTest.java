@@ -250,4 +250,23 @@ class JwtTokenVerifierTest {
         assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "my \"realm\"");
         assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "");
     }
+
+    @Test void settingsThatAreNotEnabledAreNotValidatedAndCannotAuthenticate() {
+        // disabled settings skip validation: this realm could not be written into a challenge
+        var disabled = new SecurityConfiguration(false, "not a url", Set.of(), Set.of(), "anything",
+                Set.of(), Set.of(), "", "", "a \"quoted\" realm", -1);
+        var keys = new ImmutableJWKSet<com.nimbusds.jose.proc.SecurityContext>(new JWKSet(KEY.toPublicJWK()));
+
+        for (org.junit.jupiter.api.function.Executable use : java.util.List.<org.junit.jupiter.api.function.Executable>of(
+                () -> JwtTokenVerifier.withKeys(disabled, keys),
+                () -> JwtTokenVerifier.discover(disabled),
+                () -> new BearerAuthenticationFilter(disabled, verifier()))) {
+            var failure = assertThrows(IllegalArgumentException.class, use);
+            assertTrue(failure.getMessage().startsWith("security.enabled is false"), failure.getMessage());
+        }
+    }
+
+    @Test void aFilterWithoutAVerifierIsRefusedWhenItIsBuilt() {
+        assertThrows(NullPointerException.class, () -> new BearerAuthenticationFilter(settings(), null));
+    }
 }

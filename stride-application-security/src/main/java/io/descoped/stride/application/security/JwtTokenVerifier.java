@@ -36,7 +36,7 @@ public final class JwtTokenVerifier implements AutoCloseable {
      * A verifier that reads the issuer's metadata and keys over the network, as {@code security.issuer} says.
      */
     public static JwtTokenVerifier discover(SecurityConfiguration settings) throws IOException {
-        if (!settings.enabled()) throw new IllegalArgumentException("Security must be enabled");
+        requireEnabled(settings);
         var retriever = new DefaultResourceRetriever(2000, 3000, 1024 * 1024) {
             @Override protected java.net.HttpURLConnection openHTTPConnection(java.net.URL url) throws IOException {
                 var connection = super.openHTTPConnection(url);
@@ -74,7 +74,17 @@ public final class JwtTokenVerifier implements AutoCloseable {
      * public paths from them, the verifier the issuer, audiences and algorithms.
      */
     public static JwtTokenVerifier withKeys(SecurityConfiguration settings, JWKSource<SecurityContext> keys) {
+        requireEnabled(settings);
         return new JwtTokenVerifier(settings, java.util.Objects.requireNonNull(keys, "keys"));
+    }
+
+    // SecurityConfiguration validates its values only when it is enabled
+    static void requireEnabled(SecurityConfiguration settings) {
+        if (!settings.enabled()) {
+            throw new IllegalArgumentException("security.enabled is false, so the security settings are not validated "
+                    + "and cannot be used to authenticate: set security.enabled=true, or leave the security filter out "
+                    + "(filters.security.enabled=false)");
+        }
     }
 
     JwtTokenVerifier(SecurityConfiguration settings, JWKSource<SecurityContext> keys) {
