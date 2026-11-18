@@ -93,6 +93,9 @@ Most applications are affected by these.
   disables one.
 - **A filter or servlet instance is always registered.** `filters.<name>.enabled=false` does not remove an
   instance; Stride logs a warning. An application that wants a switch leaves the instance out.
+- **A configured service class keeps its qualifiers.** A class named in `services.<name>.config.class` is bound
+  with the qualifier annotations it carries, not only `@Named`. A `@MessageReceiver` class named there now
+  receives HK2 topic events; it used to receive none.
 - **A configured service class must not declare its own scope.** A class named in
   `services.<name>.config.class` that carries a scope annotation or HK2's `@Service` fails at
   `StrideApplication.create`, with a message naming the key. A `@Named` class is bound under its name.
