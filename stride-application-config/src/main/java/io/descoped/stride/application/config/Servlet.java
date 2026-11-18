@@ -39,7 +39,7 @@ public interface Servlet {
 
         Builder validate(ServletContextValidation.Builder servletContextValidationBuilder);
 
-        Builder binding(ServletContextBinding.Builder ServletContextBindingBuilder);
+        Builder binding(ServletContextBinding.Builder servletContextBindingBuilder);
 
         Servlet build();
     }

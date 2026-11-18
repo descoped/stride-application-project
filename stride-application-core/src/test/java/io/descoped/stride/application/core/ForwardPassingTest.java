@@ -293,8 +293,9 @@ class ForwardPassingTest {
     @Test
     void registeringTwoFiltersUnderOneNameIsRejected() {
         Components.Builder components = Components.builder().filter("audit", new Marker("a"));
+        Marker second = new Marker("b");
 
-        assertThrows(IllegalArgumentException.class, () -> components.filter("audit", new Marker("b")));
+        assertThrows(IllegalArgumentException.class, () -> components.filter("audit", second));
     }
 
     private static String messages(Throwable failure) {

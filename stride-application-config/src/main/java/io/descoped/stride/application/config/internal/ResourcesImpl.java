@@ -54,7 +54,7 @@ public record ResourcesImpl(ObjectNode json) implements Resources {
                     .with(key)
                     .toObjectNode()
                     .map(json -> new ResourceImpl(key, json))
-                    .map(resources::add);
+                    .ifPresent(resources::add);
         }
         return resources;
     }

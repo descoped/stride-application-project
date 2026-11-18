@@ -54,7 +54,7 @@ public record ServletsImpl(ObjectNode json) implements Servlets {
                     .with(key)
                     .toObjectNode()
                     .map(json -> new ServletImpl(key, json))
-                    .map(servlets::add);
+                    .ifPresent(servlets::add);
         }
         return servlets;
     }

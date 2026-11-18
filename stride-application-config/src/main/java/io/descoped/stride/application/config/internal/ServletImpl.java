@@ -9,10 +9,13 @@ import io.descoped.stride.application.jackson.JsonElement;
 
 public record ServletImpl(String name, ObjectNode json) implements Servlet {
 
+    private static final String ENABLED = "enabled";
+    private static final String CONFIG = "config";
+
     @Override
     public boolean isEnabled() {
         return JsonElement.ofEphemeral(json)
-                .with("enabled")
+                .with(ENABLED)
                 .asBoolean(false);
     }
 
@@ -61,19 +64,19 @@ public record ServletImpl(String name, ObjectNode json) implements Servlet {
 
         // a component declared in code is enabled unless it says otherwise
         public ServletBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
+            this(name, JsonNodeFactory.instance.objectNode().put(ENABLED, "true"));
         }
 
         @Override
         public Servlet.Builder enabled(boolean enabled) {
-            builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
+            builder.set(ENABLED, builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
         @Override
         public Servlet.Builder className(String servletClassName) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("class", builder.textNode(servletClassName));
             return this;
@@ -87,7 +90,7 @@ public record ServletImpl(String name, ObjectNode json) implements Servlet {
         @Override
         public Servlet.Builder pathSpec(String pathSpec) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("pathSpec", builder.textNode(pathSpec));
             return this;
@@ -96,18 +99,18 @@ public record ServletImpl(String name, ObjectNode json) implements Servlet {
         @Override
         public Servlet.Builder validate(ServletContextValidation.Builder servletContextValidationBuilder) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("validation", servletContextValidationBuilder.build().json());
             return this;
         }
 
         @Override
-        public Servlet.Builder binding(ServletContextBinding.Builder ServletContextBindingBuilder) {
+        public Servlet.Builder binding(ServletContextBinding.Builder servletContextBindingBuilder) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
-                    .set("binding", ServletContextBindingBuilder.build().json());
+                    .set("binding", servletContextBindingBuilder.build().json());
             return this;
         }
 

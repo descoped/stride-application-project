@@ -51,8 +51,6 @@ class StrideApplicationTest {
 
     static class MetricsServiceInitializer implements ServletContextInitializer {
 
-        private static final Logger log = LoggerFactory.getLogger(MetricsServiceInitializer.class);
-
         @Inject
         private ApplicationConfiguration configuration;
 
@@ -184,12 +182,10 @@ class StrideApplicationTest {
     public static class TestRepository implements PreDestroy {
 
         private static final Logger log = LoggerFactory.getLogger(TestRepository.class);
-        private final ApplicationConfiguration configuration;
         private final ServiceLocator serviceLocator;
 
         @Inject
-        public TestRepository(ApplicationConfiguration configuration, ServiceLocator serviceLocator) {
-            this.configuration = configuration;
+        public TestRepository(ServiceLocator serviceLocator) {
             this.serviceLocator = serviceLocator;
             int l = serviceLocator.getService(RunLevelController.class)
                     .getCurrentRunLevel();

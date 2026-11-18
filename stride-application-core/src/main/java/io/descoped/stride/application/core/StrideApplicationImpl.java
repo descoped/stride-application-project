@@ -100,19 +100,19 @@ public class StrideApplicationImpl implements StrideApplication {
 
     @Override
     public String getHost() {
-        Optional<ServerConnector> connector = ((StrideApplicationImpl) this).getConnector();
+        Optional<ServerConnector> connector = getConnector();
         return connector.map(ServerConnector::getHost).orElse("localhost");
     }
 
     @Override
     public int getLocalPort() {
-        Optional<ServerConnector> connector = ((StrideApplicationImpl) this).getConnector();
+        Optional<ServerConnector> connector = getConnector();
         return connector.map(ServerConnector::getLocalPort).orElse(-1);
     }
 
     @Override
     public int getPort() {
-        Optional<ServerConnector> connector = ((StrideApplicationImpl) this).getConnector();
+        Optional<ServerConnector> connector = getConnector();
         return connector.map(ServerConnector::getPort).orElse(-1);
     }
 
@@ -205,13 +205,13 @@ public class StrideApplicationImpl implements StrideApplication {
 
             log.info("Application started in {}ms", System.currentTimeMillis() - startedAt);
 
-            try {
-                Thread.currentThread().join();
-
-                log.warn("Application shutdown after {}", elapsedTime(startedAt));
-            } catch (InterruptedException _) {
-                // ignore
-            }
+            // Waits until the thread is interrupted: a thread never outlives its own join. The shutdown hook
+            // logs the shutdown.
+            Thread.currentThread().join();
+        } catch (InterruptedException _) {
+            // The interrupt ends the wait. The application is closed before this clause runs, so it stops with
+            // the flag clear and running requests get their stop timeout; the flag is restored for the caller.
+            Thread.currentThread().interrupt();
         }
     }
 }

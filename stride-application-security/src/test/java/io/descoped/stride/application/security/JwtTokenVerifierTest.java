@@ -73,14 +73,20 @@ class JwtTokenVerifierTest {
                 claims().subject(" ").build(), claims().subject(null).build(), claims().expirationTime(null).build(),
                 claims().issueTime(null).build(), claims().claim("roles", java.util.List.of(1)).build());
         try (var verifier = verifier()) {
-            for (var claimSet : invalid) assertThrows(Exception.class, () -> verifier.verify(token(claimSet)), claimSet.toString());
+            for (var claimSet : invalid) {
+                String token = token(claimSet); // signed outside the lambda: only verify may throw inside it
+                assertThrows(Exception.class, () -> verifier.verify(token), claimSet.toString());
+            }
         }
     }
     @Test void rejectsWrongSignatureUnsignedMalformedAndIdTokens() throws Exception {
         var attacker = new RSAKeyGenerator(2048).keyID(KEY.getKeyID()).generate();
+        // signed outside the lambdas: only verify may throw inside them
+        String wrongSignature = token(attacker, claims().build(), "at+jwt");
+        String idToken = token(KEY, claims().build(), "JWT");
         try (var verifier = verifier()) {
-            assertThrows(Exception.class, () -> verifier.verify(token(attacker, claims().build(), "at+jwt")));
-            assertThrows(Exception.class, () -> verifier.verify(token(KEY, claims().build(), "JWT")));
+            assertThrows(Exception.class, () -> verifier.verify(wrongSignature));
+            assertThrows(Exception.class, () -> verifier.verify(idToken));
             assertThrows(Exception.class, () -> verifier.verify(new com.nimbusds.jwt.PlainJWT(claims().build()).serialize()));
             assertThrows(Exception.class, () -> verifier.verify("not-a-token"));
             assertThrows(Exception.class, () -> verifier.verify("a".repeat(16_385)));
@@ -219,16 +225,22 @@ class JwtTokenVerifierTest {
         return new SecurityConfiguration(true, ISSUER, audiences, algorithms, "at+jwt", publicPaths, requiredScopes, "scope", "roles", realm, 0);
     }
 
+    // The sets are built before the lambda, so only the constructor of the settings can throw inside it.
+    static void assertRejected(Set<String> audiences, Set<String> algorithms, Set<String> publicPaths,
+                               Set<String> requiredScopes, String realm) {
+        assertThrows(IllegalArgumentException.class, () -> settings(audiences, algorithms, publicPaths, requiredScopes, realm));
+    }
+
     @Test void rejectsUnsafeSettings() {
         assertDoesNotThrow(() -> settings(Set.of("api"), Set.of("RS256"), Set.of("/ping"), Set.of("urn:example:rating=G,PG-13"), "stride api"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of(), Set.of("RS256"), Set.of(), Set.of(), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("HS256"), Set.of(), Set.of(), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("none"), Set.of(), Set.of(), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of("/*"), Set.of(), "stride"));
+        assertRejected(Set.of(), Set.of("RS256"), Set.of(), Set.of(), "stride");
+        assertRejected(Set.of("api"), Set.of("HS256"), Set.of(), Set.of(), "stride");
+        assertRejected(Set.of("api"), Set.of("none"), Set.of(), Set.of(), "stride");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of("/*"), Set.of(), "stride");
         // OAuth 2.1 section 5.3.1: what may appear in the challenge's scope and realm attributes
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read\"write"), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read write"), "stride"));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "my \"realm\""));
-        assertThrows(IllegalArgumentException.class, () -> settings(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), ""));
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read\"write"), "stride");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of("read write"), "stride");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "my \"realm\"");
+        assertRejected(Set.of("api"), Set.of("RS256"), Set.of(), Set.of(), "");
     }
 }

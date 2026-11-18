@@ -52,7 +52,7 @@ public record FiltersImpl(ObjectNode json) implements Filters {
                     .with(key)
                     .toObjectNode()
                     .map(json -> new FilterImpl(key, json))
-                    .map(filters::add);
+                    .ifPresent(filters::add);
         }
         return filters;
     }

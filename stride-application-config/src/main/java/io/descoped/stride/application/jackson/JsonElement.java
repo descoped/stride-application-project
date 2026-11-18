@@ -297,7 +297,7 @@ public interface JsonElement {
 
     @SuppressWarnings("unchecked")
     default <R> Class<R> asClass() {
-        return (Class<R>) asString().map(ExceptionFunction.call(() -> classname -> Class.forName(classname))).orElse(null);
+        return (Class<R>) asString().map(ExceptionFunction.call(() -> Class::forName)).orElse(null);
     }
 
     default <T> Optional<T> getObjectAs(Function<ObjectNode, T> mapper) {
@@ -305,7 +305,7 @@ public interface JsonElement {
     }
 
     static Map<String, JsonNode> asMap(ObjectNode objectNode) {
-        Map<String, JsonNode> map = new HashMap<>(objectNode.size());
+        Map<String, JsonNode> map = HashMap.newHashMap(objectNode.size());
         Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
@@ -330,7 +330,7 @@ public interface JsonElement {
 
     @SuppressWarnings("unchecked")
     default <R, U extends JsonNode> Set<R> toSet(Function<U, R> mapFunction) {
-        Set<R> result = new LinkedHashSet<>(optionalNode().map(JsonNode::size).orElse(0));
+        Set<R> result = LinkedHashSet.newLinkedHashSet(optionalNode().map(JsonNode::size).orElse(0));
         toArrayNode().ifPresent(node -> {
             for (JsonNode child : node) {
                 result.add(mapFunction.apply((U) child));
@@ -352,7 +352,7 @@ public interface JsonElement {
 
     @SuppressWarnings("unchecked")
     default <R, U extends JsonNode> Map<String, R> toMap(Function<U, R> mapFunction) {
-        Map<String, R> result = new LinkedHashMap<>(optionalNode().map(JsonNode::size).orElse(0));
+        Map<String, R> result = LinkedHashMap.newLinkedHashMap(optionalNode().map(JsonNode::size).orElse(0));
         toObjectNode().ifPresent(node -> {
             Iterator<Map.Entry<String, JsonNode>> it = node.fields();
             while (it.hasNext()) {

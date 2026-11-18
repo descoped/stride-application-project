@@ -32,7 +32,7 @@ public class ResponseHelper<T> {
             }
         }
         assertTrue(matchingStatusCode != -1,
-                "Actual statusCode was " + response.statusCode() + " message: " + String.valueOf(body));
+                "Actual statusCode was " + response.statusCode() + " message: " + body);
         return this;
     }
 

@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DeploymentTest {
 
@@ -63,6 +64,12 @@ class DeploymentTest {
                         .metadata(Metadata.builder().property("foo", "bar")))
                 .build();
         log.trace("\n{}", yamlMapper.writeValueAsString(services.json()));
+
+        Service service = services.service("jetty.server").orElseThrow();
+        assertTrue(service.isEnabled());
+        assertEquals(JettyServerService.class, service.clazz());
+        assertEquals(10, service.runLevel());
+        assertEquals("bar", service.metadata().value("foo"));
     }
 
     @Test
@@ -73,6 +80,10 @@ class DeploymentTest {
                         .clazz(jakarta.servlet.Filter.class))
                 .build();
         log.trace("\n{}", yamlMapper.writeValueAsString(filters.json()));
+
+        Filter filter = filters.filter("dummy").orElseThrow();
+        assertTrue(filter.isEnabled());
+        assertEquals(jakarta.servlet.Filter.class, filter.clazz());
     }
 
     @Test
@@ -89,7 +100,6 @@ class DeploymentTest {
                                 .property("foo", "bar")))
                 .build();
 
-        //log.debug("{}", services.json().toPrettyString());
         log.debug("\n{}", yamlMapper.writeValueAsString(services.json()));
 
         Optional<Service> service = services.service("jetty.server");
@@ -100,11 +110,6 @@ class DeploymentTest {
         assertEquals("jetty.server", serviceByClass
                 .map(Service::name)
                 .orElse(null));
-//        assertEquals("bar", services.serviceName("dummy.service")
-//                .map(Services.Service::json)
-//                .map(Services.Service::new)
-//                .map(e -> e.metadata().value("foo"))
-//                .orElse(null));
     }
 
     @Test
@@ -116,7 +121,6 @@ class DeploymentTest {
                         .dispatches(EnumSet.of(DispatcherType.FORWARD, DispatcherType.REQUEST)))
                 .build();
 
-        //log.debug("filter: {}", filters.json().toPrettyString());
         assertEquals("dummy", filters.filter("dummy")
                 .map(Filter::name)
                 .orElse(null));
@@ -142,7 +146,6 @@ class DeploymentTest {
                         .pathSpec("/metrics"))
                 .build();
 
-        //log.debug("{}", servlets.json().toPrettyString());
         assertEquals("io.dropwizard.metrics.servlets.AdminServlet", servlets.servletByClass("io.dropwizard.metrics.servlets.AdminServlet")
                 .map(Servlet::clazz)
                 .map(Class::getName)
@@ -164,7 +167,6 @@ class DeploymentTest {
                         .clazz(GreetingResource.class))
                 .build();
 
-        //log.debug("{}", servlets.json().toPrettyString());
         assertEquals(GreetingResource.class.getName(), resources.resourceByClass(GreetingResource.class.getName())
                 .map(Resource::clazz)
                 .map(Class::getName)

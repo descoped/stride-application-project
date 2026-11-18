@@ -98,6 +98,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
         private Function<ApplicationConfiguration, Components> components = _ -> Components.none();
 
         public Builder() {
+            // nothing to set up: every field has its default where it is declared
         }
 
         public Builder configuration(ApplicationConfiguration.Builder configurationBuilder) {

@@ -73,12 +73,14 @@ class PropertyTreeTest {
 
     @Test
     void keyThatIsBothValueAndParentIsRejectedInEitherOrder() {
+        Map<String, String> valueThenParent = properties("a", "1", "a.b", "2");
         IllegalArgumentException first = assertThrows(IllegalArgumentException.class,
-                () -> PropertyTree.toJson(properties("a", "1", "a.b", "2")));
+                () -> PropertyTree.toJson(valueThenParent));
         assertTrue(first.getMessage().contains("'a.b'"));
 
+        Map<String, String> parentThenValue = properties("a.b", "2", "a", "1");
         IllegalArgumentException second = assertThrows(IllegalArgumentException.class,
-                () -> PropertyTree.toJson(properties("a.b", "2", "a", "1")));
+                () -> PropertyTree.toJson(parentThenValue));
         assertTrue(second.getMessage().contains("'a'"));
     }
 }

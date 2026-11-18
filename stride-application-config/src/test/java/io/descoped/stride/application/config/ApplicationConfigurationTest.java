@@ -1,17 +1,10 @@
 package io.descoped.stride.application.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.descoped.stride.application.config.utils.ClassPathResourceUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,14 +33,5 @@ class ApplicationConfigurationTest {
         log.trace("application.alias: {}", configuration.application().alias());
         log.trace("application.version: {}", configuration.application().version());
         log.trace("application.url: {}", configuration.application().url());
-    }
-
-    @Test
-    void newYamlToPropsConfig() throws IOException {
-        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        String res = ClassPathResourceUtils.readResource("application-config-test.yaml");
-        JsonNode root = mapper.readTree(res);
-        JavaPropsMapper propsMapper = new JavaPropsMapper();
-        log.trace("\n{}", propsMapper.writeValueAsString(root));
     }
 }

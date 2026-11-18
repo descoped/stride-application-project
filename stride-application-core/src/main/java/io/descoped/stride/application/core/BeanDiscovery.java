@@ -10,15 +10,11 @@ import org.glassfish.hk2.extras.ExtrasUtilities;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DuplicatePostProcessor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class BeanDiscovery {
-
-    private static final Logger log = LoggerFactory.getLogger(BeanDiscovery.class);
 
     private final ApplicationConfiguration configuration;
     private final ServiceLocator serviceLocator;

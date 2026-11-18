@@ -12,10 +12,12 @@ import java.util.List;
 
 public record ResourceImpl(String name, ObjectNode json) implements Resource {
 
+    private static final String ENABLED = "enabled";
+
     @Override
     public boolean isEnabled() {
         return JsonElement.ofEphemeral(json)
-                .with("enabled")
+                .with(ENABLED)
                 .asBoolean(false);
     }
 
@@ -49,12 +51,12 @@ public record ResourceImpl(String name, ObjectNode json) implements Resource {
 
         // a component declared in code is enabled unless it says otherwise
         public ResourceBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
+            this(name, JsonNodeFactory.instance.objectNode().put(ENABLED, "true"));
         }
 
         @Override
         public Resource.Builder enabled(boolean enabled) {
-            builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
+            builder.set(ENABLED, builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
