@@ -4,8 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
@@ -27,9 +29,11 @@ public class ClassPathResourceUtils {
             log.error("Resource NOT Found: {}", resourceName);
             throw new ResourceNotFoundException("Resource NOT Found: " + resourceName);
         }
-        return new BufferedReader(new InputStreamReader(resourceStream, StandardCharsets.UTF_8))
-                .lines()
-                .collect(Collectors.joining("\n"));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceStream, StandardCharsets.UTF_8))) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not read resource: " + resourceName, e);
+        }
     }
 
     public static class ResourceNotFoundException extends RuntimeException {
