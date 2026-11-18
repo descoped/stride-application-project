@@ -312,6 +312,15 @@
                 <version>${junit-jupiter-engine.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <!-- Runs a test class from inside a test: how the failure paths of StrideExtension are tested.
+                 JUnit 6 releases the platform and Jupiter under one version. -->
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-launcher</artifactId>
+                <version>${junit-jupiter-engine.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
