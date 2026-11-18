@@ -23,6 +23,10 @@ class OneRuntimeTest {
 
     /** A second runtime, as another jar on the class path would bring. */
     public static class OtherRuntime implements ApplicationInitializer {
+        public OtherRuntime() {
+            throw new AssertionError("a runtime that is not used must not be created");
+        }
+
         @Override
         public StrideApplication initialize(ApplicationConfiguration configuration, Components components) {
             throw new AssertionError("must not be used");
@@ -46,6 +50,26 @@ class OneRuntimeTest {
             assertEquals("More than one Stride runtime on the class path, and only one can create the application: "
                     + OtherRuntime.class.getName() + ", " + StrideApplicationInitializer.class.getName(),
                     failure.getMessage());
+        } finally {
+            thread.setContextClassLoader(original);
+        }
+    }
+
+    @Test
+    void aClassPathWithoutARuntimeSaysWhatToAdd() throws Exception {
+        ApplicationConfiguration configuration = ApplicationConfiguration.builder().testDefaults().build();
+
+        Thread thread = Thread.currentThread();
+        ClassLoader original = thread.getContextClassLoader();
+        // sees the JDK only, so no provider of the runtime
+        try (URLClassLoader withoutRuntime = new URLClassLoader(new URL[0], ClassLoader.getPlatformClassLoader())) {
+            thread.setContextClassLoader(withoutRuntime);
+
+            IllegalStateException failure = assertThrows(IllegalStateException.class,
+                    () -> StrideApplication.create(configuration));
+
+            assertEquals("No Stride runtime on the class path: add stride-application-core, or another provider of "
+                    + ApplicationInitializer.class.getName(), failure.getMessage());
         } finally {
             thread.setContextClassLoader(original);
         }

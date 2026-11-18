@@ -10,20 +10,20 @@ import java.util.stream.Collectors;
 class ApplicationConfigurator {
 
     StrideApplication configure(ApplicationConfiguration configuration, Components components) {
-        List<ApplicationInitializer> initializers = ServiceLoader.load(ApplicationInitializer.class).stream()
-                .map(ServiceLoader.Provider::get)
-                .toList();
-        if (initializers.isEmpty()) {
+        // providers, not instances: a runtime is created only when it is the one that will be used
+        List<ServiceLoader.Provider<ApplicationInitializer>> runtimes = ServiceLoader.load(ApplicationInitializer.class)
+                .stream().toList();
+        if (runtimes.isEmpty()) {
             throw new IllegalStateException("No Stride runtime on the class path: add stride-application-core, or "
                     + "another provider of " + ApplicationInitializer.class.getName());
         }
-        if (initializers.size() > 1) {
+        if (runtimes.size() > 1) {
             // which one comes first depends on the order of the class path: not a choice to make silently
             throw new IllegalStateException("More than one Stride runtime on the class path, and only one can create "
-                    + "the application: " + initializers.stream().map(i -> i.getClass().getName()).sorted()
+                    + "the application: " + runtimes.stream().map(runtime -> runtime.type().getName()).sorted()
                     .collect(Collectors.joining(", ")));
         }
-        ApplicationInitializer initializer = initializers.getFirst();
+        ApplicationInitializer initializer = runtimes.getFirst().get();
         return initializer.initialize(configuration, components);
     }
 }
