@@ -18,7 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * HK2 topic events are enabled in a started application: what one service publishes on a {@link Topic}, another
- * service receives in its {@link SubscribeTo} method. Both services are found by HK2's own discovery.
+ * service receives in its {@link SubscribeTo} method. The subscriber is found by HK2's own discovery in one test
+ * and named in the configuration in the other.
  */
 class TopicEventsTest {
 
@@ -67,6 +68,7 @@ class TopicEventsTest {
                         .clazz(Billing.class).runLevel(5)))
                 .build();
 
+        BILLED.clear();
         try (StrideApplication application = StrideApplication.create(configuration)) {
             application.start();
 
@@ -80,6 +82,7 @@ class TopicEventsTest {
     void aSubscriberReceivesWhatAnotherServicePublishes() {
         ApplicationConfiguration configuration = ApplicationConfiguration.builder().testDefaults().build();
 
+        RECEIVED.clear();
         try (StrideApplication application = StrideApplication.create(configuration)) {
             application.start();
             ServiceLocator locator = application.getServiceLocator();
