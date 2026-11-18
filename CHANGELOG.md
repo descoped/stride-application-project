@@ -105,6 +105,15 @@ Most applications are affected by these.
   `ServletContextInitialization.builder().validate(..)` was accepted and then ignored, because of a misspelled
   key inside Stride. A required attribute or named service that is missing now stops the application from
   starting, as the same requirement on a servlet always did.
+- **Resources read and write JSON with the injectable `ObjectMapper`.** Jersey used a mapper of its own, so the
+  mapper Stride offers, and one the application offered with `Components.service(ObjectMapper.class, ..)`, had
+  no effect on a resource's JSON. Two things follow:
+  - A resource now **ignores unknown properties** in a request body, as Stride's mapper is set up to. It used to
+    answer 400. To keep that, offer your own `ObjectMapper`, or set `services.jersey.objectMapper.enabled=false`
+    to get Jersey's.
+  - An application's own mapper (naming strategy, modules, date format) now applies to its resources.
+- `services.jersey.objectMapper.enabled=false` removes the injectable mapper cleanly. Injecting `ObjectMapper`
+  then used to fail inside HK2.
 - **Servlets and servlet context initializers belong to the server, not to Jersey.** With
   `services.jersey.server.enabled=false` they used to disappear, while filters and `/ping` stayed. They are now
   registered either way.

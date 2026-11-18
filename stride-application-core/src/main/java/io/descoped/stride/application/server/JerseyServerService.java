@@ -4,7 +4,9 @@ import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Arg;
 import io.descoped.stride.application.config.Resource;
 import io.descoped.stride.application.api.Components;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ext.ContextResolver;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHolder;
@@ -37,6 +39,7 @@ public class JerseyServerService implements PreDestroy {
     @Inject
     public JerseyServerService(ApplicationConfiguration configuration,
                                Components components,
+                               ServiceLocator serviceLocator,
                                ServletContextHandler servletContextHandler) throws ClassNotFoundException {
 
         ApplicationConfiguration.Jersey jerseyConfig = configuration.jersey();
@@ -46,6 +49,13 @@ public class JerseyServerService implements PreDestroy {
         resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
         resourceConfig.register(RolesAllowedDynamicFeature.class);
         resourceConfig.property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
+
+        // Resources read and write JSON with the ObjectMapper that is injectable: the application's own when it
+        // offers one, Stride's otherwise. With neither (services.jersey.objectMapper.enabled=false) Jersey's stays.
+        ObjectMapper objectMapper = serviceLocator.getService(ObjectMapper.class);
+        if (objectMapper != null) {
+            resourceConfig.register(new ObjectMapperResolver(objectMapper));
+        }
 
         // register supported mediaTypes
         String mediaTypesString = String.join(",", jerseyConfig.mediaTypes());
@@ -124,6 +134,14 @@ public class JerseyServerService implements PreDestroy {
             throw new IllegalStateException("Resource " + resourceClass + " could not be created with a constructor "
                     + "taking (" + parameterClasses.stream().map(Class::getName).collect(Collectors.joining(", "))
                     + ")", e);
+        }
+    }
+
+    /** Hands Jersey's JSON provider the application's mapper. */
+    private record ObjectMapperResolver(ObjectMapper objectMapper) implements ContextResolver<ObjectMapper> {
+        @Override
+        public ObjectMapper getContext(Class<?> type) {
+            return objectMapper;
         }
     }
 
