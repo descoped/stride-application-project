@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.descoped.stride.application</groupId>
         <artifactId>stride-application-parent</artifactId>
-        <version>0.1.1-SNAPSHOT</version>
+        <version>0.1.0-SNAPSHOT</version>
         <relativePath>../stride-application-parent</relativePath>
     </parent>
 
@@ -16,6 +16,9 @@
          and the central profile below fails a build that does not. -->
     <artifactId>stride-application-sample</artifactId>
     <packaging>jar</packaging>
+
+    <name>Stride Application Sample</name>
+    <description>A small application built on Stride. An example, never published</description>
 
     <properties>
         <sonar.skip>true</sonar.skip>
