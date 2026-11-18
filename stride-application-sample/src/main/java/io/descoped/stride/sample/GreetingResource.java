@@ -4,7 +4,11 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
+
+import java.security.Principal;
 
 /**
  * A REST resource that gets what it needs through its constructor.
@@ -16,6 +20,17 @@ public final class GreetingResource {
 
     public GreetingResource(Greetings greetings) {
         this.greetings = greetings;
+    }
+
+    /**
+     * Greets the caller. With authentication on, the caller is the subject of the access token; without it
+     * there is no caller to name.
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Greetings.Greeting greetCaller(@Context SecurityContext security) {
+        Principal caller = security.getUserPrincipal();
+        return greetings.greet(caller == null ? "stranger" : caller.getName());
     }
 
     @GET
