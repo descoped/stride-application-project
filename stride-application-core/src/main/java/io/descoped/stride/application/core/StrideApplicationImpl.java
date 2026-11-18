@@ -49,9 +49,11 @@ public class StrideApplicationImpl implements StrideApplication {
                 stop();
             }
 
-        } else if (runLevel == lifecycle.getMaxRunLevel()) {
+            return;
+        }
+        lifecycle.ensureNotStopped();
+        if (runLevel == lifecycle.getMaxRunLevel()) {
             start();
-
         } else {
             lifecycle.proceedTo(runLevel);
         }
@@ -125,7 +127,8 @@ public class StrideApplicationImpl implements StrideApplication {
         Server server = serviceLocator.getService(Server.class);
         if (server == null) {
             // a normal state before the web server's run level, for example after activate()
-            log.debug("The server is not started (run level {})", lifecycle.getCurrentRunLevel());
+            // no run level here: reading it takes the lifecycle's lock, which start() holds until it is done
+            log.debug("The server is not started");
             return Optional.empty();
         }
         for (Connector connector : server.getConnectors()) {

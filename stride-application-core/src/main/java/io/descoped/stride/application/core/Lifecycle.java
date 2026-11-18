@@ -53,9 +53,6 @@ class Lifecycle {
     }
 
     int getMaxRunLevel() {
-        if (completed.get()) {
-            return RunLevelConstants.WEB_SERVER_RUN_LEVEL + 1; // stopped: nothing to discover
-        }
         beanDiscovery.discover();
         return serviceLocator.getDescriptors(d -> true).stream()
                 .map(d -> d.getMetadata().get(org.glassfish.hk2.runlevel.RunLevel.RUNLEVEL_VAL_META_TAG))
@@ -66,8 +63,7 @@ class Lifecycle {
     synchronized void proceedTo(int runLevel) {
         if (completed.get()) {
             if (runLevel > 0) {
-                // the service locator is shut down with the application; its services cannot come back
-                throw new IllegalStateException("The application is stopped and cannot be started again; create a new one");
+                ensureNotStopped();
             }
             return;
         }
@@ -82,7 +78,15 @@ class Lifecycle {
         completed.set(runLevel == 0);
     }
 
+    // the service locator is shut down with the application; its services cannot come back
+    void ensureNotStopped() {
+        if (completed.get()) {
+            throw new IllegalStateException("The application is stopped and cannot be started again; create a new one");
+        }
+    }
+
     void start() {
+        ensureNotStopped();
         proceedTo(getMaxRunLevel()); // start all run levels
     }
 
