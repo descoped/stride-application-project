@@ -42,6 +42,7 @@ import java.net.http.HttpResponse;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -164,7 +165,7 @@ class StrideApplicationTest {
                                 .build(),
                         HttpResponse.BodyHandlers.ofString()
                 );
-                log.trace("resp: {}", response.statusCode());
+                assertEquals(200, response.statusCode());
             }
             {
                 HttpResponse<String> response = client.send(
@@ -174,7 +175,8 @@ class StrideApplicationTest {
                                 .build(),
                         HttpResponse.BodyHandlers.ofString()
                 );
-                log.trace("resp: {} => {}", response.statusCode(), response.body());
+                assertEquals(200, response.statusCode());
+                assertEquals("{\"name\":\"world\",\"greeting\":\"hello\"}", response.body());
             }
         }
     }

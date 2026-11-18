@@ -152,12 +152,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-properties</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>io.descoped.stride.application</groupId>
             <artifactId>stride-application-junit-jupiter</artifactId>
             <version>${project.version}</version>
