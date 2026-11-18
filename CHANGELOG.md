@@ -133,6 +133,10 @@ Bearer authentication follows OAuth 2.1 (draft-ietf-oauth-v2-1-16, section 5), R
 - Issuer metadata is read from `/.well-known/oauth-authorization-server`, inserted between host and path, and
   then from the OpenID Connect location. Only the OpenID Connect location was tried before.
 - Required scopes and the realm are validated at startup against the characters a challenge may carry.
+- **Protected resource metadata (RFC 9728) can be published.** New key `security.resource`, empty by default:
+  the https URL clients reach the application at. When it is set, the metadata is served without a token at
+  `/.well-known/oauth-protected-resource` followed by the URL's path, and every challenge names the document in
+  `resource_metadata`. With the key empty nothing changes.
 
 ### Test library
 
