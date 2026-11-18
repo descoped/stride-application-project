@@ -19,6 +19,10 @@
     <inceptionYear>2023</inceptionYear>
 
     <properties>
+        <!-- Reproducible builds: every jar entry gets this time, so the same tag builds the same bytes.
+             release:prepare sets it to the release time. -->
+        <project.build.outputTimestamp>2026-11-18T22:20:06Z</project.build.outputTimestamp>
+
         <!-- Java baseline. `release` alone sets the language level, the class file version and the JDK API that
              the code is checked against; `source` and `target` would only repeat it. -->
         <maven.compiler.release>25</maven.compiler.release>
