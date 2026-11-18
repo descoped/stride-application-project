@@ -2,6 +2,7 @@ package io.descoped.stride.application.core;
 
 import io.descoped.stride.application.api.Components;
 import io.descoped.stride.application.config.ApplicationConfiguration;
+import io.descoped.stride.application.cors.ApplicationCORSServletFilter;
 import io.descoped.stride.application.test.server.TestApplication;
 import io.descoped.stride.application.test.server.TestClient;
 import jakarta.ws.rs.GET;
@@ -71,6 +72,25 @@ class CorsOriginTest {
 
             assertEquals("42", response.body());
             assertEquals(Optional.empty(), response.headers().firstValue("Access-Control-Allow-Origin"));
+        }
+    }
+
+    @Test
+    void aFilterMadeWithTheBuilderAllowsTheMethodsTheDeclaredDefaultAllows() {
+        // the instance replaces the configured filter of the same name
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(ApplicationConfiguration.builder().testDefaults())
+                .components(Components.builder()
+                        .filter("cors", ApplicationCORSServletFilter.builder().build())
+                        .build())
+                .build()) {
+            application.start();
+            TestClient client = TestClient.create(application);
+
+            for (String method : "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD".split(", ")) {
+                client.options("/ping", "Origin", "https://shop.example", "Access-Control-Request-Method", method)
+                        .expectAnyOf(204);
+            }
         }
     }
 }
