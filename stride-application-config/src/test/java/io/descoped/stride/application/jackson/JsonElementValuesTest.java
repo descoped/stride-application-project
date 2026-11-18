@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -117,13 +118,15 @@ class JsonElementValuesTest {
         ObjectNode numbers = document().with("n").object();
         ObjectNode root = (ObjectNode) document().json();
 
+        // the array is left out: flattening is for objects of values, and an array has no dotted keys
         Map<String, String> flat = new LinkedHashMap<>();
         JsonElement.toFlattenedMap(flat, "", (ObjectNode) root.deepCopy().without("list"), JsonNode::asText);
 
         assertEquals("7", flat.get("n.whole"));
         assertEquals("true", flat.get("b.yes"));
         assertEquals(10, flat.size());
+        assertEquals(Set.of("whole", "wholeText", "big", "fraction", "fractionText", "notANumber"),
+                JsonElement.asMap(numbers).keySet());
         assertEquals(numbers.get("whole"), JsonElement.asMap(numbers).get("whole"));
-        assertEquals(6, JsonElement.asMap(numbers).size());
     }
 }
