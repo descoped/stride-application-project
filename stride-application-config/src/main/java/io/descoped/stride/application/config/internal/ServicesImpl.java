@@ -52,7 +52,7 @@ public record ServicesImpl(ObjectNode json) implements Services {
             jsonElement.with(key)
                     .toObjectNode()
                     .map(json -> new ServiceImpl(key, json))
-                    .map(services::add);
+                    .ifPresent(services::add);
         }
         return services;
     }
