@@ -159,4 +159,8 @@ Bearer authentication follows OAuth 2.1 (draft-ietf-oauth-v2-1-16, section 5), R
 - `TestClient` is `AutoCloseable` and has one public `send(method, uri, body, handler, headers...)` for methods
   the helpers do not cover.
 - `TestServerException` is removed.
+- **The package `io.descoped.stride.application.test.tuple` is removed.** Nothing in Stride used it, and a test
+  library is not the place for it. For ordered tuples and order-preserving binary keys, add
+  `io.descoped.tuple:java-tuple` to your own build. Its API and its encoding (FoundationDB compatible) are
+  different, so code that used the old classes must be rewritten against it.
 - `ResponseHelper` reports the expected and the actual status the right way round.

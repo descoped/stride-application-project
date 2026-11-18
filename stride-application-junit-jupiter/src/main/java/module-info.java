@@ -12,5 +12,4 @@ module stride.application.junit.jupiter {
     requires org.slf4j;
 
     exports io.descoped.stride.application.test.server;
-    exports io.descoped.stride.application.test.tuple;
 }
