@@ -59,8 +59,14 @@ jobs:
         if: github.event_name != 'push'
         run: mvn --batch-mode --no-transfer-progress verify
 
-      - name: Build, test, coverage and SonarCloud
+      - name: Build, test and collect coverage
+        if: github.event_name == 'push'
+        run: mvn --batch-mode --no-transfer-progress verify -P coverage
+
+      # The second build runs no tests. It writes every module's coverage report again, now from the data of
+      # all the tests, and then sends the analysis.
+      - name: Coverage reports and SonarCloud
         if: github.event_name == 'push'
         env:
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-        run: mvn --batch-mode --no-transfer-progress verify -P coverage,sonar
+        run: mvn --batch-mode --no-transfer-progress verify -P coverage,sonar -DskipTests
