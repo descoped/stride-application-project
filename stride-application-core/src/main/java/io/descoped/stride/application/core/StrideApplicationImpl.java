@@ -9,7 +9,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.runlevel.RunLevelController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +43,17 @@ public class StrideApplicationImpl implements StrideApplication {
 
     @Override
     public synchronized void proceedTo(int runLevel) {
-        if (runLevel <= 0 && lifecycle.getCurrentRunLevel() > 0) {
-            stop();
+        if (runLevel <= 0) {
+            // run level 0 is where an application that has not started already is: nothing to do then
+            if (!serviceLocator.isShutdown() && lifecycle.getCurrentRunLevel() > 0) {
+                stop();
+            }
 
-        } else if (runLevel == lifecycle.getMaxRunLevel()) {
+            return;
+        }
+        lifecycle.ensureNotStopped();
+        if (runLevel == lifecycle.getMaxRunLevel()) {
             start();
-
         } else {
             lifecycle.proceedTo(runLevel);
         }
@@ -117,12 +121,14 @@ public class StrideApplicationImpl implements StrideApplication {
     }
 
     public Optional<ServerConnector> getConnector() {
+        if (serviceLocator.isShutdown()) {
+            return Optional.empty(); // stopped: there is no address any more
+        }
         Server server = serviceLocator.getService(Server.class);
         if (server == null) {
-            int runLevel = ofNullable(serviceLocator.getService(RunLevelController.class))
-                    .map(RunLevelController::getCurrentRunLevel)
-                    .orElse(-1);
-            log.error("Jetty Server is NOT started (run-level: {})", runLevel);
+            // a normal state before the web server's run level, for example after activate()
+            // no run level here: reading it takes the lifecycle's lock, which start() holds until it is done
+            log.debug("The server is not started");
             return Optional.empty();
         }
         for (Connector connector : server.getConnectors()) {
@@ -140,13 +146,8 @@ public class StrideApplicationImpl implements StrideApplication {
 
     Filter getEnabledServicesFilter() {
         return descriptor -> {
-            boolean defaultValue = configuration.requireBoolean("services.hk2.defaults.enabled");
             String name = descriptor.getName();
-            boolean enabled = ofNullable(name)
-                    .map(configuration.with("services")::find)
-                    .map(e -> e.with("enabled"))
-                    .map(e -> e.asBoolean(defaultValue))
-                    .orElse(true);
+            boolean enabled = name == null || DefaultConfigurationPostPopulatorProcessor.isEnabled(configuration, name);
             if (name != null && log.isDebugEnabled() && configuration.isVerboseLogging()) {
                 log.debug("Service: {}.enabled={}", name, enabled);
             }

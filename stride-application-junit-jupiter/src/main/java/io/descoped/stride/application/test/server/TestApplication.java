@@ -17,9 +17,12 @@ public class TestApplication implements TestUriResolver, StrideApplication {
     }
 
     private final StrideApplication application;
+    private final String contextPath;
 
-    private TestApplication(StrideApplication application) {
+    private TestApplication(StrideApplication application, String contextPath) {
         this.application = application;
+        // "/" and "" are both the root; a path is kept without a trailing slash, to go in front of "/ping"
+        this.contextPath = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath;
     }
 
     @Override
@@ -75,7 +78,8 @@ public class TestApplication implements TestUriResolver, StrideApplication {
     @Override
     public String testURL(String uri) {
         String host = application.getHost();
-        return testURL(host, application.getLocalPort(), uri);
+        // under the context path the application runs under, so a test writes the same paths at any context path
+        return testURL(host, application.getLocalPort(), contextPath + uri);
     }
 
     // An IPv6 address goes in brackets unless it already is, as the URL constructor did.
@@ -133,6 +137,11 @@ public class TestApplication implements TestUriResolver, StrideApplication {
             return this;
         }
 
+        /**
+         * The context path the application runs under in the test. The default is the root, whatever the
+         * configuration says; {@code null} keeps the configuration's. Requests of the test go under it:
+         * {@code get("/ping")} reaches {@code /api/ping} when the context path is {@code /api}.
+         */
         public Builder contextPath(String contextPath) {
             this.contextPath = contextPath;
             return this;
@@ -157,7 +166,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
 
             ApplicationConfiguration configuration = configurationBuilder.build();
             StrideApplication app = StrideApplication.create(configuration, components.apply(configuration));
-            return new TestApplication(app);
+            return new TestApplication(app, configuration.server().contextPath());
         }
     }
 }

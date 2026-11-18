@@ -9,8 +9,10 @@ public interface Service {
         return new ServiceImpl.ServiceBuilder(name);
     }
 
+    /** A service of the given class, named after it. */
     static Builder builder(Class<?> clazz) {
-        return new ServiceImpl.ServiceBuilder(clazz.getName());
+        // named after the class, and of that class
+        return new ServiceImpl.ServiceBuilder(clazz.getName()).clazz(clazz);
     }
 
     String name();
@@ -37,6 +39,10 @@ public interface Service {
 
         Builder clazz(Class<?> serviceClass);
 
+        /**
+         * The run level the service starts at; application services use 1 to 9. A service without a run level is
+         * not started with the application: it is created the first time it is asked for.
+         */
         Builder runLevel(int runlevel);
 
         Builder metadata(Metadata.Builder metadataBuilder);

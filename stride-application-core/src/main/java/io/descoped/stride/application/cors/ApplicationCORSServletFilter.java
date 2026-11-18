@@ -85,7 +85,7 @@ public class ApplicationCORSServletFilter extends HttpFilter {
         private String origin = "*";
         private String credentials = "false";
         private String headers = "origin, content-type, accept, authorization";
-        private String methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD";
+        private String methods = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"; // as filters.cors.config.methods
         private String maxAge = "86400";
 
         private Builder() {
