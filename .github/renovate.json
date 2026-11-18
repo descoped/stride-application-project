@@ -2,11 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":dependencyDashboard"
+    ":dependencyDashboard",
+    "schedule:monthly"
   ],
   "packageRules": [
     {
-      "description": "Always the latest stable version; CI is the gate",
+      "description": "Always the latest stable version, once a month; CI is the gate and a pull request that passes merges itself",
       "matchManagers": [
         "maven",
         "github-actions"
@@ -27,6 +28,9 @@
   "vulnerabilityAlerts": {
     "labels": [
       "security"
+    ],
+    "schedule": [
+      "at any time"
     ],
     "automerge": true
   }
