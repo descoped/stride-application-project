@@ -15,6 +15,9 @@ Most applications are affected by these.
 - **Java 25 or newer is required.** It was 17.
 - **Core no longer brings a logging backend.** Add the one you use, for example Logback or `slf4j-simple`. Core
   needs only `slf4j-api`.
+- **The test library no longer brings `slf4j-simple`.** A project whose tests relied on it for log output adds
+  an SLF4J backend at test scope. A project that tests with Logback or another backend no longer needs to
+  exclude it.
 - **Stride no longer brings `jackson-dataformat-yaml` and `snakeyaml`.** Stride reads properties files and never
   used them. An application that uses Jackson's YAML support declares it. `stride-application-openapi` still
   brings both, through Swagger.
