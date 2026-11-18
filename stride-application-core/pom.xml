@@ -139,6 +139,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- DeploymentTest and StrideApplicationTest print configurations as YAML -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

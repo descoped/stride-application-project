@@ -4,7 +4,6 @@ module stride.application.config {
 
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.core;
-    requires com.fasterxml.jackson.dataformat.yaml;
 
     requires jakarta.servlet;
 

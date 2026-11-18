@@ -40,6 +40,8 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
+            <!-- only a test reads YAML; Stride reads properties files -->
+            <scope>test</scope>
         </dependency>
 
         <dependency>
