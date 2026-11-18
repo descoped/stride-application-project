@@ -73,14 +73,20 @@ class JwtTokenVerifierTest {
                 claims().subject(" ").build(), claims().subject(null).build(), claims().expirationTime(null).build(),
                 claims().issueTime(null).build(), claims().claim("roles", java.util.List.of(1)).build());
         try (var verifier = verifier()) {
-            for (var claimSet : invalid) assertThrows(Exception.class, () -> verifier.verify(token(claimSet)), claimSet.toString());
+            for (var claimSet : invalid) {
+                String token = token(claimSet); // signed outside the lambda: only verify may throw inside it
+                assertThrows(Exception.class, () -> verifier.verify(token), claimSet.toString());
+            }
         }
     }
     @Test void rejectsWrongSignatureUnsignedMalformedAndIdTokens() throws Exception {
         var attacker = new RSAKeyGenerator(2048).keyID(KEY.getKeyID()).generate();
+        // signed outside the lambdas: only verify may throw inside them
+        String wrongSignature = token(attacker, claims().build(), "at+jwt");
+        String idToken = token(KEY, claims().build(), "JWT");
         try (var verifier = verifier()) {
-            assertThrows(Exception.class, () -> verifier.verify(token(attacker, claims().build(), "at+jwt")));
-            assertThrows(Exception.class, () -> verifier.verify(token(KEY, claims().build(), "JWT")));
+            assertThrows(Exception.class, () -> verifier.verify(wrongSignature));
+            assertThrows(Exception.class, () -> verifier.verify(idToken));
             assertThrows(Exception.class, () -> verifier.verify(new com.nimbusds.jwt.PlainJWT(claims().build()).serialize()));
             assertThrows(Exception.class, () -> verifier.verify("not-a-token"));
             assertThrows(Exception.class, () -> verifier.verify("a".repeat(16_385)));
