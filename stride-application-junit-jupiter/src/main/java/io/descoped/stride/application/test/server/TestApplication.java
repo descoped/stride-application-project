@@ -166,7 +166,7 @@ public class TestApplication implements TestUriResolver, StrideApplication {
 
             ApplicationConfiguration configuration = configurationBuilder.build();
             StrideApplication app = StrideApplication.create(configuration, components.apply(configuration));
-            return new TestApplication(app, configuration.requireString("services.jetty.server.config.context-path"));
+            return new TestApplication(app, configuration.server().contextPath());
         }
     }
 }
