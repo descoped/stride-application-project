@@ -1,6 +1,5 @@
 package io.descoped.stride.application.core;
 
-
 import io.descoped.stride.application.api.StrideApplication;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Service;
@@ -55,6 +54,14 @@ class ServletContextWiringTest {
         public void initialize(ServiceLocator locator, ServletContext context) {
             context.setAttribute("announced", "yes");
             ServiceLocatorUtilities.addOneConstant(locator, "ready", "announcement", String.class);
+        }
+    }
+
+    /** Runs before {@link Announcer} and provides none of what the initialization requires. */
+    public static class Bystander implements ServletContextInitializer {
+        @Override
+        public void initialize(ServiceLocator locator, ServletContext context) {
+            context.setAttribute("bystander", "ran");
         }
     }
 
@@ -128,13 +135,34 @@ class ServletContextWiringTest {
     }
 
     @Test
+    void theRequirementsAreCheckedWhenEveryInitializerHasRunSoALaterOneCanMeetThem() {
+        ApplicationConfiguration.Builder configuration = ApplicationConfiguration.builder().testDefaults()
+                .initialization(ServletContextInitialization.builder()
+                        .initializerClass(Bystander.class)
+                        .initializerClass(Announcer.class)
+                        .validate(ServletContextValidation.builder()
+                                .requireAttribute("bystander")
+                                .requireAttribute("announced")
+                                .requireNamedService(String.class, "announcement")))
+                .servlets(Servlets.builder().servlet(Servlet.builder("announced")
+                        .clazz(AnnouncedServlet.class).pathSpec("/announced")));
+
+        try (TestApplication application = new TestApplication.Builder().configuration(configuration).build()) {
+            application.start();
+
+            assertEquals("yes", TestClient.create(application).get("/announced").expect200Ok().body());
+        }
+    }
+
+    @Test
     void anInitializationThatRequiresAnAttributeNobodySetStopsTheApplicationFromStarting() {
         String failure = startFailure(ApplicationConfiguration.builder().testDefaults()
                 .initialization(ServletContextInitialization.builder()
                         .initializerClass(Announcer.class)
                         .validate(ServletContextValidation.builder().requireAttribute("missing"))));
 
-        assertTrue(failure.contains("Required servletContext attribute 'missing'"), failure);
+        assertTrue(failure.contains(
+                "Required servletContext attribute 'missing' for the servlet context initialization IS NOT set!"), failure);
     }
 
     @Test

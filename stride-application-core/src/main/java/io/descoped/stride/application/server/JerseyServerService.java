@@ -72,34 +72,31 @@ public class JerseyServerService implements PreDestroy {
         for (Class<?> initializerClass : initialization.classes()) {
             ServletContextInitializer initializer = (ServletContextInitializer) serviceLocator.createAndInitialize(initializerClass);
             initializer.initialize(jerseyServiceLocator, servletContextHandler.getServletContext());
+        }
 
-            // validate requires
-            ServletContextValidation validation = initialization.validation();
-            if (validation != null) {
-                Set<ServletContextValidation.NamedService> namedServices = validation.serviceLocatorNamedServices();
-                for (ServletContextValidation.NamedService namedService : namedServices) {
-                    ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
-                    if (serviceHandle == null) {
-                        throw new ValidationException(
-                                String.format("Required service '%s' named '%s' NOT available!",
-                                        namedService.type(),
-                                        namedService.named()
-                                )
-                        );
-                    }
+        // validate requires, once every initializer has run: one may provide what another does not
+        ServletContextValidation initializationValidation = initialization.validation();
+        if (initializationValidation != null) {
+            for (ServletContextValidation.NamedService namedService : initializationValidation.serviceLocatorNamedServices()) {
+                ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
+                if (serviceHandle == null) {
+                    throw new ValidationException(
+                            String.format("Required service '%s' named '%s' NOT available!",
+                                    namedService.type(),
+                                    namedService.named()
+                            )
+                    );
                 }
+            }
 
-                Set<String> attributes = validation.servletContextAttributes();
-                for (String attribute : attributes) {
-                    boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
-                    if (!valid) {
-                        throw new ValidationException(
-                                String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
-                                        attribute,
-                                        initializerClass
-                                )
-                        );
-                    }
+            for (String attribute : initializationValidation.servletContextAttributes()) {
+                boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
+                if (!valid) {
+                    throw new ValidationException(
+                            String.format("Required servletContext attribute '%s' for the servlet context initialization IS NOT set!",
+                                    attribute
+                            )
+                    );
                 }
             }
         }
