@@ -110,4 +110,25 @@ class ApplicationOpenApiResourceTest {
             assertFalse(document.path("paths").has("/unregistered"), document.toString());
         }
     }
+
+    @Test
+    void anOperationCanSayThatItNeedsNoTokenInAnApplicationThatAuthenticates() throws Exception {
+        Components components = Components.builder()
+                .filter("security", new HttpFilter() {
+                })
+                .resource(new StatusResource())
+                .build();
+        try (TestApplication application = new TestApplication.Builder()
+                .configuration(configuration()).components(components).build()) {
+            application.start();
+
+            JsonNode document = new ObjectMapper()
+                    .readTree(TestClient.create(application).get("/openapi.json").expect200Ok().body());
+
+            assertEquals("[{}]", document.at("/paths/~1status/get/security").toString(), document.toString());
+            assertTrue(document.at("/paths/~1pets~1{name}/get/security").isMissingNode(),
+                    "other operations follow the document's requirement");
+            assertEquals("[{\"bearerAuth\":[]}]", document.path("security").toString());
+        }
+    }
 }
