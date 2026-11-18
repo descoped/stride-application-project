@@ -1,8 +1,6 @@
 package io.descoped.stride.application.config.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -15,14 +13,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class ApplicationConfigurationJson {
-
-    private static final Logger log = LoggerFactory.getLogger(ApplicationConfigurationJson.class);
 
     private final JsonNode json;
 
@@ -49,20 +45,19 @@ public final class ApplicationConfigurationJson {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Map<String, String> map = props.entrySet().stream().collect(
+        return props.entrySet().stream().collect(
                 Collectors.toMap(
                         e -> String.valueOf(e.getKey()),
                         e -> String.valueOf(e.getValue()),
                         (prev, next) -> next, LinkedHashMap::new
                 ));
-        return map;
     }
 
     static final List<String> fieldMatcher = List.of("enabled", "config", "metadata");
     static final Predicate<String> edgeFieldPredicate = fieldMatcher::contains;
-    static final Function<Set<Node>, String> formatAncestors = (ancestors) ->
+    static final Function<Set<Node>, String> formatAncestors = ancestors ->
             ancestors.stream().skip(1).map(Node::fieldName).collect(Collectors.joining("."));
-    static final Function<Set<Node>, String> indentAncestors = (ancestors) ->
+    static final Function<Set<Node>, String> indentAncestors = ancestors ->
             Arrays.stream(new String[ancestors.size()]).map(element -> " ").collect(Collectors.joining());
 
     Set<String> keys(String fieldName) {
@@ -72,7 +67,7 @@ public final class ApplicationConfigurationJson {
     static Set<String> keys(JsonNode fromNode) {
         Set<String> keys = new LinkedHashSet<>();
         depthFirstPreOrderFullTraversal(Node.root(fromNode), new LinkedHashSet<>(), new LinkedHashSet<>(), (ancestors, node) -> {
-            if (ancestors.size() == 0) {
+            if (ancestors.isEmpty()) {
                 return false;
             }
             if (edgeFieldPredicate.test(node.fieldName)) {
@@ -90,14 +85,14 @@ public final class ApplicationConfigurationJson {
     private static void depthFirstPreOrderFullTraversal(Node current,
                                                         Set<String> visited,
                                                         Set<Node> ancestors,
-                                                        BiFunction<Set<Node>, Node, Boolean> visit) {
+                                                        BiPredicate<Set<Node>, Node> visit) {
 
         String currentPath = formatAncestors.apply(ancestors) + "." + current.fieldName;
         if (!visited.add(currentPath)) {
             return;
         }
 
-        if (visit.apply(ancestors, current)) {
+        if (visit.test(ancestors, current)) {
             return;
         }
 

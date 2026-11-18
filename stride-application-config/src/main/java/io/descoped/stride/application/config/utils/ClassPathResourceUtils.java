@@ -13,6 +13,9 @@ public class ClassPathResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ClassPathResourceUtils.class);
 
+    private ClassPathResourceUtils() {
+    }
+
     static ClassLoader tccl() {
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         if (contextClassLoader == null) {

@@ -8,10 +8,12 @@ import io.descoped.stride.application.jackson.JsonElement;
 
 public record ServiceImpl(String name, ObjectNode json) implements Service {
 
+    private static final String ENABLED = "enabled";
+
     @Override
     public boolean isEnabled() {
         return JsonElement.ofEphemeral(json)
-                .with("enabled")
+                .with(ENABLED)
                 .asBoolean(false);
     }
 
@@ -55,12 +57,12 @@ public record ServiceImpl(String name, ObjectNode json) implements Service {
 
         // a component declared in code is enabled unless it says otherwise
         public ServiceBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
+            this(name, JsonNodeFactory.instance.objectNode().put(ENABLED, "true"));
         }
 
         @Override
         public Service.Builder enabled(boolean enabled) {
-            builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
+            builder.set(ENABLED, builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
