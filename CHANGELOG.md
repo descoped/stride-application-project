@@ -166,6 +166,9 @@ Bearer authentication follows OAuth 2.1 (draft-ietf-oauth-v2-1-16, section 5), R
   parameters.
 - **Test requests time out.** Connecting, and each request up to its response headers, times out after 30
   seconds, or after the duration given to `TestClient.create(server, timeout)`. There was no timeout before.
+- A test that runs the application under a context path, with `TestApplication.Builder.contextPath("/api")`,
+  writes its paths without it: `get("/ping")` reaches `/api/ping`. The path used to be left out of the address,
+  so every request had to carry it.
 - A failed request is thrown once as `TestClientException`, with a message naming the method and path.
 - `TestClient` is `AutoCloseable` and has one public `send(method, uri, body, handler, headers...)` for methods
   the helpers do not cover.
