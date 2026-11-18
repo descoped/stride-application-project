@@ -53,14 +53,14 @@ public final class JwtTokenVerifier implements AutoCloseable {
                 .cache(300_000, 5_000).refreshAheadCache(false).rateLimited(30_000).retrying(false).build();
         try {
             if (keys.get(new JWKSelector(new JWKMatcher.Builder().publicOnly(true).build()), null).isEmpty())
-                throw new IOException("OIDC provider has no public signing keys");
+                throw new IOException("The key set at " + jwks + " has no public signing keys");
             return new JwtTokenVerifier(settings, keys);
         } catch (KeySourceException | IOException e) {
             if (keys instanceof java.io.Closeable closeable) {
                 try { closeable.close(); }
                 catch (IOException cleanup) { e.addSuppressed(cleanup); }
             }
-            throw new IOException("Could not initialize OIDC signing keys", e);
+            throw new IOException("Could not read the signing keys of issuer " + settings.issuer() + " from " + jwks, e);
         }
     }
 

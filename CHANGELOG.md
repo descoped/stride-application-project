@@ -159,6 +159,7 @@ Bearer authentication follows OAuth 2.1 (draft-ietf-oauth-v2-1-16, section 5), R
 - Security settings with `enabled` false are not validated, and can no longer be used to authenticate:
   `JwtTokenVerifier.discover`, `withKeys` and `new BearerAuthenticationFilter(settings, verifier)` reject them
   with a message naming `security.enabled`. A handed-in filter used to authenticate with such settings.
+- The messages for an issuer whose keys cannot be read name the issuer and the address of the key set.
 - **Protected resource metadata (RFC 9728) can be published.** New key `security.resource`, empty by default:
   the https URL clients reach the application at. When it is set, the metadata is served without a token at
   `/.well-known/oauth-protected-resource` followed by the URL's path, and every challenge names the document in
