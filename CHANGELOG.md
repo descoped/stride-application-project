@@ -105,6 +105,14 @@ Most applications are affected by these.
   `ServletContextInitialization.builder().validate(..)` was accepted and then ignored, because of a misspelled
   key inside Stride. A required attribute or named service that is missing now stops the application from
   starting, as the same requirement on a servlet always did.
+- **Servlets and servlet context initializers belong to the server, not to Jersey.** With
+  `services.jersey.server.enabled=false` they used to disappear, while filters and `/ping` stayed. They are now
+  registered either way.
+- **What a servlet requires is checked in full.** A named service required with
+  `Servlet.builder(..).validate(..requireNamedService(..))` was never checked; a missing one now stops the start.
+- **A servlet class needs a path.** A servlet declared with a class and no `config.pathSpec` used to start and
+  answer nowhere. It now fails at startup naming the key, as a servlet instance without a path does.
+- A servlet instance that configuration disables is registered with a warning, as a filter instance is.
 - **A resource argument that no service provides stops the start.** A resource declared with
   `Resource.builder(..).args(..)` used to be created with `null` for an argument whose named service was
   missing. The application now fails at startup with a message naming the resource, the type and the name.
