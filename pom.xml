@@ -25,8 +25,36 @@
         <module>stride-application-sample</module>
     </modules>
 
+    <!-- A release is run here, and the release plugin needs to know the repository. This POM inherits nothing
+         from stride-application-parent, so it is said again. -->
+    <scm>
+        <connection>scm:git:git://github.com/descoped/stride-application-project.git</connection>
+        <developerConnection>scm:git:git@github.com:descoped/stride-application-project.git</developerConnection>
+        <url>https://github.com/descoped/stride-application-project</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <build>
         <plugins>
+            <!-- Release (by hand, never from CI): mvn release:prepare release:perform -P central,sign,secrets
+                 See the `central` profile in stride-application-parent/pom.xml. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <releaseProfiles>central,sign</releaseProfiles>
+                    <goals>deploy</goals>
+                    <!-- The sample application is an example, never an artifact: it is left out of the builds
+                         the release runs. That includes the verify before the tag; pull request and master
+                         builds test the sample. The sample's own POM fails any build that has both the sample
+                         and the central profile. -->
+                    <arguments>-pl !:stride-application-sample</arguments>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
