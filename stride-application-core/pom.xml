@@ -139,7 +139,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- DeploymentTest prints configurations as YAML -->
+        <!-- DeploymentTest and StrideApplicationTest print configurations as YAML -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
