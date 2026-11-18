@@ -53,13 +53,7 @@
 
         <mockito.version>5.24.0</mockito.version>
 
-        <!-- Sonar -->
-        <sonar.version>5.9.0.7382</sonar.version>
         <jacoco.version>0.8.16</jacoco.version>
-        <code.coverage.exclusions>
-        </code.coverage.exclusions>
-        <aggregate.report.dir>../stride-application-junit-jupiter/target/site/jacoco-aggregate/jacoco.xml
-        </aggregate.report.dir>
     </properties>
 
     <licenses>
@@ -408,33 +402,12 @@
                                     <goal>prepare-agent</goal>
                                 </goals>
                             </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>sonar</id>
-            <properties>
-                <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-                <sonar.organization>descoped</sonar.organization>
-                <sonar.projectKey>descoped_${project.artifactId}</sonar.projectKey>
-                <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
-                <sonar.exclusions>${code.coverage.exclusions}</sonar.exclusions>
-                <sonar.report>${aggregate.report.dir}</sonar.report>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonarsource.scanner.maven</groupId>
-                        <artifactId>sonar-maven-plugin</artifactId>
-                        <executions>
+                            <!-- target/site/jacoco/jacoco.xml in every module, where the Sonar scanner looks -->
                             <execution>
-                                <id>sonar</id>
+                                <id>report</id>
                                 <phase>verify</phase>
                                 <goals>
-                                    <goal>sonar</goal>
+                                    <goal>report</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -442,6 +415,7 @@
                 </plugins>
             </build>
         </profile>
+
     </profiles>
 
     <build>
@@ -538,11 +512,6 @@
                     <version>${jacoco.version}</version>
                 </plugin>
 
-                <plugin>
-                    <groupId>org.sonarsource.scanner.maven</groupId>
-                    <artifactId>sonar-maven-plugin</artifactId>
-                    <version>${sonar.version}</version>
-                </plugin>
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

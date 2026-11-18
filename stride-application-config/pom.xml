@@ -19,16 +19,6 @@
     <description>Stride Application Config</description>
     <inceptionYear>2023</inceptionYear>
 
-    <properties>
-        <!-- Sonar -->
-        <sonar.projectKey>descoped_${project.artifactId}</sonar.projectKey>
-        <code.coverage.exclusions>
-        </code.coverage.exclusions>
-        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}
-        </sonar.coverage.jacoco.xmlReportPaths>
-    </properties>
-
-
     <licenses>
         <license>
             <name>The Apache License, Version 2.0</name>
