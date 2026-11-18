@@ -27,7 +27,7 @@ public record ServletContextInitializationImpl(ObjectNode json) implements Servl
     @Override
     public ServletContextValidationImpl validation() {
         return JsonElement.ofStrict(json)
-                .with("conifg.validation")
+                .with("config.validation")
                 .toObjectNode()
                 .map(ServletContextValidationImpl::new)
                 .orElse(null);
