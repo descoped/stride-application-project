@@ -18,14 +18,6 @@
     <description>Stride Application</description>
     <inceptionYear>2023</inceptionYear>
 
-    <properties>
-        <!-- Sonar -->
-        <sonar.projectKey>descoped_${project.artifactId}</sonar.projectKey>
-        <code.coverage.exclusions>
-        </code.coverage.exclusions>
-        <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}
-        </sonar.coverage.jacoco.xmlReportPaths>
-    </properties>
 
     <licenses>
         <license>
@@ -182,28 +174,5 @@
         </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>coverage</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>${jacoco.version}</version>
-                        <executions>
-                            <execution>
-                                <id>report</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>report-aggregate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

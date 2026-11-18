@@ -38,4 +38,37 @@
         </plugins>
     </build>
 
+    <profiles>
+        <!-- One SonarCloud project for the whole repository. The scanner analyses every module in one run, and it
+             runs only in the last project of the build, which is this one: so the profile and its settings are
+             here and not in the parent POM. Coverage comes from each module's target/site/jacoco/jacoco.xml
+             (profile `coverage`). -->
+        <profile>
+            <id>sonar</id>
+            <properties>
+                <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+                <sonar.organization>descoped</sonar.organization>
+                <sonar.projectKey>descoped_stride-application-project</sonar.projectKey>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonarsource.scanner.maven</groupId>
+                        <artifactId>sonar-maven-plugin</artifactId>
+                        <version>5.9.0.7382</version>
+                        <executions>
+                            <execution>
+                                <id>sonar</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sonar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
