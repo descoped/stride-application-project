@@ -37,6 +37,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Optional: bearer authentication. Off until security.enabled is true. -->
+        <dependency>
+            <groupId>io.descoped.stride.application</groupId>
+            <artifactId>stride-application-security</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Stride logs through SLF4J and ships no backend: the application picks one. -->
         <dependency>
             <groupId>org.slf4j</groupId>

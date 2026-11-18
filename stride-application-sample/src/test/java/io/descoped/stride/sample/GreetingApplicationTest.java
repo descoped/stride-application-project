@@ -28,6 +28,11 @@ class GreetingApplicationTest {
     }
 
     @Test
+    void withoutAuthenticationThereIsNoCallerToName(TestClient client) {
+        assertEquals("{\"message\":\"Hei, stranger!\"}", client.get("/greetings").expect200Ok().response().body());
+    }
+
+    @Test
     void anUnknownPathIsNotFound(TestClient client) {
         client.get("/farewells/Ada").expect404NotFound();
     }

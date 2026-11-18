@@ -13,14 +13,16 @@ The Java code is in the package `io.descoped.stride.sample`.
 | File | What it is |
 |---|---|
 | `Greetings` | The application's own logic. A plain class that knows nothing about Stride, HTTP or injection. |
-| `GreetingResource` | A JAX-RS resource at `/greetings/{name}`. It gets `Greetings` through its constructor. |
+| `GreetingResource` | A JAX-RS resource at `/greetings` and `/greetings/{name}`. It gets `Greetings` through its constructor. |
 | `GreetingApplication` | The `main` class: builds the configuration, wires the objects, starts the server. |
 | `META-INF/stride/defaults.properties` | Declares the application's own key, `greeting.salutation`, with the default `Hello`. |
 | `application.properties` | What the application sets differently from the defaults: `application.alias=greetings` and `services.jetty.server.config.port=8080`. |
 | `GreetingApplicationTest` | Starts the application on a free port and sends real requests. |
+| `SecuredGreetingApplicationTest` | The same with authentication on, and tokens the test signs. |
 
-Its dependencies are `stride-application-core`, which brings the configuration and API modules, a logging backend
-(`slf4j-simple`), and for the test `stride-application-junit-jupiter` and JUnit Jupiter. Stride logs through SLF4J and ships no backend, so the
+Its dependencies are `stride-application-core`, which brings the configuration and API modules,
+`stride-application-security` for authentication, a logging backend (`slf4j-simple`), and for the tests
+`stride-application-junit-jupiter` and JUnit Jupiter. Stride logs through SLF4J and ships no backend, so the
 application picks one.
 
 ### Wiring
@@ -60,6 +62,31 @@ The sample declares `greeting.salutation=Hello` in its own `META-INF/stride/defa
 Stride module declares its keys. Because the key is declared, it can be overridden from outside: by the
 environment variable `GREETING_SALUTATION` or the system property `-Dgreeting.salutation=...`.
 
+### Authentication
+
+The sample has `stride-application-security` on its class path, and authentication is off, which is the module's
+default. `GET /greetings` greets the caller: the subject of the access token when authentication is on, `stranger`
+when it is off.
+
+```java
+@GET
+@Produces(MediaType.APPLICATION_JSON)
+public Greetings.Greeting greetCaller(@Context SecurityContext security) {
+    Principal caller = security.getUserPrincipal();
+    return greetings.greet(caller == null ? "stranger" : caller.getName());
+}
+```
+
+To run the sample with authentication, set `security.enabled=true`, `security.issuer` and `security.audiences`.
+Stride then creates the filter and reads the issuer's keys when it starts. Every request needs a token after
+that, `/ping` included, unless its path is listed in `security.public-paths`.
+
+`SecuredGreetingApplicationTest` turns authentication on with an issuer it never contacts. It makes a key pair, hands the
+application a filter built with `JwtTokenVerifier.withKeys` and the public half, and signs its tokens with the
+private half. The filter is the real one, so the test proves the challenge for a request without a token, the
+rejection of a token from another issuer, and the greeting by the token's subject. See
+[security.md](security.md).
+
 ## Run the test
 
 From the root of the repository:
@@ -91,6 +118,11 @@ class GreetingApplicationTest {
 
         assertEquals("{\"message\":\"Hei, Ada!\"}", response.body());
         assertEquals("application/json", response.headers().firstValue("Content-Type").orElseThrow());
+    }
+
+    @Test
+    void withoutAuthenticationThereIsNoCallerToName(TestClient client) {
+        assertEquals("{\"message\":\"Hei, stranger!\"}", client.get("/greetings").expect200Ok().response().body());
     }
 
     @Test
@@ -158,6 +190,7 @@ Do not depend on `stride-application-sample`. Copy from it.
 | Request | Answer |
 |---|---|
 | `GET /greetings/{name}` | 200, `application/json`, `{"message":"<salutation>, <name>!"}` |
+| `GET /greetings` | 200, `application/json`, `{"message":"<salutation>, <caller>!"}`. The caller is the token's subject, or `stranger` without authentication. |
 | `GET /ping` | 200. Served by core, not by the sample. |
 | Any other path | 404 |
 
