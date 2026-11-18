@@ -92,39 +92,31 @@ public class JerseyServerService implements PreDestroy {
         // validate requires, once every initializer has run: one may provide what another does not
         ServletContextValidation validation = initialization.validation();
         if (validation != null) {
-            validateInitialization(validation, servletContextHandler);
+            validate(validation, servletContextHandler, "the servlet context initialization");
         }
     }
 
-    private void validateInitialization(ServletContextValidation validation,
-                                        ServletContextHandler servletContextHandler) {
-        Set<ServletContextValidation.NamedService> namedServices = validation.serviceLocatorNamedServices();
-        for (ServletContextValidation.NamedService namedService : namedServices) {
+    /**
+     * Fails when something the configuration requires is not there: a named service, looked up where the
+     * initializers put theirs, or a servlet context attribute.
+     */
+    private void validate(ServletContextValidation validation, ServletContextHandler servletContextHandler, String where) {
+        for (ServletContextValidation.NamedService namedService : validation.serviceLocatorNamedServices()) {
             ServiceHandle<?> serviceHandle = jerseyServiceLocator.getServiceHandle(namedService.type(), namedService.named());
             if (serviceHandle == null) {
-                throw new ValidationException(
-                        String.format("Required service '%s' named '%s' NOT available!",
-                                namedService.type(),
-                                namedService.named()
-                        )
-                );
+                throw new ValidationException(String.format("Required service '%s' named '%s' for %s is NOT available!",
+                        namedService.type().getName(), namedService.named(), where));
             }
         }
-
-        Set<String> attributes = validation.servletContextAttributes();
-        for (String attribute : attributes) {
-            boolean valid = servletContextHandler.getServletContext().getAttribute(attribute) != null;
-            if (!valid) {
-                throw new ValidationException(
-                        String.format("Required servletContext attribute '%s' for the servlet context initialization IS NOT set!",
-                                attribute
-                        )
-                );
+        for (String attribute : validation.servletContextAttributes()) {
+            if (servletContextHandler.getServletContext().getAttribute(attribute) == null) {
+                throw new ValidationException(String.format("Required servletContext attribute '%s' for %s IS NOT set!",
+                        attribute, where));
             }
         }
     }
 
-    private static void registerServlets(ApplicationConfiguration configuration,
+    private void registerServlets(ApplicationConfiguration configuration,
                                          Components components,
                                          ServiceLocator serviceLocator,
                                          ServletContextHandler servletContextHandler) {
@@ -136,6 +128,15 @@ public class JerseyServerService implements PreDestroy {
         for (io.descoped.stride.application.config.Servlet servlet : configuration.servlets().iterator()) {
             Servlet servletInstance = components.servlets().get(servlet.name());
             if (servletInstance == null && !servlet.isEnabled()) continue;
+            if (servlet.pathSpec() == null) {
+                throw new IllegalStateException("Servlet '" + servlet.name() + "' has no path: set servlets."
+                        + servlet.name() + ".config.pathSpec");
+            }
+            if (servletInstance != null && !servlet.isEnabled() && servlet.json().has("enabled")) {
+                // code decides which components exist; an instance is never dropped by configuration
+                log.warn("Servlet '{}' was handed in as an instance and is registered although servlets.{}.enabled is false",
+                        servlet.name(), servlet.name());
+            }
             if (servletInstance == null) {
                 Class<? extends Servlet> servletClass = servlet.clazz();
                 servletInstance = serviceLocator.createAndInitialize(servletClass);
@@ -151,7 +152,10 @@ public class JerseyServerService implements PreDestroy {
                         .ifPresent(instance -> servletContextHandler.getServletContext().setAttribute(name, instance)));
             }
 
-            validateServlet(servlet, servletContextHandler);
+            ServletContextValidation validation = servlet.validation();
+            if (validation != null) {
+                validate(validation, servletContextHandler, "'" + servlet.name() + "' servlet");
+            }
 
             ServletHolder servletHolder = new ServletHolder(servletInstance);
             servletSpecList.add(new ServletSpec(servletHolder, servlet.pathSpec()));
@@ -170,26 +174,6 @@ public class JerseyServerService implements PreDestroy {
         for (String name : components.servlets().keySet()) {
             if (!servletsWithPath.contains(name)) {
                 throw new IllegalStateException("Servlet '" + name + "' has no path: set servlets." + name + ".config.pathSpec");
-            }
-        }
-    }
-
-    private static void validateServlet(io.descoped.stride.application.config.Servlet servlet,
-                                        ServletContextHandler servletContextHandler) {
-        // validate servletContext attributes
-        ServletContextValidation validation = servlet.validation();
-        if (validation != null) {
-            Set<String> requires = validation.servletContextAttributes();
-            for (String require : requires) {
-                boolean valid = servletContextHandler.getServletContext().getAttribute(require) != null;
-                if (!valid) {
-                    throw new ValidationException(
-                            String.format("Required servletContext attribute '%s' for '%s' servlet IS NOT set!",
-                                    require,
-                                    servlet.name()
-                            )
-                    );
-                }
             }
         }
     }
