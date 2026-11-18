@@ -205,13 +205,13 @@ public class StrideApplicationImpl implements StrideApplication {
 
             log.info("Application started in {}ms", System.currentTimeMillis() - startedAt);
 
-            try {
-                Thread.currentThread().join();
+            Thread.currentThread().join();
 
-                log.warn("Application shutdown after {}", elapsedTime(startedAt));
-            } catch (InterruptedException _) {
-                // ignore
-            }
+            log.warn("Application shutdown after {}", elapsedTime(startedAt));
+        } catch (InterruptedException _) {
+            // The interrupt ends the wait. The application is closed before this clause runs, so it stops with
+            // the flag clear and running requests get their stop timeout; the flag is restored for the caller.
+            Thread.currentThread().interrupt();
         }
     }
 }
