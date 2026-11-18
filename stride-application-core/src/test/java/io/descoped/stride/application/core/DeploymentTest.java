@@ -2,7 +2,6 @@ package io.descoped.stride.application.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.descoped.stride.application.config.ApplicationConfiguration;
 import io.descoped.stride.application.config.Filter;
@@ -201,14 +200,25 @@ class DeploymentTest {
                         .resource(Resource.builder("greeting")
                                 .clazz(GreetingResource.class)))
                 .build();
-        log.debug("\n{}", configuration.json().toPrettyString());
-        JavaPropsMapper propsMapper = new JavaPropsMapper();
-        log.trace("\n{}", propsMapper.writeValueAsString(configuration.json()));
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        log.trace("\n{}", propsMapper.writeValueAsString(configuration.json()));
-        log.trace("\n{}", mapper.writeValueAsString(configuration.json()));
+        log.trace("\n{}", yamlMapper.writeValueAsString(configuration.json()));
 
-        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.builder().testDefaults().build();
-        log.trace("\n{}", mapper.writeValueAsString(applicationConfiguration.json()));
+        // what was declared in code is what the configuration holds
+        Services services = configuration.services();
+        assertEquals(JettyServerService.class, services.service("jetty.server").orElseThrow().clazz());
+        assertEquals(JerseyServerService.class, services.service("jersey.server").orElseThrow().clazz());
+        assertEquals("bar", services.service("dummy.service").orElseThrow().metadata().value("foo"));
+
+        Filter filter = configuration.filters().filter("dummy").orElseThrow();
+        assertEquals(jakarta.servlet.Filter.class, filter.clazz());
+        assertEquals("/dummy", filter.pathSpec());
+
+        Servlets servlets = configuration.servlets();
+        assertEquals(AdminServlet.class, servlets.servlet("admin").orElseThrow().clazz());
+        assertEquals("/admin", servlets.servlet("admin").orElseThrow().pathSpec());
+        assertEquals(MetricsServlet.class, servlets.servlet("metrics").orElseThrow().clazz());
+        assertEquals("/metrics", servlets.servlet("metrics").orElseThrow().pathSpec());
+
+        assertEquals(GreetingResource.class,
+                configuration.resources().resource("greeting").orElseThrow().clazz());
     }
 }
