@@ -14,6 +14,8 @@ import static java.util.Optional.ofNullable;
 
 public record ServletContextValidationImpl(ObjectNode json) implements ServletContextValidation {
 
+    private static final String REQUIRES = "requires";
+
     @Override
     public Set<NamedService> serviceLocatorNamedServices() {
         return JsonElement.ofEphemeral(json)
@@ -21,7 +23,7 @@ public record ServletContextValidationImpl(ObjectNode json) implements ServletCo
                 .toSet(node -> {
                     JsonElement namedServiceElement = JsonElement.ofStrict(node);
                     return new NamedService(
-                            namedServiceElement.with("type").asString().map(ExceptionFunction.call(() -> s -> Class.forName(s))).orElseThrow(),
+                            namedServiceElement.with("type").asString().map(ExceptionFunction.call(() -> Class::forName)).orElseThrow(),
                             namedServiceElement.with("named").asString().orElseThrow());
                 });
     }
@@ -44,14 +46,14 @@ public record ServletContextValidationImpl(ObjectNode json) implements ServletCo
             ObjectNode namedServiceNode = JsonNodeFactory.instance.objectNode();
             namedServiceNode.set("type", builder.textNode(type.getName()));
             namedServiceNode.set("named", builder.textNode(named));
-            ArrayNode requiresArrayNode = BuilderHelper.createOrGet(JsonElement.ofDynamic(builder).with("requires").object(), "namedServices");
+            ArrayNode requiresArrayNode = BuilderHelper.createOrGet(JsonElement.ofDynamic(builder).with(REQUIRES).object(), "namedServices");
             requiresArrayNode.add(namedServiceNode);
             return this;
         }
 
         @Override
         public ServletContextValidation.Builder requireAttribute(String name) {
-            ArrayNode requiresArrayNode = BuilderHelper.createOrGet(JsonElement.ofDynamic(builder).with("requires").object(), "servletContextAttributes");
+            ArrayNode requiresArrayNode = BuilderHelper.createOrGet(JsonElement.ofDynamic(builder).with(REQUIRES).object(), "servletContextAttributes");
             requiresArrayNode.add(builder.textNode(name));
             return this;
         }
@@ -60,7 +62,7 @@ public record ServletContextValidationImpl(ObjectNode json) implements ServletCo
         public ServletContextValidation.Builder requireAttributes(Set<String> nameSet) {
             ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
             ofNullable(nameSet).ifPresent(set -> set.forEach(arrayNode::add));
-            JsonElement.ofDynamic(builder).with("requires").object().set("servletContextAttributes", arrayNode);
+            JsonElement.ofDynamic(builder).with(REQUIRES).object().set("servletContextAttributes", arrayNode);
             return this;
         }
 

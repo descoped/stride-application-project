@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class BuilderHelper {
 
+    private BuilderHelper() {
+    }
+
     public static ArrayNode createOrGet(ObjectNode builder, String field) {
         ArrayNode arrayNode;
         if (builder.has(field)) {

@@ -24,9 +24,10 @@ import java.util.regex.Pattern;
  * is configured, it also serves this resource server's protected resource metadata (RFC 9728) without a token.
  */
 public final class BearerAuthenticationFilter extends HttpFilter {
-    private final SecurityConfiguration settings;
-    private final JwtTokenVerifier verifier;
-    private final ProtectedResourceMetadata metadata;
+    // transient because HttpFilter is Serializable; Stride never serializes a filter
+    private final transient SecurityConfiguration settings;
+    private final transient JwtTokenVerifier verifier;
+    private final transient ProtectedResourceMetadata metadata;
 
     /**
      * Used when Stride creates the filter from the configuration: reads {@code security.*} and fetches the issuer's
@@ -34,8 +35,8 @@ public final class BearerAuthenticationFilter extends HttpFilter {
      */
     @Inject
     public BearerAuthenticationFilter(ApplicationConfiguration configuration) throws IOException {
-        SecurityConfiguration settings = SecurityConfiguration.from(configuration);
-        this(settings, JwtTokenVerifier.discover(settings));
+        SecurityConfiguration configured = SecurityConfiguration.from(configuration);
+        this(configured, JwtTokenVerifier.discover(configured));
     }
 
     /**
@@ -48,9 +49,11 @@ public final class BearerAuthenticationFilter extends HttpFilter {
         this.metadata = ProtectedResourceMetadata.of(settings);
     }
 
-    // OAuth 2.1 section 5.1.1: credentials = "bearer" 1*SP token68, the scheme name in any case
+    // OAuth 2.1 section 5.1.1: credentials = "bearer" 1*SP token68, the scheme name in any case, and
+    // token68 = 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
+    // Only the scheme name is matched without regard to case; the token68 class already lists both cases.
     private static final Pattern BEARER_SCHEME = Pattern.compile("(?i)bearer( .*)?");
-    private static final Pattern BEARER_CREDENTIALS = Pattern.compile("(?i)bearer +([A-Za-z0-9._~+/-]+=*)");
+    private static final Pattern BEARER_CREDENTIALS = Pattern.compile("(?i:bearer) +([A-Za-z0-9._~+/-]+=*)");
 
     /**
      * Accepts the access token only from the Authorization header. A token in the query string is ignored, as
@@ -85,10 +88,10 @@ public final class BearerAuthenticationFilter extends HttpFilter {
         TokenPrincipal principal;
         try {
             principal = verifier.verify(credentials.group(1));
-        } catch (ExpiredJWTException e) {
+        } catch (ExpiredJWTException _) {
             reject(response, 401, "invalid_token", "The access token expired", null);
             return;
-        } catch (ParseException | BadJOSEException | JOSEException | IllegalArgumentException e) {
+        } catch (ParseException | BadJOSEException | JOSEException | IllegalArgumentException _) {
             // RFC 9068 section 4: every failed validation is "invalid_token". The reason is not told to the caller.
             reject(response, 401, "invalid_token", "The access token is invalid", null);
             return;

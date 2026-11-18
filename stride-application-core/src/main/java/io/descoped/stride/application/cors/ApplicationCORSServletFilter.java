@@ -28,11 +28,6 @@ public class ApplicationCORSServletFilter extends HttpFilter {
                 configuration.requireString("filters.cors.config.max-age"));
     }
 
-    @Override
-    public void init() throws ServletException {
-        super.init();
-    }
-
     private ApplicationCORSServletFilter(String origin,
                                          String credentials,
                                          String headers,

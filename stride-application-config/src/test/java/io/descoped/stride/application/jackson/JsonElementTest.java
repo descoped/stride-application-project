@@ -34,5 +34,8 @@ class JsonElementTest {
         JsonElement je = JsonElement.ofDynamic(JsonNodeFactory.instance.objectNode());
         je.with("foo.bar").object().set("a", je.object().textNode("b"));
         log.trace("\n{}", je.json().toPrettyString());
+
+        // the dynamic strategy creates the missing nodes in the document itself
+        assertEquals("{\"foo\":{\"bar\":{\"a\":\"b\"}}}", je.json().toString());
     }
 }

@@ -14,10 +14,13 @@ import java.util.List;
 
 public record FilterImpl(String name, ObjectNode json) implements Filter {
 
+    private static final String ENABLED = "enabled";
+    private static final String CONFIG = "config";
+
     @Override
     public boolean isEnabled() {
         return JsonElement.ofEphemeral(json)
-                .with("enabled")
+                .with(ENABLED)
                 .asBoolean(false);
     }
 
@@ -75,19 +78,19 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
 
         // a component declared in code is enabled unless it says otherwise
         public FilterBuilder(String name) {
-            this(name, JsonNodeFactory.instance.objectNode().put("enabled", "true"));
+            this(name, JsonNodeFactory.instance.objectNode().put(ENABLED, "true"));
         }
 
         @Override
         public Builder enabled(boolean enabled) {
-            builder.set("enabled", builder.textNode(Boolean.toString(enabled)));
+            builder.set(ENABLED, builder.textNode(Boolean.toString(enabled)));
             return this;
         }
 
         @Override
         public Builder className(String filterClassName) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("class", builder.textNode(filterClassName));
             return this;
@@ -101,7 +104,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
         @Override
         public Builder pathSpec(String pathSpec) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("pathSpec", builder.textNode(pathSpec));
             return this;
@@ -110,7 +113,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
         @Override
         public Builder order(int order) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("order", builder.textNode(Integer.toString(order)));
             return this;
@@ -121,7 +124,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
             ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
             dispatches.forEach(e -> arrayNode.add(builder.textNode(e.name())));
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("dispatches", arrayNode);
             return this;
@@ -130,7 +133,7 @@ public record FilterImpl(String name, ObjectNode json) implements Filter {
         @Override
         public Builder context(ServletContextValidation.Builder contextBuilder) {
             JsonElement.ofDynamic(builder)
-                    .with("config")
+                    .with(CONFIG)
                     .object()
                     .set("context", contextBuilder.build().json());
             return this;

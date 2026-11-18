@@ -159,7 +159,7 @@ public final class ApplicationConfiguration implements JsonElement {
     public static class Builder {
 
         private Consumer<DynamicConfiguration.Builder> sources;
-        private Map<String, String> overrideProperties = new LinkedHashMap<>();
+        private final Map<String, String> overrideProperties = new LinkedHashMap<>();
         private Services.Builder servicesBuilder;
         private Filters.Builder filtersBuilder;
         private Servlets.Builder servletsBuilder;
@@ -249,24 +249,44 @@ public final class ApplicationConfiguration implements JsonElement {
 
             // 0. the settings of filters declared in code, at their defaults. Lowest of all, so everything else
             //    wins, but declared, so each can be overridden by environment variable or system property.
-            if (filtersBuilder != null) {
-                Map<String, String> implied = new LinkedHashMap<>();
-                for (Filter filter : filtersBuilder.build().iterator()) {
-                    String prefix = "filters." + filter.name() + ".config.";
-                    implied.put(prefix + "pathSpec", Filter.DEFAULT_PATH_SPEC);
-                    implied.put(prefix + "order", Integer.toString(Filter.DEFAULT_ORDER));
-                    implied.put(prefix + "dispatches.0", "REQUEST");
-                }
-                if (!implied.isEmpty()) {
-                    builder.values(implied);
-                }
-            }
+            addImpliedFilterSettings(builder);
 
             // 1. the defaults of every module on the class path: they declare every key that is read
             ModuleDefaults.find(classLoader != null ? classLoader : defaultClassLoader()).forEach(builder::resource);
 
             // 2. what the application declares in code: it decides which components exist, and its values are
             //    defaults that every later source can override
+            addDeclaredComponents(builder);
+
+            // 3. the application's sources: files, then environment variables, then system properties
+            addApplicationSources(builder);
+
+            // 4. override properties are added last, so they win over every source
+            if (!overrideProperties.isEmpty()) {
+                builder.values(overrideProperties);
+            }
+
+            ObjectNode jsonConfiguration = (ObjectNode) new ApplicationConfigurationJson(builder.build().asMap()).json();
+            return new ApplicationConfiguration(jsonConfiguration, JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
+        }
+
+        private void addImpliedFilterSettings(DynamicConfiguration.Builder builder) {
+            if (filtersBuilder == null) {
+                return;
+            }
+            Map<String, String> implied = new LinkedHashMap<>();
+            for (Filter filter : filtersBuilder.build().iterator()) {
+                String prefix = "filters." + filter.name() + ".config.";
+                implied.put(prefix + "pathSpec", Filter.DEFAULT_PATH_SPEC);
+                implied.put(prefix + "order", Integer.toString(Filter.DEFAULT_ORDER));
+                implied.put(prefix + "dispatches.0", "REQUEST");
+            }
+            if (!implied.isEmpty()) {
+                builder.values(implied);
+            }
+        }
+
+        private void addDeclaredComponents(DynamicConfiguration.Builder builder) {
             Map<String, String> declared = new LinkedHashMap<>();
             if (servicesBuilder != null) {
                 PropertyFlattener.flatten("services", servicesBuilder.build().json(), declared);
@@ -286,8 +306,9 @@ public final class ApplicationConfiguration implements JsonElement {
             if (!declared.isEmpty()) {
                 builder.values(declared);
             }
+        }
 
-            // 3. the application's sources: files, then environment variables, then system properties
+        private void addApplicationSources(DynamicConfiguration.Builder builder) {
             if (sources != null) {
                 sources.accept(builder);
             } else if (enableDefault || enableTestDefault) {
@@ -299,14 +320,6 @@ public final class ApplicationConfiguration implements JsonElement {
                 }
                 builder.environment().systemProperties();
             }
-
-            // 4. override properties are added last, so they win over every source
-            if (!overrideProperties.isEmpty()) {
-                builder.values(overrideProperties);
-            }
-
-            ObjectNode jsonConfiguration = (ObjectNode) new ApplicationConfigurationJson(builder.build().asMap()).json();
-            return new ApplicationConfiguration(jsonConfiguration, JsonCreationStrategy.CREATE_EPHEMERAL_NODE_IF_NOT_EXIST);
         }
     }
 

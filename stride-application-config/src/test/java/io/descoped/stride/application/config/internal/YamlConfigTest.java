@@ -24,7 +24,6 @@ public class YamlConfigTest {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         String res = ClassPathResourceUtils.readResource("application-config-test.yaml");
         JsonNode root = mapper.readTree(res);
-        //log.trace("config:\n{}", root.toPrettyString());
 
         JavaPropsMapper propsMapper = new JavaPropsMapper();
         String props = propsMapper.writeValueAsString(root);

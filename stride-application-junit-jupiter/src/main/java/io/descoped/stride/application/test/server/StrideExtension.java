@@ -96,6 +96,8 @@ public final class StrideExtension implements BeforeAllCallback, BeforeEachCallb
             application.start();
             return new Running(application, TestClient.create(application, timeout));
         } catch (RuntimeException | Error e) {
+            // Error is caught on purpose: a start that fails with a linkage or assertion error must not leave
+            // the application running either. It is closed and the same throwable is thrown on.
             try {
                 application.close();
             } catch (RuntimeException closing) {
