@@ -18,7 +18,7 @@
         <module>stride-application-parent</module>
         <module>stride-application-config</module>
         <module>stride-application-api</module>
-        <module>stride-application-junit5</module>
+        <module>stride-application-junit-jupiter</module>
         <module>stride-application-core</module>
         <module>stride-application-openapi</module>
         <module>stride-application-security</module>

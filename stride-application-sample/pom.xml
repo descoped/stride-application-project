@@ -45,7 +45,7 @@
 
         <dependency>
             <groupId>io.descoped.stride.application</groupId>
-            <artifactId>stride-application-junit5</artifactId>
+            <artifactId>stride-application-junit-jupiter</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
